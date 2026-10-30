@@ -1,0 +1,91 @@
+{
+  "currency": "KRW",
+  "timeZone": "Asia/Seoul",
+  "services": [
+    {
+      "id": "airport",
+      "name": "Airport transfer",
+      "eyebrow": "A seamless welcome",
+      "price": 120000,
+      "unit": "one way",
+      "duration": 2,
+      "description": "From the arrivals hall to your next chapter. We'll take it from here.",
+      "features": [
+        "Airport meet & greet",
+        "60-minute waiting allowance",
+        "Flight details with your request",
+        "Bottled water & connectivity"
+      ]
+    },
+    {
+      "id": "hourly",
+      "name": "By the hour",
+      "eyebrow": "The city, on your terms",
+      "price": 260000,
+      "unit": "4 hours",
+      "duration": 4,
+      "description": "A driver at your disposal. A day that moves entirely to your rhythm.",
+      "features": [
+        "Four hours of private service",
+        "Multiple stops, your itinerary",
+        "Professional English-speaking driver",
+        "Bottled water & connectivity"
+      ]
+    },
+    {
+      "id": "day",
+      "name": "Full day",
+      "eyebrow": "Make a day of it",
+      "price": 480000,
+      "unit": "8 hours",
+      "duration": 8,
+      "description": "The freedom to explore, with every detail quietly taken care of.",
+      "features": [
+        "Eight hours of private service",
+        "A personalised city itinerary",
+        "Professional English-speaking driver",
+        "Bottled water & connectivity"
+      ]
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "executive",
+      "name": "Executive Sedan",
+      "model": "BMW 7 Series or similar",
+      "passengers": 3,
+      "luggage": 2,
+      "surcharge": 0,
+      "image": "/media/hero/000.webp"
+    },
+    {
+      "id": "first",
+      "name": "First Class Sedan",
+      "model": "Mercedes-Benz S-Class or similar",
+      "passengers": 3,
+      "luggage": 2,
+      "surcharge": 60000,
+      "image": "/media/exterior.webp"
+    }
+  ],
+  "options": [
+    {
+      "id": "childSeat",
+      "name": "Child seat",
+      "description": "For your smallest travelling companion",
+      "price": 20000
+    },
+    {
+      "id": "welcome",
+      "name": "Personalised welcome",
+      "description": "A name board, a thoughtful first impression",
+      "price": 10000
+    },
+    {
+      "id": "extraStop",
+      "name": "Additional stop",
+      "description": "One more place along the way",
+      "price": 30000
+    }
+  ]
+}
