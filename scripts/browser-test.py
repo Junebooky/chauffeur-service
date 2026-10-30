@@ -28,11 +28,18 @@ def nav(page, label):
     page.locator('.section-rail').get_by_role('button', name=label, exact=True).click()
     page.wait_for_timeout(950)
 
+def choose_place(page, label, query, result, touch=False):
+    field = page.get_by_role('combobox', name=label, exact=True)
+    field.fill(query)
+    choice = page.get_by_role('option', name=result, exact=False)
+    choice.tap() if touch else choice.click()
+    expect(field).to_have_attribute('aria-expanded', 'false')
+
 def aligned(page, id):
     return page.evaluate('(id) => Math.abs(document.querySelector("main").scrollTop - document.getElementById(id).offsetTop) < 3', id)
 
 with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
-    env = {**os.environ, 'NODE_ENV': 'production', 'PORT': '4183', 'HOST': '127.0.0.1', 'DATABASE_PATH': str(Path(tmp) / 'requests.sqlite')}
+    env = {**os.environ, 'NODE_ENV': 'production', 'PORT': '4183', 'HOST': '127.0.0.1', 'DATABASE_PATH': str(Path(tmp) / 'requests.sqlite'), 'GOOGLE_MAPS_API_KEY': ''}
     with open(Path(tmp) / 'server.log', 'w') as log:
         server = subprocess.Popen(['node', 'server/index.mjs'], cwd=ROOT, env=env, stdout=log, stderr=log)
         try:
@@ -101,13 +108,40 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 assert colours['gold'] == '#c7ae7b'
                 passed('Page and card backgrounds are dark neutral charcoal; gold accents remain unchanged')
 
-                page.get_by_label('Pick-up location', exact=False).fill('Incheon Airport Terminal 2')
-                page.get_by_label('Destination', exact=True).fill('Four Seasons Hotel Seoul')
+                pickup_input = page.get_by_role('combobox', name='Pick-up location', exact=True)
+                pickup_input.fill('Unconfirmed text')
+                page.get_by_role('button', name='Continue your journey', exact=True).click()
+                expect(pickup_input).to_be_focused()
+                passed('Unselected address text cannot advance the booking')
+                choose_place(page, 'Pick-up location', '인천공항 2터미널', 'Incheon Airport — Terminal 2')
+                choose_place(page, 'Destination', '首尔四季', 'Four Seasons Hotel Seoul')
+                pickup_input.focus()
+                page.wait_for_timeout(250)
+                focus_style = pickup_input.evaluate('(e) => { const s = getComputedStyle(e); return [s.outlineStyle, s.boxShadow, s.borderColor] }')
+                assert focus_style == ['none', 'none', 'rgb(199, 174, 123)'], focus_style
+                passed('Multilingual address suggestions resolve to real locations and inputs use a single focus border')
                 page.get_by_label('Pickup time', exact=True).select_option('09:30')
+                destination_input = page.get_by_role('combobox', name='Destination', exact=True)
+                destination_input.fill('Some other street')
+                page.get_by_role('button', name='Continue your journey', exact=True).click()
+                expect(destination_input).to_be_focused()
+                choose_place(page, 'Destination', 'Four Seasons', 'Four Seasons Hotel Seoul')
+                passed('Editing a selected location requires confirming a new suggestion')
                 page.get_by_label('Flight number', exact=False).fill('KE 902')
                 page.get_by_role('button', name='Continue your journey', exact=True).click()
-                expect(page.get_by_role('button', name='First Class Sedan', exact=False)).to_be_visible()
-                page.get_by_role('button', name='First Class Sedan', exact=False).click()
+                expect(page.locator('.fleet-stage').get_by_role('button', name='First Class Sedan', exact=False)).to_be_visible()
+                fleet = page.get_by_role('region', name='Interactive vehicle selection')
+                fleet.focus()
+                page.keyboard.press('ArrowRight')
+                expect(page.locator('.fleet-stage').get_by_role('button', name='First Class Sedan', exact=False)).to_have_attribute('aria-pressed', 'true')
+                page.keyboard.press('ArrowLeft')
+                expect(page.locator('.fleet-stage').get_by_role('button', name='Executive Sedan', exact=False)).to_have_attribute('aria-pressed', 'true')
+                fleet.get_by_role('button', name='Next vehicle', exact=True).click()
+                page.locator('.booking-fields').evaluate('(e) => e.scrollTop = 0')
+                page.wait_for_timeout(700)
+                page.screenshot(path=str(OUT / 'desktop-vehicle-carousel.png'))
+                passed('Convex vehicle carousel changes selection using keyboard and arrow controls')
+                page.locator('.fleet-stage').get_by_role('button', name='First Class Sedan', exact=False).click()
                 page.get_by_role('switch', name='Child seat', exact=False).click()
                 page.get_by_role('switch', name='Personalised welcome', exact=False).click()
                 expect(page.locator('.summary-total strong')).to_have_text('₩210,000')
@@ -167,10 +201,25 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 assert mobile.locator('.booking-panel').evaluate('(e) => e.scrollTop > 0')
                 assert aligned(mobile, 'reservation')
                 passed('Wheel input scrolls the long mobile booking form internally')
-                mobile.get_by_label('Pick-up location', exact=False).fill('Seoul Station')
-                mobile.get_by_label('Destination', exact=True).fill('Grand Hyatt Seoul')
+                choose_place(mobile, 'Pick-up location', 'ソウル駅', 'Seoul Station', touch=True)
+                choose_place(mobile, 'Destination', '그랜드 하얏트', 'Grand Hyatt Seoul', touch=True)
                 mobile.get_by_label('Pickup time', exact=True).select_option('15:30')
                 mobile.get_by_role('button', name='Continue your journey', exact=True).click()
+                stage = mobile.locator('.fleet-stage')
+                stage.scroll_into_view_if_needed()
+                rect = stage.bounding_box()
+                gesture = mobile.context.new_cdp_session(mobile)
+                cy = rect['y'] + rect['height'] * .5
+                gesture.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': rect['x'] + rect['width'] * .8, 'y': cy}]})
+                for portion in [.7, .55, .4, .2]:
+                    gesture.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': rect['x'] + rect['width'] * portion, 'y': cy}]})
+                    mobile.wait_for_timeout(25)
+                gesture.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+                expect(mobile.locator('.fleet-stage').get_by_role('button', name='First Class Sedan', exact=False)).to_have_attribute('aria-pressed', 'true')
+                mobile.wait_for_timeout(700)
+                mobile.screenshot(path=str(OUT / 'mobile-vehicle-carousel.png'))
+                mobile.get_by_role('button', name='Select Executive Sedan', exact=True).click()
+                passed('A horizontal mobile swipe changes the selected vehicle')
                 mobile.get_by_role('button', name='Continue your journey', exact=True).click()
                 mobile.get_by_label('Full name').fill('Mobile Guest')
                 mobile.get_by_label('Email address').fill('guest@example.com')

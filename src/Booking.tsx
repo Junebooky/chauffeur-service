@@ -11,14 +11,14 @@ import {
   Clock3,
   LoaderCircle,
   LockKeyhole,
-  Luggage,
-  MapPin,
   Plus,
   ShieldCheck,
-  Users,
   X,
 } from 'lucide-react'
 import catalog from './catalog.json'
+import AddressSearch from './AddressSearch'
+import type { Place } from './AddressSearch'
+import VehicleCarousel from './VehicleCarousel'
 import { displayDate, money, seoulDate, tomorrow } from './utils'
 
 type Result = {
@@ -140,6 +140,8 @@ export default function Booking({
   const [time, setTime] = useState('10:00')
   const [pickup, setPickup] = useState('')
   const [destination, setDestination] = useState('')
+  const [pickupPlace, setPickupPlace] = useState<Place | null>(null)
+  const [destinationPlace, setDestinationPlace] = useState<Place | null>(null)
   const [flight, setFlight] = useState('')
   const [options, setOptions] = useState<string[]>([])
   const [name, setName] = useState('')
@@ -233,6 +235,8 @@ export default function Booking({
           time,
           pickup,
           destination,
+          pickupPlace,
+          destinationPlace,
           flight,
           service,
           vehicle,
@@ -443,35 +447,26 @@ export default function Booking({
                         ))}
                       </select>
                     </label>
-                    <label className="field">
-                      <span>
-                        <MapPin size={13} /> Pick-up location
-                      </span>
-                      <input
-                        required
-                        minLength={3}
-                        maxLength={250}
-                        autoComplete="street-address"
-                        name="pickup"
-                        value={pickup}
-                        onChange={(e) => setPickup(e.target.value)}
-                        placeholder="Airport, hotel or street address"
-                      />
-                    </label>
-                    <label className="field">
-                      <span>
-                        <MapPin size={13} /> Destination
-                      </span>
-                      <input
-                        required
-                        minLength={3}
-                        maxLength={250}
-                        name="destination"
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
-                        placeholder="Where would you like to go?"
-                      />
-                    </label>
+                    <AddressSearch
+                      name="pickup"
+                      label="Pick-up location"
+                      value={pickup}
+                      place={pickupPlace}
+                      onChange={(value, selected) => {
+                        setPickup(value)
+                        setPickupPlace(selected)
+                      }}
+                    />
+                    <AddressSearch
+                      name="destination"
+                      label="Destination"
+                      value={destination}
+                      place={destinationPlace}
+                      onChange={(value, selected) => {
+                        setDestination(value)
+                        setDestinationPlace(selected)
+                      }}
+                    />
                     {service === 'airport' && (
                       <label className="field">
                         <span>
@@ -496,44 +491,11 @@ export default function Booking({
               {step === 1 && (
                 <div className="preferences-fields">
                   <p className="field-section-title">Select your collection</p>
-                  <div className="vehicle-options">
-                    {catalog.vehicles.map((v) => (
-                      <button
-                        type="button"
-                        className={`vehicle-option ${vehicle === v.id ? 'selected' : ''}`}
-                        key={v.id}
-                        disabled={availability[v.id] === false}
-                        aria-pressed={vehicle === v.id}
-                        onClick={() => setVehicle(v.id)}
-                      >
-                        <div className="vehicle-option-top">
-                          <span className="radio-dot" />
-                          <span>
-                            {v.name}
-                            <small>{v.model}</small>
-                          </span>
-                          <span className="vehicle-price">
-                            {v.surcharge
-                              ? `+${money(v.surcharge)}`
-                              : 'Included'}
-                          </span>
-                        </div>
-                        <div className="vehicle-meta">
-                          <span>
-                            <Users size={12} /> {v.passengers} guests
-                          </span>
-                          <span>
-                            <Luggage size={12} /> {v.luggage} bags
-                          </span>
-                          {availability[v.id] === false && (
-                            <span className="unavailable">
-                              Unavailable at this time
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  <VehicleCarousel
+                    value={vehicle}
+                    onChange={setVehicle}
+                    availability={availability}
+                  />
                   <p className="field-section-title extras-title">
                     Make it personal <span>Optional additions</span>
                   </p>
@@ -666,7 +628,11 @@ export default function Booking({
               <span className="mini-star">✦</span>
             </div>
             <div className="summary-car">
-              <img src={currentVehicle.image} alt={currentVehicle.model} />
+              <div
+                className={`summary-fleet-art art-${vehicle}`}
+                role="img"
+                aria-label={currentVehicle.model}
+              />
               <span>{currentVehicle.name}</span>
               <small>{currentVehicle.model}</small>
             </div>

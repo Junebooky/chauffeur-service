@@ -1,0 +1,102 @@
+[
+  {
+    "id": "curated:icn-t1",
+    "name": "Incheon Airport — Terminal 1",
+    "address": "272 Gonghang-ro, Jung-gu, Incheon, South Korea",
+    "latitude": 37.4486,
+    "longitude": 126.4512,
+    "aliases": [
+      "ICN T1",
+      "Incheon International Airport Terminal 1",
+      "인천공항 제1여객터미널",
+      "인천공항 1터미널",
+      "仁川机场第一航站楼",
+      "仁川空港 第1ターミナル"
+    ]
+  },
+  {
+    "id": "curated:icn-t2",
+    "name": "Incheon Airport — Terminal 2",
+    "address": "446 Je2terminal-daero, Jung-gu, Incheon, South Korea",
+    "latitude": 37.4686,
+    "longitude": 126.4332,
+    "aliases": [
+      "ICN T2",
+      "Incheon International Airport Terminal 2",
+      "인천공항 제2여객터미널",
+      "인천공항 2터미널",
+      "仁川机场第二航站楼",
+      "仁川空港 第2ターミナル"
+    ]
+  },
+  {
+    "id": "curated:gimpo",
+    "name": "Gimpo Airport — International Terminal",
+    "address": "38 Haneul-gil, Gangseo-gu, Seoul, South Korea",
+    "latitude": 37.5583,
+    "longitude": 126.8029,
+    "aliases": [
+      "GMP",
+      "Gimpo International Airport",
+      "김포공항 국제선",
+      "金浦机场",
+      "金浦空港"
+    ]
+  },
+  {
+    "id": "curated:seoul-station",
+    "name": "Seoul Station",
+    "address": "405 Hangang-daero, Yongsan-gu, Seoul, South Korea",
+    "latitude": 37.5547,
+    "longitude": 126.9706,
+    "aliases": ["서울역", "首尔站", "ソウル駅", "Seoul railway station"]
+  },
+  {
+    "id": "curated:four-seasons",
+    "name": "Four Seasons Hotel Seoul",
+    "address": "97 Saemunan-ro, Jongno-gu, Seoul, South Korea",
+    "latitude": 37.5706,
+    "longitude": 126.976,
+    "aliases": [
+      "Four Seasons Seoul",
+      "포시즌스 호텔 서울",
+      "포시즌",
+      "首尔四季酒店",
+      "フォーシーズンズホテルソウル"
+    ]
+  },
+  {
+    "id": "curated:grand-hyatt",
+    "name": "Grand Hyatt Seoul",
+    "address": "322 Sowol-ro, Yongsan-gu, Seoul, South Korea",
+    "latitude": 37.539,
+    "longitude": 126.9971,
+    "aliases": [
+      "그랜드 하얏트 서울",
+      "그랜드하얏트",
+      "首尔君悦酒店",
+      "グランドハイアットソウル"
+    ]
+  },
+  {
+    "id": "curated:lotte-hotel",
+    "name": "Lotte Hotel Seoul",
+    "address": "30 Eulji-ro, Jung-gu, Seoul, South Korea",
+    "latitude": 37.565,
+    "longitude": 126.981,
+    "aliases": [
+      "롯데호텔 서울",
+      "롯데호텔 소공동",
+      "首尔乐天酒店",
+      "ロッテホテルソウル"
+    ]
+  },
+  {
+    "id": "curated:coex",
+    "name": "COEX Convention & Exhibition Center",
+    "address": "513 Yeongdong-daero, Gangnam-gu, Seoul, South Korea",
+    "latitude": 37.5117,
+    "longitude": 127.0594,
+    "aliases": ["코엑스", "三成洞会展中心", "コエックス", "COEX Seoul"]
+  }
+]

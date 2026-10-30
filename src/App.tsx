@@ -496,6 +496,30 @@ export default function App() {
               cancellation, payment, and operator confirmation are not
               connected.
             </p>
+            <h3>Finding your address</h3>
+            <p>
+              When live address search is enabled, your search text is sent to
+              Google Maps to find locations in South Korea. Popular-location
+              search is handled locally. Selected addresses and building-level
+              coordinates are saved with your request; confirm the exact meeting
+              point with your chauffeur. Google Maps use is subject to the{' '}
+              <a
+                href="https://maps.google.com/help/terms_maps/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Google Maps terms
+              </a>{' '}
+              and{' '}
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Google Privacy Policy
+              </a>
+              .
+            </p>
           </>
         )}
       </Modal>

@@ -14,6 +14,8 @@ const valid = {
   vehicle: 'executive',
   pickup: 'Incheon Airport Terminal 2',
   destination: 'Four Seasons Hotel Seoul',
+  pickupPlace: { id: 'curated:icn-t2' },
+  destinationPlace: { id: 'curated:four-seasons' },
   name: 'Test Traveller',
   email: 'test@example.com',
   phone: '+82 10 1234 5678',
@@ -22,7 +24,11 @@ const valid = {
 }
 
 async function withServer(run, databasePath = ':memory:') {
-  const instance = createApp({ databasePath, now: () => fixedNow })
+  const instance = createApp({
+    databasePath,
+    now: () => fixedNow,
+    placesOptions: { apiKey: '' },
+  })
   const server = await new Promise((resolve) => {
     const s = instance.app.listen(0, '127.0.0.1', () => resolve(s))
   })
@@ -167,3 +173,51 @@ test('does not expose stored personal details through a listing endpoint', () =>
     const text = await response.text()
     assert.ok(!text.includes(valid.email))
   }))
+
+test('requires resolved route locations and rejects a pickup equal to the destination', () =>
+  withServer(async ({ post }) => {
+    for (const patch of [
+      { pickupPlace: null },
+      {
+        destinationPlace: {
+          id: 'invented-place',
+          latitude: 37,
+          longitude: 127,
+        },
+      },
+      { destinationPlace: { id: 'curated:icn-t2' } },
+    ])
+      assert.equal((await post({ ...valid, ...patch })).status, 400)
+  }))
+
+test('stores canonical addresses and coordinates, ignoring client coordinate tampering', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'chauffeur-route-'))
+  const databasePath = join(dir, 'bookings.sqlite')
+  try {
+    await withServer(async ({ post }) => {
+      assert.equal(
+        (
+          await post({
+            ...valid,
+            pickup: 'fake address',
+            pickupPlace: { id: 'curated:icn-t2', latitude: 0, longitude: 0 },
+          })
+        ).status,
+        201,
+      )
+    }, databasePath)
+    const { DatabaseSync } = await import('node:sqlite')
+    const db = new DatabaseSync(databasePath)
+    const details = JSON.parse(
+      db.prepare('SELECT details FROM reservations').get().details,
+    )
+    assert.equal(details.pickupPlace.id, 'curated:icn-t2')
+    assert.equal(details.pickupPlace.latitude, 37.4686)
+    assert.equal(details.pickupPlace.longitude, 126.4332)
+    assert.match(details.pickup, /446 Je2terminal-daero/)
+    assert.equal(details.destinationPlace.id, 'curated:four-seasons')
+    db.close()
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})

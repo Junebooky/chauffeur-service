@@ -4,10 +4,12 @@ import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import catalog from '../src/catalog.json' with { type: 'json' }
+import { createPlaces } from './places.mjs'
 
 export function createApp({
   databasePath = resolve('.data/reservations.sqlite'),
   now = () => Date.now(),
+  placesOptions = {},
 } = {}) {
   if (databasePath !== ':memory:')
     mkdirSync(dirname(databasePath), { recursive: true })
@@ -29,6 +31,8 @@ export function createApp({
     res.set('Cache-Control', 'no-store')
     next()
   })
+  const places = createPlaces({ now, ...placesOptions })
+  app.use('/api/places', places.router)
 
   function schedule(input) {
     const service = catalog.services.find((s) => s.id === input.service)
@@ -92,11 +96,9 @@ export function createApp({
     try {
       const key = req.get('Idempotency-Key')
       if (!key || !/^[a-zA-Z0-9-]{16,80}$/.test(key))
-        return res
-          .status(400)
-          .json({
-            error: 'A valid request identifier is required. Please retry.',
-          })
+        return res.status(400).json({
+          error: 'A valid request identifier is required. Please retry.',
+        })
       const previous = db
         .prepare('SELECT * FROM reservations WHERE idempotency_key = ?')
         .get(key)
@@ -104,11 +106,9 @@ export function createApp({
       const ip = req.ip || 'local'
       const recent = (limits.get(ip) || []).filter((t) => now() - t < 600000)
       if (recent.length >= 8)
-        return res
-          .status(429)
-          .json({
-            error: 'Too many requests. Please try again in a few minutes.',
-          })
+        return res.status(429).json({
+          error: 'Too many requests. Please try again in a few minutes.',
+        })
       limits.set(ip, [...recent, now()])
       if (limits.size > 10000)
         for (const [address, hits] of limits)
@@ -119,6 +119,12 @@ export function createApp({
       const { service, startsAt, endsAt } = schedule(b)
       const vehicle = catalog.vehicles.find((v) => v.id === b.vehicle)
       if (!vehicle) throw new Error('Please select a vehicle.')
+      const pickupPlace = places.selected(b.pickupPlace)
+      const destinationPlace = places.selected(b.destinationPlace)
+      if (pickupPlace.id === destinationPlace.id)
+        throw new Error(
+          'Please choose a destination different from your pickup location.',
+        )
       for (const [field, label, max] of [
         ['name', 'name', 100],
         ['email', 'email address', 180],
@@ -172,6 +178,10 @@ export function createApp({
         ].map((k) => [k, b[k].trim()]),
       )
       details.options = b.options
+      details.pickup = pickupPlace.address
+      details.destination = destinationPlace.address
+      details.pickupPlace = pickupPlace
+      details.destinationPlace = destinationPlace
       details.flight = (b.flight || '').trim()
       details.consent = true
       const reference = `CH-${randomUUID().slice(0, 8).toUpperCase()}`
@@ -179,12 +189,10 @@ export function createApp({
       try {
         if (occupied.get(vehicle.id, endsAt, startsAt)) {
           db.exec('ROLLBACK')
-          return res
-            .status(409)
-            .json({
-              error:
-                'This vehicle is already requested for that time. Please choose another vehicle or time.',
-            })
+          return res.status(409).json({
+            error:
+              'This vehicle is already requested for that time. Please choose another vehicle or time.',
+          })
         }
         db.prepare(
           'INSERT INTO reservations (id, idempotency_key, vehicle_id, starts_at, ends_at, total, details, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -232,5 +240,11 @@ export function createApp({
       .status(500)
       .json({ error: 'We could not save your request. Please try again.' })
   })
-  return { app, close: () => db.close() }
+  return {
+    app,
+    close: () => {
+      db.close()
+      void places.close()
+    },
+  }
 }
