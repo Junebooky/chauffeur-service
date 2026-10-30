@@ -51,32 +51,31 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 page.on('console', lambda message: errors.append(message.text) if message.type == 'error' else None)
                 page.goto(BASE, wait_until='networkidle')
                 expect(page.get_by_role('heading', name='The art of arriving.')).to_be_visible()
-                before = page.locator('canvas').evaluate('(c) => c.toDataURL()')
-                page.mouse.move(700, 650)
-                page.mouse.wheel(0, 550)
-                page.wait_for_timeout(200)
-                assert page.evaluate('document.querySelector("main").scrollTop') > 200
-                after = page.locator('canvas').evaluate('(c) => c.toDataURL()')
-                assert before != after, 'Hero must draw a different frame as scrolling advances'
-                page.mouse.wheel(0, -300)
-                page.wait_for_timeout(200)
-                assert after != page.locator('canvas').evaluate('(c) => c.toDataURL()'), 'Hero must scrub backwards'
-                passed('Hero scrubs forward and backward with actual wheel events')
-                page.evaluate('const r=document.querySelector("main");r.scrollTop=document.getElementById("welcome").offsetHeight-r.clientHeight')
+                video = page.locator('#welcome video')
+                expect(video).to_be_visible()
+                assert video.evaluate('(v) => v.muted && v.playsInline && !v.loop')
+                page.wait_for_function('document.querySelector("#welcome video").ended')
+                assert video.evaluate('(v) => v.currentTime > 1.5 && v.duration < 3')
+                ended_at = video.evaluate('(v) => v.currentTime')
                 page.wait_for_timeout(250)
+                assert video.evaluate('(v) => v.currentTime') == ended_at
+                assert page.locator('.discover-button').count() == 0
+                assert page.locator('#welcome').evaluate('(e) => e.offsetHeight === innerHeight')
+                passed('Welcome video autoplays once, holds its last frame, and has no down-arrow button or extra scroll track')
+                page.mouse.move(700, 650)
                 page.mouse.wheel(0, 100)
                 page.wait_for_timeout(1000)
                 assert aligned(page, 'collection')
-                page.mouse.wheel(0, 100)
-                for _ in range(12):
-                    page.wait_for_timeout(35)
-                    page.mouse.wheel(0, 55)
-                page.wait_for_timeout(900)
-                assert aligned(page, 'services'), 'Trackpad momentum must not skip multiple panels'
+                # Small continuous trackpad deltas previously got cancelled forever.
+                for _ in range(30):
+                    page.mouse.wheel(0, 3)
+                    page.wait_for_timeout(15)
+                page.wait_for_timeout(1000)
+                assert aligned(page, 'services'), 'Small continuous wheel deltas must advance the next chapter'
                 page.mouse.wheel(0, 100)
                 page.wait_for_timeout(1000)
                 assert aligned(page, 'reservation')
-                passed('One wheel gesture advances one full-screen chapter; inertia cannot skip chapters')
+                passed('Wheel navigation works from the finished video through all chapters, including small continuous trackpad deltas')
                 page.locator('main').focus()
                 page.keyboard.press('ArrowUp')
                 page.wait_for_timeout(1000)
@@ -87,6 +86,21 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 assert aligned(page, 'reservation')
                 expect(page.locator('select[name="service"]')).to_have_value('airport')
                 passed('Pricing selection carries through to reservation')
+                colours = page.evaluate("""() => {
+                    const style = (selector) => {
+                        const s = getComputedStyle(document.querySelector(selector));
+                        return { background: s.backgroundColor, image: s.backgroundImage };
+                    };
+                    return { page: style('#reservation'), panel: style('.booking-panel'), card: style('.service-card'), featured: style('.service-card.featured'), gold: getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() };
+                }""")
+                assert colours['page']['background'] == 'rgb(8, 9, 11)'
+                assert colours['panel']['background'] == 'rgb(17, 19, 22)'
+                assert colours['card']['background'] == 'rgb(17, 19, 22)'
+                assert colours['featured']['background'] == 'rgb(21, 23, 27)'
+                assert all(colours[key]['image'] == 'none' for key in ['page', 'panel', 'card', 'featured'])
+                assert colours['gold'] == '#c7ae7b'
+                passed('Page and card backgrounds are dark neutral charcoal; gold accents remain unchanged')
+
                 page.get_by_label('Pick-up location', exact=False).fill('Incheon Airport Terminal 2')
                 page.get_by_label('Destination', exact=True).fill('Four Seasons Hotel Seoul')
                 page.get_by_label('Pickup time', exact=True).select_option('09:30')
@@ -147,6 +161,12 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 mobile.get_by_role('button', name='Open navigation').click()
                 mobile.locator('#mobile-nav').get_by_role('button', name='Your journey').click()
                 mobile.wait_for_timeout(950)
+                mobile.mouse.move(180, 450)
+                mobile.mouse.wheel(0, 220)
+                mobile.wait_for_timeout(300)
+                assert mobile.locator('.booking-panel').evaluate('(e) => e.scrollTop > 0')
+                assert aligned(mobile, 'reservation')
+                passed('Wheel input scrolls the long mobile booking form internally')
                 mobile.get_by_label('Pick-up location', exact=False).fill('Seoul Station')
                 mobile.get_by_label('Destination', exact=True).fill('Grand Hyatt Seoul')
                 mobile.get_by_label('Pickup time', exact=True).select_option('15:30')
@@ -178,11 +198,34 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 reduce = browser.new_page(viewport={'width': 1440, 'height': 900}, reduced_motion='reduce')
                 reduce.goto(BASE, wait_until='networkidle')
                 assert reduce.locator('#welcome').evaluate('(e) => e.offsetHeight === innerHeight')
+                assert reduce.locator('#welcome video').count() == 0
+                expect(reduce.locator('#welcome .hero-visual img')).to_be_visible()
                 reduce.mouse.move(700, 600)
                 reduce.mouse.wheel(0, 100)
                 reduce.wait_for_timeout(200)
                 assert aligned(reduce, 'collection')
-                passed('Reduced-motion preference uses a static hero and immediate navigation')
+                passed('Reduced-motion preference uses a static hero and working native scrolling')
+                blocked = browser.new_page(viewport={'width': 1440, 'height': 900})
+                blocked.on('pageerror', lambda error: errors.append(str(error)))
+                blocked.add_init_script("""window.originalMediaPlay = HTMLMediaElement.prototype.play;
+                    HTMLMediaElement.prototype.play = function() { return Promise.reject(new DOMException('Autoplay declined', 'NotAllowedError')); };""")
+                blocked.goto(BASE, wait_until='networkidle')
+                expect(blocked.get_by_role('button', name='Play welcome film')).to_be_visible()
+                blocked.mouse.move(700, 600)
+                blocked.mouse.wheel(0, 100)
+                blocked.wait_for_timeout(1000)
+                assert aligned(blocked, 'collection')
+                passed('Autoplay refusal offers a play button and never locks scrolling')
+                unavailable = browser.new_page(viewport={'width': 1440, 'height': 900})
+                unavailable.on('pageerror', lambda error: errors.append(str(error)))
+                unavailable.route('**/media/welcome.mp4', lambda route: route.fulfill(status=404, body=''))
+                unavailable.goto(BASE, wait_until='networkidle')
+                expect(unavailable.locator('#welcome .hero-visual img')).to_be_visible()
+                unavailable.mouse.move(700, 600)
+                unavailable.mouse.wheel(0, 100)
+                unavailable.wait_for_timeout(1000)
+                assert aligned(unavailable, 'collection')
+                passed('A failed video request falls back to the still image without locking scrolling')
                 assert not errors, errors
                 passed('No browser runtime errors')
                 browser.close()

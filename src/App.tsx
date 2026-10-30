@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
-  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   Check,
@@ -93,8 +92,7 @@ function Modal({
 }
 
 export default function App() {
-  const { scrollRef, active, heroProgress, reducedMotion, goTo } =
-    useJourneyScroll()
+  const { scrollRef, active, reducedMotion, goTo } = useJourneyScroll()
   const [mobileMenu, setMobileMenu] = useState(false)
   const [modal, setModal] = useState<'contact' | 'privacy' | null>(null)
   const [service, setService] = useState('hourly')
@@ -204,11 +202,7 @@ export default function App() {
         tabIndex={-1}
         aria-label="Chauffeur experience"
       >
-        <Hero
-          progress={heroProgress}
-          reducedMotion={reducedMotion}
-          goTo={nav}
-        />
+        <Hero reducedMotion={reducedMotion} goTo={nav} />
         <section
           id="collection"
           className="screen collection-screen"
@@ -325,7 +319,7 @@ export default function App() {
             </button>
           </div>
           <button className="section-next" onClick={() => nav(2)}>
-            EXPLORE OUR SERVICES <ArrowDown size={13} />
+            EXPLORE OUR SERVICES
           </button>
         </section>
         <section

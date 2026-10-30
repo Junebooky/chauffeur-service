@@ -1,6 +1,6 @@
 # CHAUFFEUR — The art of arriving.
 
-A complete English-language chauffeur website inspired by the supplied video: charcoal and champagne-gold art direction, a scroll-controlled door-opening sequence, full-viewport chapters, and a working reservation request service.
+A complete English-language chauffeur website inspired by the supplied video: deep black and charcoal surfaces with champagne-gold accents, an autoplaying door-opening film, full-viewport chapters, and a working reservation request service.
 
 ## Run
 
@@ -24,14 +24,14 @@ The production server serves both the site and API on port **3001**. Optional en
 
 ## Experience
 
-- **Welcome:** 38 locally hosted WebP frames, extracted from the actual supplied door-opening sequence. Native wheel scrolling scrubs forward and backward through a sticky hero. The original browser chrome and embedded page copy are excluded from the artwork.
+- **Welcome:** a locally hosted 2.1-second MP4, encoded from the supplied door-opening sequence. It plays once, muted and inline, then holds the open-door scene. The hero occupies one viewport and never locks scrolling for loading or playback. If autoplay is blocked, a play button is available; reduced motion or a media error uses the still image. The original browser chrome and embedded page copy are excluded from the artwork.
 - **The collection:** exterior, cabin, and cockpit views extracted from the supplied reference; vehicle details and amenities.
 - **Our services:** airport transfer, four-hour service, and full-day service. Choosing a service carries it into the reservation form.
 - **Your journey:** date calendar, pickup time and route, two vehicle classes, optional extras, contact details, and a live quote.
 
-After the hero, one wheel gesture moves one full-screen chapter. A gesture gate prevents trackpad momentum from skipping chapters. Touch swipes and keyboard navigation are supported. Forms and compact layouts can scroll internally. At short desktop heights, chapter content can scroll within its viewport to remain reachable.
+Every chapter, including the hero, occupies one viewport. The first vertical wheel delta advances to the adjacent chapter, including small continuous trackpad deltas. Subsequent momentum from that gesture is grouped until input stops for 180ms; there is no minimum delta, input-gap requirement, video lock, or animation lock. CSS scroll snap aligns native touch and scrollbar scrolling. Keyboard navigation is supported. Forms and compact layouts scroll natively, and scrolling can chain out of a panel at its boundary. At short desktop heights, chapter content can scroll within its viewport to remain reachable.
 
-The mobile navigation, section rail, and direct CTAs provide alternatives to scrolling. Reduced-motion preferences replace the animated hero with a still image and use immediate chapter navigation. Native dialogs provide focus trapping and Escape handling. Fonts and media are self-hosted.
+The mobile navigation, section rail, and direct CTAs provide alternatives to scrolling. Reduced-motion preferences replace the film with a still image and use immediate chapter navigation. Native dialogs provide focus trapping and Escape handling. Fonts and media are self-hosted.
 
 ## What reservations do
 
@@ -70,7 +70,7 @@ Production browser checks use Python Playwright and Chromium:
 python3 scripts/browser-test.py
 ```
 
-The script uses a temporary database, starts/stops its own production server on port 4183, and checks actual wheel events, reverse scrubbing, one-chapter scrolling, keyboard navigation, complete desktop and mobile submissions, calendar download, reduced motion, dialogs, and layout at 1440, 1366, 1024, 768, 390, and 360px widths. It uses system Chromium when available; otherwise install the Playwright browser with `python3 -m playwright install chromium`. Override `CHROMIUM_PATH` if needed. Screenshots are written to ignored `test-results/`.
+The script uses a temporary database, starts/stops its own production server on port 4183, and checks real video playback through its end, wheel navigation across all chapters, small continuous trackpad deltas, dark surface colours, keyboard navigation, complete desktop and mobile submissions, calendar download, reduced motion, dialogs, and layout at 1440, 1366, 1024, 768, 390, and 360px widths. It uses system Chromium when available; otherwise install the Playwright browser with `python3 -m playwright install chromium`. Override `CHROMIUM_PATH` if needed. Screenshots are written to ignored `test-results/`.
 
 `scripts/visual-check.py` is an optional screenshot helper for an already running development server.
 
@@ -78,8 +78,8 @@ The script uses a temporary database, starts/stops its own production server on 
 
 ```text
 src/App.tsx                 Navigation, collection, services, dialogs
-src/Hero.tsx                Bounded frame preloading and canvas rendering
-src/useJourneyScroll.ts     Wheel, gesture, keyboard and touch navigation
+src/Hero.tsx                One-shot welcome film and playback fallbacks
+src/useJourneyScroll.ts     Reliable wheel/keyboard navigation and passive section tracking
 src/Booking.tsx             Calendar and three-step request flow
 src/catalog.json            Shared service, vehicle and option prices
 src/styles.css              Responsive visual design

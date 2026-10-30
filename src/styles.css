@@ -22,10 +22,10 @@
 :root {
   font-family: Manrope, Arial, sans-serif;
   color: #eceae4;
-  background: #101211;
+  background: #08090b;
   font-synthesis: none;
-  --bg: #101211;
-  --panel: #191b19;
+  --bg: #08090b;
+  --panel: #111316;
   --gold: #c7ae7b;
   --gold-light: #e0c99e;
   --muted: #979a92;
@@ -140,12 +140,11 @@ em {
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
-  scrollbar-width: none;
-  overscroll-behavior-y: none;
+  scrollbar-width: thin;
+  scrollbar-color: #45474b var(--bg);
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
   outline: none;
-}
-.journey-scroll::-webkit-scrollbar {
-  display: none;
 }
 .site-header {
   position: fixed;
@@ -161,7 +160,7 @@ em {
   gap: 30px;
 }
 .header-solid {
-  background: rgba(16, 18, 17, 0.96);
+  background: rgba(8, 9, 11, 0.97);
   backdrop-filter: blur(20px);
 }
 .brand {
@@ -335,19 +334,18 @@ em {
 .icon-button:hover {
   background: #c7ae7b14;
 }
-/* The hero's track is intentionally free-scrolling. Only the stage is sticky. */
+/* Native scrolling stays enabled throughout; chapters settle at viewport boundaries. */
 .hero-track {
-  height: 250svh;
+  height: 100dvh;
   position: relative;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 .hero-stage {
-  height: 100svh;
-  position: sticky;
-  top: 0;
+  height: 100dvh;
+  position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 69% 65%, #24282088, transparent 55%),
-    linear-gradient(125deg, #101312, #0f1110 70%);
+  background: var(--bg);
 }
 .hero-stage:after,
 .screen:after {
@@ -355,8 +353,7 @@ em {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.6' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+  opacity: 0;
   z-index: 5;
 }
 .hero-orbit {
@@ -436,7 +433,7 @@ em {
 .hero-visual.is-loaded {
   opacity: 1;
 }
-.hero-visual canvas,
+.hero-visual video,
 .hero-visual img {
   width: 100%;
   height: auto;
@@ -501,7 +498,13 @@ em {
   letter-spacing: 2px;
   color: #8b8e82;
   margin-left: auto;
-  margin-right: 55px;
+  margin-right: 0;
+}
+.welcome-play {
+  font-size: 10px;
+  gap: 8px;
+  margin-left: 14px;
+  flex-shrink: 0;
 }
 .hero-frame-indicator i {
   width: 95px;
@@ -591,14 +594,16 @@ em {
 }
 /* Each chapter occupies one viewport. Content can scroll within short/mobile panels. */
 .screen {
-  height: 100svh;
+  height: 100dvh;
   min-height: 600px;
   padding: calc(var(--header) + 25px) var(--gutter) 26px;
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #111411;
+  background: var(--bg);
   isolation: isolate;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 .screen > * {
   position: relative;
@@ -640,8 +645,7 @@ em {
   color: #c4b693;
 }
 .collection-screen {
-  background:
-    radial-gradient(ellipse at 20% 72%, #282a214f, transparent 63%), #121511;
+  background: var(--bg);
 }
 .collection-intro {
   width: 32%;
@@ -660,7 +664,7 @@ em {
 }
 .collection-feature {
   overflow: hidden;
-  background: #171b17;
+  background: var(--panel);
   border: 1px solid var(--line);
   position: relative;
   min-height: 0;
@@ -671,10 +675,10 @@ em {
   inset: 0;
   background: linear-gradient(
     0deg,
-    #11150ee6,
+    #08090be6,
     transparent 25%,
     transparent 75%,
-    #171a13aa
+    #111316aa
   );
   pointer-events: none;
 }
@@ -819,8 +823,7 @@ em {
   color: var(--gold);
 }
 .services-screen {
-  background:
-    radial-gradient(ellipse at 50% 80%, #3f3a232b, transparent 68%), #111310;
+  background: var(--bg);
 }
 .services-heading {
   margin-bottom: 38px;
@@ -838,7 +841,7 @@ em {
 }
 .service-card {
   border: 1px solid #c7ae7b29;
-  background: linear-gradient(130deg, #24271f69, #161a1466);
+  background: var(--panel);
   padding: 25px 29px 24px;
   position: relative;
   display: flex;
@@ -850,9 +853,7 @@ em {
 }
 .service-card.featured {
   border-color: #a28c58;
-  background:
-    radial-gradient(ellipse at 40% -10%, #c5ab7130, transparent 60%),
-    linear-gradient(135deg, #24261d, #191d16);
+  background: #15171b;
 }
 .popular-label {
   position: absolute;
@@ -984,8 +985,7 @@ em {
 }
 /* Reservation */
 .booking-screen {
-  background:
-    radial-gradient(ellipse at 0% 100%, #2b312339, transparent 65%), #101410;
+  background: var(--bg);
 }
 .booking-heading {
   margin-bottom: 26px;
@@ -1004,7 +1004,7 @@ em {
   display: grid;
   grid-template-columns: minmax(0, 1.95fr) minmax(285px, 1fr);
   border: 1px solid #c7ae7b30;
-  background: linear-gradient(120deg, #22281c6e, #151b1266);
+  background: var(--panel);
   flex: 1;
   min-height: 0;
 }
@@ -1162,7 +1162,7 @@ em {
 .field select {
   width: 100%;
   height: 39px;
-  background: #0c130a40;
+  background: #0b0d10;
   color: #d9dfd0;
   border: 1px solid #7d866643;
   padding: 0 12px;
@@ -1228,6 +1228,7 @@ em {
   gap: 8px;
 }
 .journey-summary {
+  background: #0e1013;
   padding: 23px 27px 18px;
   display: flex;
   flex-direction: column;
@@ -1391,6 +1392,7 @@ em {
   gap: 10px;
 }
 .vehicle-option {
+  background: #101215;
   border: 1px solid #687a4d4f;
   text-align: left;
   padding: 13px 14px;
@@ -1400,7 +1402,7 @@ em {
 }
 .vehicle-option.selected {
   border-color: #c7ae7b94;
-  background: #c7ae7b08;
+  background: #181a1e;
 }
 .vehicle-option-top {
   display: flex;
@@ -1584,7 +1586,7 @@ em {
   justify-content: center;
   padding: 25px;
   border: 1px solid var(--line);
-  background: radial-gradient(ellipse at 50% 0%, #c7ae7b13, transparent 65%);
+  background: var(--panel);
 }
 .success-symbol {
   color: var(--gold);
@@ -1636,7 +1638,7 @@ em {
 /* Native dialogs retain focus trapping, Escape handling and focus restoration. */
 .info-dialog {
   border: 1px solid #a9966b66;
-  background: #1a2017;
+  background: #14161a;
   color: #cbd3be;
   max-width: 550px;
   width: calc(100% - 40px);
@@ -1645,7 +1647,7 @@ em {
   box-shadow: 0 30px 150px #000a;
 }
 .info-dialog::backdrop {
-  background: #080c07c9;
+  background: #040507d9;
   backdrop-filter: blur(8px);
 }
 .dialog-content {
@@ -1703,7 +1705,7 @@ em {
   margin-top: 24px;
 }
 .reduced-hero {
-  height: 100svh;
+  height: 100dvh;
 }
 @keyframes scrollHint {
   0%,
@@ -2168,7 +2170,7 @@ em {
     top: var(--header);
     inset-inline: 0;
     z-index: 29;
-    background: #161c12f7;
+    background: #0c0e11f7;
     backdrop-filter: blur(30px);
     flex-direction: column;
     padding: 20px var(--gutter) 30px;
@@ -2485,7 +2487,7 @@ em {
     height: 17px;
   }
   .hero-track {
-    height: 230svh;
+    height: 100dvh;
   }
   .hero-heading {
     top: calc(var(--header) + 6vh);
@@ -2595,7 +2597,7 @@ em {
     left: -10%;
   }
   .screen {
-    height: 100svh;
+    height: 100dvh;
     min-height: 0;
     padding: calc(var(--header) + 22px) var(--gutter) 24px;
     overflow: hidden;
@@ -2861,7 +2863,7 @@ em {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: #1b2216;
+    background: var(--panel);
   }
   .booking-steps > button {
     font-size: 0;
@@ -3128,7 +3130,7 @@ em {
     max-height: 80dvh;
   }
   .reduced-hero {
-    height: 100svh;
+    height: 100dvh;
   }
 }
 @media (max-width: 650px) and (max-height: 740px) {
@@ -3204,7 +3206,7 @@ em {
     --header: 60px;
   }
   .screen {
-    height: 100svh;
+    height: 100dvh;
     min-height: 0;
     overflow-y: auto;
     padding-top: 80px;
