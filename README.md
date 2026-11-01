@@ -2,6 +2,12 @@
 
 A complete English-language chauffeur website inspired by the supplied video: deep black and charcoal surfaces with champagne-gold accents, an autoplaying door-opening film, full-viewport chapters, and a working reservation request service.
 
+## Project status and release readiness
+
+The repository currently implements airport transfer, four-hour hourly service and full-day service with **illustrative** rates. The planned standalone long-distance quote engine, operator approvals/driver assignment, scroll-controlled hero, expense evidence and customer settlement reports are **not yet implemented**.
+
+See [STATUS_BOARD.md](STATUS_BOARD.md) for the shared milestone pipeline and [the 2026-11-01 repository audit](docs/REPO_AUDIT_2026-11-01.md) for verified scope versus planned features. The site's booking confirmation is a **pending request only**; do not treat a request as dispatched, paid or confirmed.
+
 ## Run
 
 Use Node.js 24 (the tested version is in `.node-version`). Node 22.13+ is required for the built-in SQLite API.
@@ -20,11 +26,11 @@ npm run build
 npm start
 ```
 
-The production server serves both the site and API on port **3001**. Optional environment settings are listed in `.env.example`; copy it to `.env` to override defaults. `DATABASE_PATH` selects the SQLite file. Keep this file on persistent storage when deploying. Changing the API port during development also requires updating the Vite proxy target.
+The production server serves both the site and API on port **3001**. Optional environment settings are listed in `.env.example`; copy it to `.env` or `.env.local` to override defaults. `DATABASE_PATH` selects the SQLite file. Keep this file on persistent storage when deploying. Changing the API port during development also requires updating the Vite proxy target.
 
 ## Experience
 
-- **Welcome:** a locally hosted 2.1-second MP4, encoded from the supplied door-opening sequence. It plays once, muted and inline, then holds the open-door scene. The hero occupies one viewport and never locks scrolling for loading or playback. If autoplay is blocked, a play button is available; reduced motion or a media error uses the still image. The original browser chrome and embedded page copy are excluded from the artwork.
+- **Welcome:** a locally hosted 2.1-second MP4, encoded from the supplied door-opening sequence. It plays once, muted and inline, then holds the open-door scene. The hero occupies one viewport and never locks scrolling for loading or playback. **The film is currently autoplayed, not frame-scrubbed by scroll position.** If autoplay is blocked, a play button is available; reduced motion or a media error uses the still image. The original browser chrome and embedded page copy are excluded from the artwork.
 - **The collection:** exterior, cabin, and cockpit views extracted from the supplied reference; vehicle details and amenities.
 - **Our services:** airport transfer, four-hour service, and full-day service. Choosing a service carries it into the reservation form.
 - **Your journey:** date calendar, pickup time and route, a convex-style interactive vehicle carousel, multilingual address selection, optional extras, contact details, and a live quote.
@@ -113,4 +119,4 @@ The frontend sends search/resolve requests to this server, which calls Google th
 
 `POST /api/places/search` takes `{ query, sessionToken }`; `POST /api/places/resolve` takes `{ id, sessionToken }`. Reservation requests now require `pickupPlace` and `destinationPlace`: either a known curated ID or a server-resolved Google ID plus its `selectionToken`. The server supplies the authoritative coordinates. Google attribution is displayed with live results; its official image is served from `maps.gstatic.com`. Google Maps terms/privacy links are available in the site's privacy notice. Follow the provider's current attribution, content-retention, and licensing terms when connecting live operations; place IDs can be retained for later re-resolution.
 
-Vehicle selection artwork in `public/media/fleet/collection.png` is generated representative artwork. The carousel shows the existing two bookable vehicle classes; repeated side previews are a looping visual treatment, not additional inventory. Arrow controls, direct selection, pagination, horizontal touch swipes, and left/right keyboard keys all update the selected vehicle and quote. Focused form inputs use only their existing border, retaining a visible keyboard focus indication without an extra outer outline.
+Vehicle selection artwork in `public/media/fleet/` is generated representative artwork (one PNG per listed vehicle). The carousel shows the four representative vehicle classes listed in `src/catalog.json`; repeated side previews are a looping visual treatment, not additional physical vehicles or confirmed stock. Arrow controls, direct selection, pagination, horizontal touch swipes, and left/right keyboard keys all update the selected vehicle and quote. Focused form inputs use only their existing border, retaining a visible keyboard focus indication without an extra outer outline.
