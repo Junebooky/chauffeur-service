@@ -12,6 +12,8 @@ import subprocess
 import tempfile
 import time
 import urllib.request
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,8 +107,8 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 assert colours['card']['background'] == 'rgb(17, 19, 22)'
                 assert colours['featured']['background'] == 'rgb(21, 23, 27)'
                 assert all(colours[key]['image'] == 'none' for key in ['page', 'panel', 'card', 'featured'])
-                assert colours['gold'] == '#c7ae7b'
-                passed('Page and card backgrounds are dark neutral charcoal; gold accents remain unchanged')
+                assert colours['gold'] == '#c5a059'
+                passed('Dark neutral surfaces use the updated metallic gold accents')
 
                 pickup_input = page.get_by_role('combobox', name='Pick-up location', exact=True)
                 pickup_input.fill('Unconfirmed text')
@@ -118,7 +120,7 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 pickup_input.focus()
                 page.wait_for_timeout(250)
                 focus_style = pickup_input.evaluate('(e) => { const s = getComputedStyle(e); return [s.outlineStyle, s.boxShadow, s.borderColor] }')
-                assert focus_style == ['none', 'none', 'rgb(199, 174, 123)'], focus_style
+                assert focus_style == ['none', 'none', 'rgb(197, 160, 89)'], focus_style
                 passed('Multilingual address suggestions resolve to real locations and inputs use a single focus border')
                 page.get_by_label('Pickup time', exact=True).select_option('09:30')
                 destination_input = page.get_by_role('combobox', name='Destination', exact=True)
@@ -230,6 +232,84 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 assert response.value.status == 201, response.value.text()
                 expect(mobile.locator('.success-reference')).to_be_visible()
                 passed('Complete mobile reservation via the responsive menu and internally scrolling form')
+                for width, height in [(1440, 900), (390, 844)]:
+                    daily = browser.new_page(viewport={'width': width, 'height': height}, is_mobile=width < 650, has_touch=width < 650)
+                    daily.on('pageerror', lambda error: errors.append(str(error)))
+                    daily.on('console', lambda message: errors.append(message.text) if message.type == 'error' else None)
+                    daily.goto(BASE, wait_until='networkidle')
+                    nav(daily, 'Our services')
+                    assert daily.locator('.service-tax-notice').count() == 3
+                    expect(daily.locator('.services-footnote')).to_contain_text('TAX excluded')
+                    nav(daily, 'Your journey')
+                    start_date = datetime.now(ZoneInfo('Asia/Seoul')).date() + timedelta(days=1)
+                    last_date = start_date + timedelta(days=2)
+                    daily.get_by_label('Travel over multiple days').check()
+                    daily.get_by_label('Last day', exact=True).fill(last_date.isoformat())
+                    # Use distinct times so both viewport checks can persist their actual requests.
+                    daily.get_by_label('Pickup time', exact=True).select_option('18:00' if width > 650 else '09:00')
+                    choose_place(daily, 'Pick-up location', 'Seoul Station', 'Seoul Station')
+                    choose_place(daily, 'Destination', 'COEX', 'COEX')
+                    daily.get_by_role('button', name='Continue your journey', exact=True).click()
+                    daily.get_by_label('Choose a vehicle by date', exact=True).check()
+                    expect(daily.locator('.daily-vehicle-day')).to_have_count(3)
+                    daily.get_by_role('button', name='Select Sprinter 319', exact=True).click()
+                    expect(daily.locator('.fleet-selected-meta')).to_contain_text('6 guests')
+                    expect(daily.locator('.summary-total strong')).to_have_text('Quote on request')
+                    daily.locator('.daily-vehicle-day').nth(1).click()
+                    daily.get_by_role('button', name='Select First Class Sedan', exact=True).click()
+                    daily.locator('.daily-vehicle-day').nth(2).click()
+                    daily.get_by_role('button', name='Select Sprinter 519', exact=True).click()
+                    expect(daily.locator('.fleet-selected-meta')).to_contain_text('9 guests')
+                    daily.get_by_label('Same vehicle every day', exact=True).check()
+                    expect(daily.locator('.summary-total strong')).to_have_text('₩780,000')
+                    daily.get_by_label('Choose a vehicle by date', exact=True).check()
+                    expect(daily.locator('.daily-vehicle-day').nth(0)).to_contain_text('Sprinter 319')
+                    expect(daily.locator('.daily-vehicle-day').nth(1)).to_contain_text('First Class Sedan')
+                    expect(daily.locator('.daily-vehicle-day').nth(2)).to_contain_text('Sprinter 519')
+                    expect(daily.locator('.summary-total')).to_contain_text('TAX excluded')
+                    daily.locator('.booking-fields').evaluate('(e) => e.scrollTop = 0')
+                    daily.screenshot(path=str(OUT / f'{width}-daily-vehicles.png'))
+                    daily.get_by_role('button', name='Continue your journey', exact=True).click()
+                    daily.get_by_label('Full name').fill('Multi Day Traveller')
+                    daily.get_by_label('Email address').fill('multi@example.com')
+                    daily.get_by_label('Phone number', exact=True).fill('+82 10 9876 5432')
+                    if width > 650:
+                        daily.get_by_role('radio', name='LINE', exact=True).check()
+                        daily.locator('input[name="consent"]').check()
+                        daily.get_by_role('button', name='Request your journey', exact=True).click()
+                        expect(daily.get_by_label('LINE ID', exact=True)).to_be_focused()
+                        daily.get_by_label('LINE ID', exact=True).fill('traveller-line')
+                    else:
+                        daily.get_by_role('radio', name='WhatsApp', exact=True).check()
+                        expect(daily.get_by_label('WhatsApp number', exact=False)).to_be_empty()
+                        daily.locator('input[name="consent"]').check()
+                    daily.screenshot(path=str(OUT / f'{width}-messenger-contact.png'))
+                    with daily.expect_response(lambda r: '/api/reservations' in r.url and r.request.method == 'POST') as response:
+                        daily.get_by_role('button', name='Request your journey', exact=True).click()
+                    assert response.value.status == 201, response.value.text()
+                    result = response.value.json()
+                    assert result['total'] is None
+                    assert result['taxIncluded'] is False
+                    assert [day['vehicle'] for day in result['journeys']] == ['Sprinter 319', 'First Class Sedan', 'Sprinter 519']
+                    expect(daily.locator('.success-details')).to_contain_text('TAX excluded')
+                    expect(daily.locator('.success-details')).to_contain_text('Sprinter 519')
+                    with daily.expect_download() as download:
+                        daily.get_by_role('button', name='Save to calendar', exact=False).click()
+                    calendar = Path(download.value.path()).read_text()
+                    assert calendar.count('BEGIN:VEVENT') == 3
+                    assert calendar.count('STATUS:TENTATIVE') == 3
+                    assert 'Sprinter 319' in calendar and 'Sprinter 519' in calendar
+                    # Check persisted data, not just the request or response.
+                    import sqlite3
+                    with sqlite3.connect(Path(tmp) / 'requests.sqlite') as db:
+                        row = db.execute('SELECT details FROM reservations WHERE id = ?', (result['reference'],)).fetchone()
+                        details = json.loads(row[0])
+                        assert details['contactMethod'] == ('line' if width > 650 else 'whatsapp')
+                        assert details['messengerContact'] == ('traveller-line' if width > 650 else '+82 10 9876 5432')
+                        assert db.execute('SELECT COUNT(*) FROM reservation_legs WHERE reservation_id = ?', (result['reference'],)).fetchone()[0] == 3
+                    assert not daily.evaluate('document.documentElement.scrollWidth > innerWidth')
+                    passed(f'{width}px: daily vehicles, independent selections, tax disclosure, messenger validation, SQLite persistence and three calendar events')
+                    daily.close()
                 mobile.get_by_role('button', name='Privacy & reservations', exact=False).click()
                 expect(mobile.get_by_role('dialog')).to_be_visible()
                 mobile.keyboard.press('Escape')

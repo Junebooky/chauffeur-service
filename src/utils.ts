@@ -28,3 +28,18 @@ export function displayDate(value: string) {
     year: 'numeric',
   })
 }
+export function addDays(value: string, count: number) {
+  const date = new Date(`${value}T12:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + count)
+  return date.toISOString().slice(0, 10)
+}
+export function journeyDates(start: string, end: string) {
+  const dates: string[] = []
+  for (
+    let date = start;
+    date <= end && dates.length < 366;
+    date = addDays(date, 1)
+  )
+    dates.push(date)
+  return dates
+}

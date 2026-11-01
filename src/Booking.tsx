@@ -19,12 +19,27 @@ import catalog from './catalog.json'
 import AddressSearch from './AddressSearch'
 import type { Place } from './AddressSearch'
 import VehicleCarousel from './VehicleCarousel'
-import { displayDate, money, seoulDate, tomorrow } from './utils'
+import {
+  addDays,
+  displayDate,
+  journeyDates,
+  money,
+  seoulDate,
+  tomorrow,
+} from './utils'
 
 type Result = {
   reference: string
   status: string
-  total: number
+  total: number | null
+  quoteRequired: boolean
+  journeys: {
+    date: string
+    time: string
+    vehicle: string
+    service: string
+    total: number | null
+  }[]
   date: string
   time: string
   vehicle: string
@@ -137,6 +152,13 @@ export default function Booking({
 }: Props) {
   const [step, setStep] = useState(0)
   const [date, setDate] = useState(tomorrow)
+  const [multiDay, setMultiDay] = useState(false)
+  const [endDate, setEndDate] = useState(() => addDays(tomorrow(), 1))
+  const [dailyVehicles, setDailyVehicles] = useState(false)
+  const [vehiclesByDate, setVehiclesByDate] = useState<Record<string, string>>(
+    {},
+  )
+  const [editingDate, setEditingDate] = useState('')
   const [time, setTime] = useState('10:00')
   const [pickup, setPickup] = useState('')
   const [destination, setDestination] = useState('')
@@ -147,9 +169,13 @@ export default function Booking({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [contactMethod, setContactMethod] = useState('email')
+  const [messengerContact, setMessengerContact] = useState('')
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
-  const [availability, setAvailability] = useState<Record<string, boolean>>({})
+  const [availability, setAvailability] = useState<
+    Record<string, Record<string, boolean>>
+  >({})
   const [checking, setChecking] = useState(false)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
@@ -159,32 +185,76 @@ export default function Booking({
   const heading = useRef<HTMLHeadingElement>(null)
   const successHeading = useRef<HTMLHeadingElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
-  const currentVehicle = catalog.vehicles.find((v) => v.id === vehicle)!
+  const lastDate = multiDay ? (endDate >= date ? endDate : date) : date
+  const dates = journeyDates(date, lastDate)
+  const customVehicles = multiDay && dailyVehicles
+  const journeys = dates.map((day) => ({
+    date: day,
+    vehicle: customVehicles ? vehiclesByDate[day] || vehicle : vehicle,
+  }))
+  const activeDate =
+    customVehicles && dates.includes(editingDate) ? editingDate : date
+  const activeVehicle = journeys.find((day) => day.date === activeDate)!.vehicle
+  const firstVehicle = catalog.vehicles.find(
+    (v) => v.id === journeys[0].vehicle,
+  )!
+  const extras = catalog.options
+    .filter((o) => options.includes(o.id))
+    .reduce((sum, o) => sum + o.price, 0)
+  const quoteRequired = journeys.some(
+    (day) => catalog.vehicles.find((v) => v.id === day.vehicle)!.quoteRequired,
+  )
+  const vehicleSurcharges = journeys.reduce(
+    (sum, day) =>
+      sum + catalog.vehicles.find((v) => v.id === day.vehicle)!.surcharge,
+    0,
+  )
   const total =
-    currentService.price +
-    currentVehicle.surcharge +
-    catalog.options
-      .filter((o) => options.includes(o.id))
-      .reduce((sum, o) => sum + o.price, 0)
+    (currentService.price + extras) * dates.length + vehicleSurcharges
+  const allAvailable = journeys.every(
+    (day) => availability[day.date]?.[day.vehicle] === true,
+  )
+  const unavailableDay = journeys.find(
+    (day) => availability[day.date]?.[day.vehicle] === false,
+  )
+  const changeVehicle = (value: string) => {
+    if (customVehicles)
+      setVehiclesByDate((previous) => ({ ...previous, [activeDate]: value }))
+    else setVehicle(value)
+  }
+  const changeDate = (value: string) => {
+    setDate(value)
+    if (endDate < value) setEndDate(value)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
     setChecking(true)
     setAvailability({})
     setError('')
-    fetch(`/api/availability?${new URLSearchParams({ date, time, service })}`, {
-      signal: controller.signal,
-    })
+    fetch(
+      `/api/availability?${new URLSearchParams({ date, endDate: lastDate, time, service })}`,
+      {
+        signal: controller.signal,
+      },
+    )
       .then(async (response) => {
         const data = await response.json()
         if (!response.ok)
           throw new Error(data.error || 'Availability could not be checked.')
         setAvailability(
           Object.fromEntries(
-            data.vehicles.map((v: { id: string; available: boolean }) => [
-              v.id,
-              v.available,
-            ]),
+            data.days.map(
+              (day: {
+                date: string
+                vehicles: { id: string; available: boolean }[]
+              }) => [
+                day.date,
+                Object.fromEntries(
+                  day.vehicles.map((v) => [v.id, v.available]),
+                ),
+              ],
+            ),
           ),
         )
       })
@@ -200,13 +270,21 @@ export default function Booking({
         if (!controller.signal.aborted) setChecking(false)
       })
     return () => controller.abort()
-  }, [date, time, service, availabilityVersion])
+  }, [date, lastDate, time, service, availabilityVersion])
   useEffect(() => {
     if (result) successHeading.current?.focus()
   }, [result])
 
   const moveStep = (target: number) => {
     if (target > step && !form.current?.reportValidity()) return
+    if (target > step && step === 1 && !allAvailable) {
+      setError(
+        unavailableDay
+          ? `Please choose another vehicle for ${displayDate(unavailableDay.date)}.`
+          : 'Please wait for availability to be checked for every day, or retry.',
+      )
+      return
+    }
     setError('')
     setStep(target)
     requestAnimationFrame(() => heading.current?.focus())
@@ -239,11 +317,14 @@ export default function Booking({
           destinationPlace,
           flight,
           service,
-          vehicle,
+          vehicle: journeys[0].vehicle,
+          journeys,
           options,
           name,
           email,
           phone,
+          contactMethod,
+          messengerContact,
           consent,
         }),
       })
@@ -273,8 +354,6 @@ export default function Booking({
   }
   const downloadCalendar = () => {
     if (!result) return
-    const start = new Date(`${result.date}T${result.time}:00+09:00`)
-    const end = new Date(start.getTime() + currentService.duration * 3600000)
     const stamp = (d: Date) =>
       d
         .toISOString()
@@ -286,16 +365,24 @@ export default function Booking({
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//Chauffeur//Journey Request//EN',
-      'BEGIN:VEVENT',
-      `UID:${result.reference}@chauffeur.local`,
-      `DTSTAMP:${stamp(new Date())}`,
-      `DTSTART:${stamp(start)}`,
-      `DTEND:${stamp(end)}`,
-      `SUMMARY:${escape(`Chauffeur request ${result.reference} — pending confirmation`)}`,
-      `LOCATION:${escape(pickup)}`,
-      'DESCRIPTION:Reservation request only. This journey has not been confirmed.',
-      'STATUS:TENTATIVE',
-      'END:VEVENT',
+      ...result.journeys.flatMap((day) => {
+        const start = new Date(`${day.date}T${day.time}:00+09:00`)
+        const end = new Date(
+          start.getTime() + currentService.duration * 3600000,
+        )
+        return [
+          'BEGIN:VEVENT',
+          `UID:${result.reference}-${day.date}@chauffeur.local`,
+          `DTSTAMP:${stamp(new Date())}`,
+          `DTSTART:${stamp(start)}`,
+          `DTEND:${stamp(end)}`,
+          `SUMMARY:${escape(`Chauffeur request ${result.reference} — ${day.vehicle} — pending confirmation`)}`,
+          `LOCATION:${escape(pickup)}`,
+          'DESCRIPTION:Reservation request only. This journey has not been confirmed. All prices exclude TAX.',
+          'STATUS:TENTATIVE',
+          'END:VEVENT',
+        ]
+      }),
       'END:VCALENDAR',
     ].join('\r\n')
     const url = URL.createObjectURL(
@@ -344,13 +431,21 @@ export default function Booking({
           </h3>
           <p className="success-reference">{result.reference}</p>
           <div className="success-details">
+            {result.journeys.map((day) => (
+              <span key={day.date}>
+                {displayDate(day.date)} · {day.time} KST · {day.vehicle}
+              </span>
+            ))}
             <span>
-              {displayDate(result.date)} · {result.time} KST
+              {result.service} · {result.journeys.length}{' '}
+              {result.journeys.length === 1 ? 'day' : 'days'}
             </span>
             <span>
-              {result.vehicle} · {result.service}
+              {result.total === null
+                ? 'Quote on request'
+                : `${money(result.total)} estimated total`}{' '}
+              · TAX excluded
             </span>
-            <span>{money(result.total)} estimated total</span>
           </div>
           <p className="pending-notice">
             This is a pending reservation request, not a confirmed booking. No
@@ -369,6 +464,8 @@ export default function Booking({
                 setName('')
                 setEmail('')
                 setPhone('')
+                setContactMethod('email')
+                setMessengerContact('')
                 setConsent(false)
                 idempotency.current = crypto.randomUUID()
                 setAvailabilityVersion((v) => v + 1)
@@ -413,7 +510,47 @@ export default function Booking({
               {step === 0 && (
                 <div className="journey-fields">
                   <div>
-                    <Calendar value={date} onChange={setDate} />
+                    <Calendar value={date} onChange={changeDate} />
+                    <div className="multi-day-control">
+                      <label className="multi-day-toggle">
+                        <input
+                          type="checkbox"
+                          checked={multiDay}
+                          onChange={(event) => {
+                            setMultiDay(event.target.checked)
+                            if (endDate <= date)
+                              setEndDate(
+                                addDays(date, 1) <= addDays(seoulDate(), 365)
+                                  ? addDays(date, 1)
+                                  : date,
+                              )
+                          }}
+                        />
+                        <span>Travel over multiple days</span>
+                      </label>
+                      {multiDay && (
+                        <label className="field last-day-field">
+                          <span>
+                            Last day{' '}
+                            <small>
+                              {dates.length}{' '}
+                              {dates.length === 1 ? 'day' : 'days'}, including
+                              your first day
+                            </small>
+                          </span>
+                          <input
+                            type="date"
+                            name="end-date"
+                            aria-label="Last day"
+                            required
+                            min={date}
+                            max={addDays(seoulDate(), 365)}
+                            value={endDate}
+                            onChange={(event) => setEndDate(event.target.value)}
+                          />
+                        </label>
+                      )}
+                    </div>
                     <label className="field time-field">
                       <span>
                         <Clock3 size={13} /> Pickup time
@@ -485,19 +622,112 @@ export default function Booking({
                       <ShieldCheck size={14} /> A minimum of two hours' notice,
                       please.
                     </p>
+                    {multiDay && (
+                      <p className="field-note multi-day-note">
+                        Your pickup time, service and route apply each day. You
+                        can choose a different vehicle for each date in the next
+                        step.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
               {step === 1 && (
                 <div className="preferences-fields">
                   <p className="field-section-title">Select your collection</p>
+                  {multiDay && dates.length > 1 && (
+                    <>
+                      <fieldset className="vehicle-mode">
+                        <legend>
+                          Vehicles for your {dates.length}-day journey
+                        </legend>
+                        <label>
+                          <input
+                            type="radio"
+                            name="vehicle-mode"
+                            value="same"
+                            checked={!dailyVehicles}
+                            onChange={() => setDailyVehicles(false)}
+                          />
+                          <span>Same vehicle every day</span>
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="vehicle-mode"
+                            value="daily"
+                            checked={dailyVehicles}
+                            onChange={() => setDailyVehicles(true)}
+                          />
+                          <span>Choose a vehicle by date</span>
+                        </label>
+                      </fieldset>
+                      {dailyVehicles && (
+                        <div className="daily-vehicle-picker">
+                          <p>Select a day, then choose its vehicle below.</p>
+                          <div
+                            className="daily-vehicle-list"
+                            role="group"
+                            aria-label="Daily vehicle selections"
+                          >
+                            {journeys.map((day, index) => {
+                              const selected = catalog.vehicles.find(
+                                (v) => v.id === day.vehicle,
+                              )!
+                              const available =
+                                availability[day.date]?.[day.vehicle]
+                              return (
+                                <button
+                                  key={day.date}
+                                  type="button"
+                                  className={`daily-vehicle-day ${activeDate === day.date ? 'active' : ''}`}
+                                  aria-pressed={activeDate === day.date}
+                                  onClick={() => setEditingDate(day.date)}
+                                >
+                                  <span>
+                                    Day {index + 1}
+                                    <small>{displayDate(day.date)}</small>
+                                  </span>
+                                  <span>
+                                    {selected.name}
+                                    <small
+                                      className={
+                                        available === false
+                                          ? 'day-unavailable'
+                                          : ''
+                                      }
+                                    >
+                                      {available === false
+                                        ? 'Unavailable — choose another'
+                                        : checking
+                                          ? 'Checking…'
+                                          : 'Select vehicle'}
+                                    </small>
+                                  </span>
+                                  <ChevronRight size={14} />
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <p className="editing-day" aria-live="polite">
+                            Choosing for {displayDate(activeDate)}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <VehicleCarousel
-                    value={vehicle}
-                    onChange={setVehicle}
-                    availability={availability}
+                    value={activeVehicle}
+                    onChange={changeVehicle}
+                    availability={availability[activeDate] || {}}
                   />
                   <p className="field-section-title extras-title">
-                    Make it personal <span>Optional additions</span>
+                    Make it personal{' '}
+                    <span>
+                      {dates.length > 1
+                        ? 'Optional additions · per day'
+                        : 'Optional additions'}
+                    </span>
                   </p>
                   <div className="extras">
                     {catalog.options.map((option) => (
@@ -530,6 +760,11 @@ export default function Booking({
                       </button>
                     ))}
                   </div>
+                  {dates.length > 1 && (
+                    <p className="field-note">
+                      Selected extras apply to every day of your journey.
+                    </p>
+                  )}
                 </div>
               )}
               {step === 2 && (
@@ -579,6 +814,81 @@ export default function Booking({
                       />
                     </label>
                   </div>
+                  <fieldset className="contact-methods">
+                    <legend>How would you prefer to be contacted?</legend>
+                    <div className="contact-method-grid">
+                      {catalog.contactMethods.map((method) => (
+                        <label
+                          key={method.id}
+                          className={
+                            contactMethod === method.id ? 'selected' : ''
+                          }
+                        >
+                          <input
+                            type="radio"
+                            name="contact-method"
+                            value={method.id}
+                            checked={contactMethod === method.id}
+                            onChange={() => {
+                              setContactMethod(method.id)
+                              setMessengerContact('')
+                            }}
+                          />
+                          <span>{method.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {!['email', 'phone'].includes(contactMethod) && (
+                      <label className="field messenger-field">
+                        <span>
+                          {contactMethod === 'whatsapp'
+                            ? 'WhatsApp number'
+                            : `${catalog.contactMethods.find((method) => method.id === contactMethod)!.name} ID`}
+                          {contactMethod === 'whatsapp' && (
+                            <small>optional</small>
+                          )}
+                        </span>
+                        <input
+                          name="messenger-contact"
+                          aria-label={
+                            contactMethod === 'whatsapp'
+                              ? 'WhatsApp number'
+                              : `${catalog.contactMethods.find((method) => method.id === contactMethod)!.name} ID`
+                          }
+                          type={contactMethod === 'whatsapp' ? 'tel' : 'text'}
+                          autoComplete={
+                            contactMethod === 'whatsapp' ? 'tel' : 'off'
+                          }
+                          required={contactMethod !== 'whatsapp'}
+                          maxLength={contactMethod === 'whatsapp' ? 40 : 80}
+                          pattern={
+                            contactMethod === 'whatsapp'
+                              ? '\\+?[0-9 \\(\\)\\.\\-]{7,40}'
+                              : '.*\\S.*'
+                          }
+                          value={messengerContact}
+                          onChange={(event) =>
+                            setMessengerContact(event.target.value)
+                          }
+                          placeholder={
+                            contactMethod === 'whatsapp'
+                              ? phone || '+82 10 1234 5678'
+                              : 'Your messenger ID'
+                          }
+                          aria-describedby="messenger-help"
+                        />
+                        <small id="messenger-help" className="messenger-help">
+                          {contactMethod === 'whatsapp'
+                            ? 'Leave blank to use the phone number above.'
+                            : 'Enter an ID we can use to find you on this app.'}
+                        </small>
+                      </label>
+                    )}
+                    <p className="messenger-help">
+                      Your preference is saved with your request. Messaging is
+                      not connected yet.
+                    </p>
+                  </fieldset>
                   <label className="consent">
                     <input
                       type="checkbox"
@@ -629,12 +939,20 @@ export default function Booking({
             </div>
             <div className="summary-car">
               <div
-                className={`summary-fleet-art art-${vehicle}`}
+                className={`summary-fleet-art art-${firstVehicle.id}`}
                 role="img"
-                aria-label={currentVehicle.model}
+                aria-label={firstVehicle.model}
               />
-              <span>{currentVehicle.name}</span>
-              <small>{currentVehicle.model}</small>
+              <span>
+                {customVehicles && dates.length > 1
+                  ? 'Your daily collection'
+                  : firstVehicle.name}
+              </span>
+              <small>
+                {customVehicles && dates.length > 1
+                  ? `${dates.length} days · selected individually`
+                  : firstVehicle.model}
+              </small>
             </div>
             <div className="summary-lines">
               <div>
@@ -643,45 +961,91 @@ export default function Booking({
                 </span>
                 <span>{time} KST</span>
               </div>
-              <div>
-                <span>{currentService.name}</span>
-                <span>{money(currentService.price)}</span>
-              </div>
-              {currentVehicle.surcharge > 0 && (
+              {dates.length > 1 && (
                 <div>
-                  <span>First Class upgrade</span>
-                  <span>{money(currentVehicle.surcharge)}</span>
+                  <span>Through {displayDate(lastDate)}</span>
+                  <span>{dates.length} days</span>
+                </div>
+              )}
+              {dates.length > 1 && (
+                <div className="summary-daily-vehicles">
+                  {journeys.map((day, index) => (
+                    <div key={day.date}>
+                      <span>
+                        Day {index + 1} · {displayDate(day.date)}
+                      </span>
+                      <span>
+                        {
+                          catalog.vehicles.find((v) => v.id === day.vehicle)!
+                            .name
+                        }
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div>
+                <span>
+                  {currentService.name}
+                  {dates.length > 1 ? ` × ${dates.length} days` : ''}
+                </span>
+                <span>
+                  {quoteRequired
+                    ? 'Quote on request'
+                    : money(currentService.price * dates.length)}
+                </span>
+              </div>
+              {vehicleSurcharges > 0 && (
+                <div>
+                  <span>Vehicle upgrades</span>
+                  <span>{money(vehicleSurcharges)}</span>
                 </div>
               )}
               {catalog.options
                 .filter((o) => options.includes(o.id))
                 .map((o) => (
                   <div key={o.id}>
-                    <span>{o.name}</span>
-                    <span>{money(o.price)}</span>
+                    <span>
+                      {o.name}
+                      {dates.length > 1 ? ` × ${dates.length}` : ''}
+                    </span>
+                    <span>{money(o.price * dates.length)}</span>
                   </div>
                 ))}
             </div>
             <div className="summary-total">
               <div>
                 <span>Estimated total</span>
-                <small>KRW · including applicable taxes</small>
+                <small className="tax-notice">KRW · TAX excluded</small>
               </div>
-              <strong>{money(total)}</strong>
+              <strong className={quoteRequired ? 'quote-on-request' : ''}>
+                {quoteRequired ? 'Quote on request' : money(total)}
+              </strong>
             </div>
+            {quoteRequired && (
+              <p className="quote-note">
+                Sprinter pricing requires a separate quote. TAX is not included.
+              </p>
+            )}
             <p className="availability-note" aria-live="polite">
               {checking ? (
                 <>
                   <LoaderCircle size={12} className="spin" /> Checking your
-                  date…
+                  {dates.length > 1 ? 'dates…' : 'date…'}
                 </>
-              ) : availability[vehicle] === false ? (
+              ) : unavailableDay ? (
                 <>
-                  <X size={12} /> Choose another vehicle or time
+                  <X size={12} />{' '}
+                  {dates.length > 1
+                    ? `Vehicle unavailable on ${displayDate(unavailableDay.date)}`
+                    : 'Choose another vehicle or time'}
                 </>
-              ) : availability[vehicle] ? (
+              ) : allAvailable ? (
                 <>
-                  <Check size={12} /> Time slot open for a request
+                  <Check size={12} />{' '}
+                  {dates.length > 1
+                    ? 'All daily slots open for a request'
+                    : 'Time slot open for a request'}
                 </>
               ) : (
                 <>
@@ -704,7 +1068,11 @@ export default function Booking({
             <button
               type="submit"
               className="button gold-button booking-submit"
-              disabled={sending || checking || availability[vehicle] !== true}
+              disabled={
+                sending ||
+                (step > 0 && checking) ||
+                (step === 2 && !allAvailable)
+              }
             >
               {sending ? (
                 <>

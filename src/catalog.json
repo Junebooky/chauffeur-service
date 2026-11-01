@@ -1,6 +1,15 @@
 {
   "currency": "KRW",
   "timeZone": "Asia/Seoul",
+  "taxIncluded": false,
+  "contactMethods": [
+    { "id": "email", "name": "Email" },
+    { "id": "phone", "name": "Phone" },
+    { "id": "whatsapp", "name": "WhatsApp" },
+    { "id": "line", "name": "LINE" },
+    { "id": "kakao", "name": "KakaoTalk" },
+    { "id": "wechat", "name": "WeChat" }
+  ],
   "services": [
     {
       "id": "airport",
@@ -56,6 +65,7 @@
       "passengers": 3,
       "luggage": 2,
       "surcharge": 0,
+      "quoteRequired": false,
       "image": "/media/hero/000.webp"
     },
     {
@@ -65,7 +75,28 @@
       "passengers": 3,
       "luggage": 2,
       "surcharge": 60000,
+      "quoteRequired": false,
       "image": "/media/exterior.webp"
+    },
+    {
+      "id": "sprinter319",
+      "name": "Sprinter 319",
+      "model": "Mercedes-Benz Sprinter · 6 seats",
+      "passengers": 6,
+      "luggage": null,
+      "surcharge": 0,
+      "quoteRequired": true,
+      "image": "/media/fleet/sprinter.svg"
+    },
+    {
+      "id": "sprinter519",
+      "name": "Sprinter 519",
+      "model": "Mercedes-Benz Sprinter · 9 seats",
+      "passengers": 9,
+      "luggage": null,
+      "surcharge": 0,
+      "quoteRequired": true,
+      "image": "/media/fleet/sprinter.svg"
     }
   ],
   "options": [

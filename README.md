@@ -1,6 +1,6 @@
 # CHAUFFEUR — The art of arriving.
 
-A complete English-language chauffeur website inspired by the supplied video: deep black and charcoal surfaces with champagne-gold accents, an autoplaying door-opening film, full-viewport chapters, and a working reservation request service.
+A complete English-language chauffeur website inspired by the supplied video: deep black and charcoal surfaces with metallic-gold accents (`#C5A059`), an autoplaying door-opening film, full-viewport chapters, and a working reservation request service.
 
 ## Run
 
@@ -27,7 +27,13 @@ The production server serves both the site and API on port **3001**. Optional en
 - **Welcome:** a locally hosted 2.1-second MP4, encoded from the supplied door-opening sequence. It plays once, muted and inline, then holds the open-door scene. The hero occupies one viewport and never locks scrolling for loading or playback. If autoplay is blocked, a play button is available; reduced motion or a media error uses the still image. The original browser chrome and embedded page copy are excluded from the artwork.
 - **The collection:** exterior, cabin, and cockpit views extracted from the supplied reference; vehicle details and amenities.
 - **Our services:** airport transfer, four-hour service, and full-day service. Choosing a service carries it into the reservation form.
-- **Your journey:** date calendar, pickup time and route, a convex-style interactive vehicle carousel, multilingual address selection, optional extras, contact details, and a live quote.
+- **Your journey:** date calendar, optional multi-day range, pickup time and route, a convex-style interactive vehicle carousel, multilingual address selection, optional extras, contact details with a preferred messenger, and a live estimate excluding TAX.
+
+Multi-day requests include each consecutive date from the first through the last day. Guests can use the same vehicle throughout or choose a vehicle for each date. The pickup time, service, route, and selected extras apply each day; known service rates, upgrades, and extras are summed across the dates. The summary and saved request retain every daily choice. The calendar download contains one tentative event per day.
+
+The collection includes Executive Sedan, First Class Sedan, **Sprinter 319 (6 seats)** and **Sprinter 519 (9 seats)**. Sprinter prices and luggage capacities were not supplied, so their UI uses **Quote on request** and **Luggage on request**. Requests involving a Sprinter return `total: null` and `quoteRequired: true`; a zero surcharge in the catalog is a placeholder, not a published Sprinter rate. Confirm actual rates before setting `quoteRequired` to `false`. Every displayed price excludes TAX; the API returns `taxIncluded: false` and does not invent a tax rate.
+
+The contact card offers Email, Phone, WhatsApp, LINE, KakaoTalk and WeChat. Messenger IDs are required for LINE, KakaoTalk and WeChat. WhatsApp defaults to the entered phone number unless a different number is supplied. The server validates and stores these details privately with the request; messaging delivery is not connected.
 
 Every chapter, including the hero, occupies one viewport. The first vertical wheel delta advances to the adjacent chapter, including small continuous trackpad deltas. Subsequent momentum from that gesture is grouped until input stops for 180ms; there is no minimum delta, input-gap requirement, video lock, or animation lock. CSS scroll snap aligns native touch and scrollbar scrolling. Keyboard navigation is supported. Forms and compact layouts scroll natively, and scrolling can chain out of a panel at its boundary. At short desktop heights, chapter content can scroll within its viewport to remain reachable.
 
@@ -35,7 +41,11 @@ The mobile navigation, section rail, and direct CTAs provide alternatives to scr
 
 ## What reservations do
 
-`POST /api/reservations` validates the request, calculates the price from the server-side catalog, prevents overlapping requests for the same vehicle class in a SQLite transaction, and persists a **pending** request. An idempotency key makes retrying the same submission safe. Dates require at least two hours' notice and cannot be more than a year ahead. Times use **Asia/Seoul (UTC+9)**.
+`POST /api/reservations` validates the request, calculates known prices from the server-side catalog, prevents overlapping requests for each daily vehicle class in a SQLite transaction, and persists a **pending** request. If any daily slot conflicts, no part of the request is saved. An idempotency key makes retrying the same submission safe. Dates require at least two hours' notice and cannot be more than a year ahead. Times use **Asia/Seoul (UTC+9)**.
+
+Multi-day payloads include `journeys: [{ date: "YYYY-MM-DD", vehicle: "vehicle-id" }, ...]` (up to 366 consecutive dates), with top-level `date` and `vehicle` matching the first day. Legacy single-day payloads remain supported. `contactMethod` defaults to `email`; `messengerContact` holds the optional WhatsApp number or required messenger ID. Responses contain daily vehicle names and estimates without returning contact details.
+
+Daily inventory is stored in `reservation_legs`, linked to the parent request. Startup automatically backfills old single-day reservations without duplicating existing legs. The parent's numeric `total` retains the catalog subtotal; it is not a complete quote when `details.quoteRequired` is true. The public API returns `null` for such totals.
 
 Successful submissions display a reference and offer a downloadable **tentative** calendar event. No payment is taken. There is no public endpoint that lists stored personal details. Request rate limiting is local to the server process.
 
@@ -48,7 +58,7 @@ Before live operations, connect an operator workflow and notification provider, 
 | Endpoint                                                          | Purpose                                                           |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
 | `GET /api/health`                                                 | Verify that the API and SQLite database respond                   |
-| `GET /api/availability?date=YYYY-MM-DD&time=HH:MM&service=hourly` | Check each vehicle class against local pending/confirmed requests |
+| `GET /api/availability?date=YYYY-MM-DD&endDate=YYYY-MM-DD&time=HH:MM&service=hourly` | Check each vehicle class for each date; `endDate` is optional |
 | `POST /api/reservations`                                          | Save a pending request; requires an `Idempotency-Key` header      |
 
 The catalog, option prices, and vehicle surcharge live in `src/catalog.json`; both the frontend and API use this file. The database is created at `.data/reservations.sqlite` and is ignored by Git. Do not commit personal data or `.env` files.
@@ -61,7 +71,7 @@ npm test
 npm run build
 ```
 
-The API and address-service tests cover persistence across restarts, server-calculated pricing, overlapping and concurrent requests, safe retries, validation, rate limiting, canonical route coordinates, multilingual popular-place matching, Google REST request contracts using an injected test transport, expired/forged place selections, and privacy of stored contact details. Live Google calls require your key and are not validated by the fixture tests.
+The API and address-service tests cover persistence across restarts, legacy database migration, server-calculated daily pricing, atomic multi-day conflicts, overlapping and concurrent requests, safe retries, date-range and messenger validation, quote-required vehicles, TAX exclusion, rate limiting, canonical route coordinates, multilingual popular-place matching, Google REST request contracts using an injected test transport, expired/forged place selections, and privacy of stored contact details. Live Google calls require your key and are not validated by the fixture tests.
 
 Production browser checks use Python Playwright and Chromium:
 
@@ -70,7 +80,7 @@ Production browser checks use Python Playwright and Chromium:
 python3 scripts/browser-test.py
 ```
 
-The script uses a temporary database, starts/stops its own production server on port 4183, and checks real video playback through its end, wheel navigation across all chapters, small continuous trackpad deltas, dark surface colours, keyboard navigation, complete desktop and mobile submissions, calendar download, reduced motion, dialogs, and layout at 1440, 1366, 1024, 768, 390, and 360px widths. It uses system Chromium when available; otherwise install the Playwright browser with `python3 -m playwright install chromium`. Override `CHROMIUM_PATH` if needed. Screenshots are written to ignored `test-results/`.
+The script uses a temporary database, starts/stops its own production server on port 4183, and checks real video playback through its end, wheel navigation across all chapters, small continuous trackpad deltas, dark surfaces and metallic-gold accents, keyboard navigation, complete desktop and mobile submissions, multi-day vehicle selection, Sprinter capacities and quotes, TAX disclosure, messenger validation and actual SQLite persistence, multi-event calendar downloads, reduced motion, dialogs, and layout at 1440, 1366, 1024, 768, 390, and 360px widths. It uses system Chromium when available; otherwise install the Playwright browser with `python3 -m playwright install chromium`. Override `CHROMIUM_PATH` if needed. Screenshots are written to ignored `test-results/`.
 
 `scripts/visual-check.py` is an optional screenshot helper for an already running development server.
 
@@ -113,4 +123,4 @@ The frontend sends search/resolve requests to this server, which calls Google th
 
 `POST /api/places/search` takes `{ query, sessionToken }`; `POST /api/places/resolve` takes `{ id, sessionToken }`. Reservation requests now require `pickupPlace` and `destinationPlace`: either a known curated ID or a server-resolved Google ID plus its `selectionToken`. The server supplies the authoritative coordinates. Google attribution is displayed with live results; its official image is served from `maps.gstatic.com`. Google Maps terms/privacy links are available in the site's privacy notice. Follow the provider's current attribution, content-retention, and licensing terms when connecting live operations; place IDs can be retained for later re-resolution.
 
-Vehicle selection artwork in `public/media/fleet/collection.png` is generated representative artwork. The carousel shows the existing two bookable vehicle classes; repeated side previews are a looping visual treatment, not additional inventory. Arrow controls, direct selection, pagination, horizontal touch swipes, and left/right keyboard keys all update the selected vehicle and quote. Focused form inputs use only their existing border, retaining a visible keyboard focus indication without an extra outer outline.
+Sedan selection artwork in `public/media/fleet/collection.png` is generated representative artwork. The Sprinters share an illustrative vector van in `public/media/fleet/sprinter.svg`; artwork does not establish actual trim or luggage capacity. The carousel shows four selectable vehicle classes; repeated side previews are a looping visual treatment, not additional inventory. Arrow controls, direct selection, pagination, horizontal touch swipes, and left/right keyboard keys all update the selected vehicle and estimate for the active date. Focused form inputs use only their existing border, retaining a visible keyboard focus indication without an extra outer outline.

@@ -14,7 +14,11 @@ export default function VehicleCarousel({
 }) {
   const active = catalog.vehicles.findIndex((v) => v.id === value)
   const current = catalog.vehicles[active]
-  const other = catalog.vehicles[(active + 1) % catalog.vehicles.length]
+  const previous =
+    catalog.vehicles[
+      (active - 1 + catalog.vehicles.length) % catalog.vehicles.length
+    ]
+  const next = catalog.vehicles[(active + 1) % catalog.vehicles.length]
   const touch = useRef({ x: 0, y: 0 })
   const suppressed = useRef(0)
   const change = (direction: number) =>
@@ -69,7 +73,7 @@ export default function VehicleCarousel({
             if (performance.now() >= suppressed.current) change(-1)
           }}
         >
-          <span className={`fleet-car-art art-${other.id}`} />
+          <span className={`fleet-car-art art-${previous.id}`} />
         </button>
         {catalog.vehicles.map((v) => (
           <button
@@ -77,7 +81,7 @@ export default function VehicleCarousel({
             key={v.id}
             aria-label={`${v.name} — ${v.model}`}
             aria-pressed={value === v.id}
-            className={`fleet-car ${value === v.id ? 'fleet-center' : 'fleet-right'}`}
+            className={`fleet-car ${value === v.id ? 'fleet-center' : next.id === v.id ? 'fleet-right' : 'fleet-hidden'}`}
             onClick={() => {
               if (performance.now() >= suppressed.current) onChange(v.id)
             }}
@@ -120,7 +124,11 @@ export default function VehicleCarousel({
           <p>{current.model}</p>
         </div>
         <span className="fleet-surcharge">
-          {current.surcharge ? `+${money(current.surcharge)}` : 'Included'}
+          {current.quoteRequired
+            ? 'Quote on request'
+            : current.surcharge
+              ? `+${money(current.surcharge)}`
+              : 'Included'}
         </span>
       </div>
       <div className="fleet-selected-meta">
@@ -128,7 +136,10 @@ export default function VehicleCarousel({
           <Users size={12} /> {current.passengers} guests
         </span>
         <span>
-          <Luggage size={12} /> {current.luggage} bags
+          <Luggage size={12} />{' '}
+          {current.luggage === null
+            ? 'Luggage on request'
+            : `${current.luggage} bags`}
         </span>
         <span
           className={availability[value] === false ? 'fleet-unavailable' : ''}
@@ -139,7 +150,8 @@ export default function VehicleCarousel({
         </span>
       </div>
       <p className="fleet-hint">
-        Use the arrows, tap a car or swipe to explore. Images are illustrative.
+        Use the arrows, tap a car or swipe to explore. Rates exclude TAX. Images
+        are illustrative.
       </p>
     </div>
   )
