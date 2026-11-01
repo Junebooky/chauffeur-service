@@ -53,6 +53,10 @@ function Calendar({
   value: string
   onChange: (value: string) => void
 }) {
+  const [localValue, setLocalValue] = useState(value)
+  useEffect(() => {
+    setLocalValue(value)
+  }, [value])
   const [month, setMonth] = useState(
     () => new Date(`${value.slice(0, 7)}-01T12:00:00`),
   )
@@ -119,10 +123,13 @@ function Calendar({
               type="button"
               key={date}
               aria-label={displayDate(date)}
-              aria-pressed={value === date}
-              className={value === date ? 'selected' : ''}
+              aria-pressed={localValue === date}
+              className={localValue === date ? 'selected' : ''}
               disabled={date < today || date > maxDate}
-              onClick={() => onChange(date)}
+              onClick={() => {
+                setLocalValue(date)
+                onChange(date)
+              }}
             >
               {i + 1}
             </button>

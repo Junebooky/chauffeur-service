@@ -26,7 +26,7 @@
   font-synthesis: none;
   --bg: #08090b;
   --panel: #111316;
-  --gold: #c7ae7b;
+  --gold: #D4AF37;
   --gold-light: #e0c99e;
   --muted: #979a92;
   --line: rgba(204, 195, 171, 0.16);
@@ -320,7 +320,7 @@ em {
   color: #d6c399;
 }
 .outline-button:hover {
-  background: #c7ae7b15;
+  background: #d4af3715;
 }
 .icon-button {
   width: 30px;
@@ -332,7 +332,7 @@ em {
   color: var(--gold);
 }
 .icon-button:hover {
-  background: #c7ae7b14;
+  background: #d4af3714;
 }
 /* Native scrolling stays enabled throughout; chapters settle at viewport boundaries. */
 .hero-track {
@@ -840,7 +840,7 @@ em {
   min-height: 0;
 }
 .service-card {
-  border: 1px solid #c7ae7b29;
+  border: 1px solid #d4af3729;
   background: var(--panel);
   padding: 25px 29px 24px;
   position: relative;
@@ -849,7 +849,7 @@ em {
   transition: border-color 0.3s;
 }
 .service-card:hover {
-  border-color: #c7ae7b75;
+  border-color: #d4af3775;
 }
 .service-card.featured {
   border-color: #a28c58;
@@ -876,7 +876,7 @@ em {
   border-radius: 50%;
   background: var(--gold);
   display: inline-block;
-  box-shadow: 0 0 7px #c7ae7b40;
+  box-shadow: 0 0 7px #d4af3740;
 }
 .popular-label .live-dot {
   background: #41482e;
@@ -957,7 +957,7 @@ em {
 .lining-price .currency-symbol {
   font-size: 0.72em;
   font-weight: 300;
-  color: #c7ae7b;
+  color: #D4AF37;
   opacity: 0.85;
 }
 .service-price > span:last-child {
@@ -1023,7 +1023,7 @@ em {
 .booking-panel {
   display: grid;
   grid-template-columns: minmax(0, 1.95fr) minmax(285px, 1fr);
-  border: 1px solid #c7ae7b30;
+  border: 1px solid #d4af3730;
   background: var(--panel);
   flex: 1;
   min-height: 0;
@@ -1140,18 +1140,20 @@ em {
   max-width: 30px;
   width: 100%;
   justify-self: center;
-  transition: background 0.2s;
+  transition: none;
 }
 .calendar-grid > button:hover:not(:disabled) {
-  background: #c7ae7b26;
+  background: #d4af3726;
 }
-.calendar-grid > button:disabled {
-  color: #718063;
-  opacity: 0.35;
+.calendar-grid > button:active:not(:disabled) {
+  background: var(--gold) !important;
+  color: #1d2418 !important;
+  transition: none !important;
 }
 .calendar-grid > button.selected {
-  background: var(--gold);
-  color: #1d2418;
+  background: var(--gold) !important;
+  color: #1d2418 !important;
+  transition: none !important;
 }
 .calendar-note {
   font-size: 12px;
@@ -1431,7 +1433,7 @@ em {
     border-color 0.2s;
 }
 .vehicle-option.selected {
-  border-color: #c7ae7b94;
+  border-color: #d4af3794;
   background: #181a1e;
 }
 .vehicle-option-top {
@@ -3748,7 +3750,7 @@ em {
 }
 .address-result.highlighted,
 .address-result:hover {
-  background: #c7ae7b13;
+  background: #d4af3713;
 }
 .address-result[aria-disabled='true'] {
   opacity: 0.5;
@@ -3783,12 +3785,12 @@ em {
 }
 
 .fleet-selector {
-  border: 1px solid #c7ae7b35;
+  border: 1px solid #d4af3735;
   border-radius: 18px;
   padding: 18px 20px 15px;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 0%, #c7ae7b30 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 0%, #d4af3730 0%, transparent 55%),
     radial-gradient(ellipse at 50% 30%, #30333890 0%, transparent 68%),
     #111316;
   box-shadow:
@@ -3846,7 +3848,7 @@ em {
   height: 48%;
   bottom: 2%;
   border-radius: 50%;
-  border-top: 1px solid #c7ae7b28;
+  border-top: 1px solid #d4af3728;
   background: radial-gradient(ellipse at 50% 60%, #000000d0 0%, #00000060 60%, transparent 75%);
   pointer-events: none;
 }
@@ -3857,7 +3859,7 @@ em {
   height: 50%;
   bottom: 10%;
   border-radius: 50%;
-  background: radial-gradient(circle, #c7ae7b12 0%, transparent 70%);
+  background: radial-gradient(circle, #d4af3712 0%, transparent 70%);
   pointer-events: none;
 }
 .fleet-car {
@@ -3956,13 +3958,13 @@ em {
 }
 .fleet-pagination button.active:after {
   background: var(--gold);
-  box-shadow: 0 0 10px #c7ae7b88;
+  box-shadow: 0 0 10px #d4af3788;
 }
 .fleet-selected {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid #c7ae7b20;
+  border-top: 1px solid #d4af3720;
   padding-top: 14px;
   gap: 12px;
 }
@@ -3983,8 +3985,8 @@ em {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: #ffd875;
-  background: #c7ae7b22;
-  border: 1px solid #c7ae7b44;
+  background: #d4af3722;
+  border: 1px solid #d4af3744;
   border-radius: 99px;
   padding: 2px 7px;
   display: inline-flex;
@@ -4041,12 +4043,12 @@ em {
   color: inherit;
 }
 .fleet-spec-card:hover {
-  border-color: #c7ae7b60;
+  border-color: #d4af3760;
   background: #202228;
 }
 .fleet-spec-card.selected {
   border-color: var(--gold);
-  background: #c7ae7b15;
+  background: #d4af3715;
 }
 .fleet-spec-card img {
   width: 100%;
@@ -4078,12 +4080,12 @@ em {
   margin-top: 12px;
 }
 .journey-summary .fleet-selector {
-  border: 1px solid #c7ae7b32;
+  border: 1px solid #d4af3732;
   border-radius: 14px;
   padding: 12px 14px 10px;
   margin: 10px 0 12px;
   background:
-    radial-gradient(ellipse at 50% 0%, #c7ae7b22 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 0%, #d4af3722 0%, transparent 60%),
     radial-gradient(ellipse at 50% 35%, #2a2d3380 0%, transparent 70%),
     #121417;
   box-shadow:
@@ -4135,7 +4137,7 @@ em {
   min-height: 44px;
   max-height: 44px;
   padding-top: 6px;
-  border-top: 1px solid #c7ae7b20;
+  border-top: 1px solid #d4af3720;
   display: flex;
   align-items: center;
   justify-content: space-between;

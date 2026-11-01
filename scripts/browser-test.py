@@ -105,7 +105,7 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 assert colours['card']['background'] == 'rgb(17, 19, 22)'
                 assert colours['featured']['background'] == 'rgb(21, 23, 27)'
                 assert all(colours[key]['image'] == 'none' for key in ['page', 'panel', 'card', 'featured'])
-                assert colours['gold'] == '#c7ae7b'
+                assert colours['gold'] == '#d4af37'
                 passed('Page and card backgrounds are dark neutral charcoal; gold accents remain unchanged')
 
                 pickup_input = page.get_by_role('combobox', name='Pick-up location', exact=True)

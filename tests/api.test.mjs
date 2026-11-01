@@ -11,7 +11,7 @@ const valid = {
   date: '2026-11-10',
   time: '10:00',
   service: 'hourly',
-  vehicle: 'carnival',
+  vehicle: 'staria',
   pickup: 'Incheon Airport Terminal 2',
   destination: 'Four Seasons Hotel Seoul',
   pickupPlace: { id: 'curated:icn-t2' },
@@ -65,7 +65,7 @@ test('saves a pending request and independently calculates the price', () =>
   withServer(async ({ post }) => {
     const result = await post({
       ...valid,
-      vehicle: 'sprinter',
+      vehicle: 'sprinter_319',
       options: ['childSeat'],
       total: 1,
     })
@@ -96,13 +96,14 @@ test('rejects overlapping journeys and reports per-vehicle availability', () =>
       `${base}/api/availability?date=2026-11-10&time=12:00&service=hourly`,
     ).then((r) => r.json())
     assert.deepEqual(available.vehicles, [
-      { id: 'carnival', available: false },
+      { id: 'staria', available: false },
       { id: 'carnival_limousine', available: true },
-      { id: 'staria', available: true },
-      { id: 'sprinter', available: true },
+      { id: 'g90', available: true },
+      { id: 'sprinter_319', available: true },
+      { id: 'sprinter_519', available: true },
     ])
     assert.equal((await post({ ...valid, time: '14:00' })).status, 201)
-    assert.equal((await post({ ...valid, vehicle: 'sprinter' })).status, 201)
+    assert.equal((await post({ ...valid, vehicle: 'sprinter_519' })).status, 201)
   }))
 
 test('simultaneous requests cannot take the same slot', () =>

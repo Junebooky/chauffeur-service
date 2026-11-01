@@ -96,7 +96,7 @@ export default function App() {
   const [mobileMenu, setMobileMenu] = useState(false)
   const [modal, setModal] = useState<'contact' | 'privacy' | null>(null)
   const [service, setService] = useState('hourly')
-  const [vehicle, setVehicle] = useState('carnival')
+  const [vehicle, setVehicle] = useState('staria')
   const [usdRate, setUsdRate] = useState<number>(DEFAULT_USD_RATE)
   const [fleetView, setFleetView] = useState<'exterior' | 'cabin' | 'cockpit'>(
     'exterior',

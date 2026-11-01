@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Luggage, Search, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, Users } from 'lucide-react'
 import catalog from './catalog.json'
 import { money } from './utils'
 
@@ -35,7 +35,7 @@ export default function VehicleCarousel({
     onChange(catalog.vehicles[nextIndex].id)
   }
 
-  // Calculate convex mirror fisheye position for 4 vehicles
+  // Calculate convex mirror fisheye position for 5 vehicles
   const getCarStyle = (index: number) => {
     let diff = index - active
     if (diff > n / 2) diff -= n
@@ -44,30 +44,47 @@ export default function VehicleCarousel({
     // 1. Center focused car: dramatic convex zoom & forward pop
     if (diff === 0) {
       return {
-        transform: 'translateX(0%) translateY(5%) scale(1.42) rotateY(0deg)',
+        transform: 'translateX(0%) translateY(4%) scale(1.36) rotateY(0deg)',
         zIndex: 10,
         opacity: 1,
       }
     }
-    // 2. Left flanking car: shifted left without overlapping the center car
+    // 2. Immediate Left flanking car
     if (diff === -1) {
       return {
         transform:
-          'translateX(-66%) translateY(-2%) scale(0.68) rotateY(22deg)',
-        zIndex: 4,
-        opacity: 0.65,
+          'translateX(-52%) translateY(-1%) scale(0.74) rotateY(18deg)',
+        zIndex: 5,
+        opacity: 0.75,
       }
     }
-    // 3. Right flanking car: shifted right without overlapping the center car
+    // 3. Immediate Right flanking car
     if (diff === 1) {
       return {
         transform:
-          'translateX(66%) translateY(-2%) scale(0.68) rotateY(-22deg)',
-        zIndex: 4,
-        opacity: 0.65,
+          'translateX(52%) translateY(-1%) scale(0.74) rotateY(-18deg)',
+        zIndex: 5,
+        opacity: 0.75,
       }
     }
-    // 4. Opposite back car: tucked behind in perspective
+    // 4. Far Left flanking car: outer perimeter of convex mirror
+    if (diff === -2) {
+      return {
+        transform:
+          'translateX(-88%) translateY(-4%) scale(0.52) rotateY(26deg)',
+        zIndex: 2,
+        opacity: 0.45,
+      }
+    }
+    // 5. Far Right flanking car: outer perimeter of convex mirror
+    if (diff === 2) {
+      return {
+        transform:
+          'translateX(88%) translateY(-4%) scale(0.52) rotateY(-26deg)',
+        zIndex: 2,
+        opacity: 0.45,
+      }
+    }
     return {
       transform: 'translateX(0%) translateY(-12%) scale(0.48) rotateY(0deg)',
       zIndex: 1,
@@ -198,9 +215,6 @@ export default function VehicleCarousel({
       <div className="fleet-selected-meta">
         <span>
           <Users size={12} /> {current.passengers} guests
-        </span>
-        <span>
-          <Luggage size={12} /> {current.luggage} bags
         </span>
         <span
           className={availability[value] === false ? 'fleet-unavailable' : ''}
