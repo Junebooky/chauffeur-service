@@ -3,13 +3,14 @@
 > Maintained by A01 · Reference: `Junebooky/chauffeur-service` · Updated 2026-11-01 KST.
 >
 > States: `[ ]` planned · `[~]` in progress · `[x]` uploaded/verified at stated evidence level · `[!]` blocked.
-> **No task may be marked done without a real linked artifact.** Review branch is not a production release.
+> **No task may be marked done without a real linked artifact.** Review branch is not a production release. Review changes in [PR #1](https://github.com/Junebooky/chauffeur-service/pull/1).
 
 ## M0 — Repository synchronization and safety fixes (P1)
 
 - [x] **[A01 / STATIC_REVIEW]** Reviewed project files, recent 4 commits, default branch and open PR status. Baseline: [main at 56b4cee](https://github.com/Junebooky/chauffeur-service/commit/56b4cee293a674fc82a2112f604988395c3f1b72). Findings: [audit](docs/REPO_AUDIT_2026-11-01.md).
 - [x] **[A01 / PATCH_UPLOADED]** Corrected missing hero fallback asset and booking availability uncertainty on review branch. See [Hero](src/Hero.tsx), [Booking](src/Booking.tsx), [regression guard](tests/ui-contract.test.mjs).
-- [ ] **[A04 / NOT_RUN]** Execute `npm ci && npm run check && npm test && npm run build` and browser E2E on review PR. No QA PASS claimed.
+- [x] **[CI / AUTOMATED]** Node 24 quality pipeline (install, TypeScript, tests, build) passed on [push run 41314143153](https://github.com/Junebooky/chauffeur-service/actions/runs/41314143153) at commit `33a284b`. This is not independent browser QA.
+- [ ] **[A04 / NOT_RUN]** Run production browser E2E, scroll/video QA, mobile widths and reservation-path QA on the final review commit. No E2E PASS claimed.
 - [ ] **[A01 + owner / APPROVAL]** Review changes and approve final merge to `main`.
 
 ## M1 — Three-service production-ready booking (P0)
