@@ -84,7 +84,7 @@ export default function Hero({
         <div className="hero-visual is-loaded">
           {failed || reducedMotion ? (
             <img
-              src="/media/hero/000.webp"
+              src="/media/exterior.webp"
               alt="A chauffeur welcoming you to a black luxury sedan"
             />
           ) : (
@@ -94,7 +94,7 @@ export default function Hero({
               muted
               playsInline
               preload="auto"
-              poster="/media/hero/000.webp"
+              poster="/media/exterior.webp"
               width="1224"
               height="480"
               aria-label="A chauffeur opens the door of your luxury sedan"
