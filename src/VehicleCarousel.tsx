@@ -24,7 +24,7 @@ export default function VehicleCarousel({
       const img = new Image()
       img.src = v.image
       if ('decode' in img) {
-        img.decode().catch(() => { })
+        img.decode().catch(() => {})
       }
     })
   }, [])
@@ -202,9 +202,7 @@ export default function VehicleCarousel({
 
       <div className="fleet-selected" aria-live="polite" aria-atomic="true">
         <div>
-          <h4>
-            {current.name}
-          </h4>
+          <h4>{current.name}</h4>
           <p>{current.model}</p>
         </div>
         <span className="fleet-surcharge">
@@ -252,7 +250,7 @@ export default function VehicleCarousel({
 
       <p className="fleet-hint">
         Click or swipe vehicles to select. Convex perspective adapts to your
-        collection.
+        collection. Rates exclude TAX.
       </p>
     </div>
   )

@@ -237,7 +237,7 @@ export default function App() {
                 <br />
                 Meticulously prepared. Beautifully appointed.
                 <br />
-                Always ready for you.
+                Sedans & Sprinters, tailored to your party.
               </p>
               <span className="small-caps">OUR STANDARD IS EXCEPTIONAL.</span>
             </div>
@@ -316,13 +316,13 @@ export default function App() {
           <div className="collection-bottom">
             <div className="collection-specs">
               <span>
-                <Users size={15} /> Up to 3 guests
+                <Users size={15} /> Sedans · up to 3 guests
               </span>
               <span>
-                <Luggage size={15} /> 2 large suitcases
+                <Luggage size={15} /> Sprinter 319 · 6 seats
               </span>
               <span>
-                <ShieldCheck size={15} /> Private chauffeur
+                <ShieldCheck size={15} /> Sprinter 519 · 9 seats
               </span>
             </div>
             <button className="text-link" onClick={() => nav(3)}>
@@ -390,6 +390,7 @@ export default function App() {
                     / {s.unit} · approx. {moneyUsd(s.price, usdRate)} USD
                   </span>
                 </div>
+                <p className="service-tax-notice">TAX excluded</p>
                 <ul>
                   {s.features.map((feature) => (
                     <li key={feature}>
@@ -411,7 +412,7 @@ export default function App() {
             ))}
           </div>
           <div className="services-footnote">
-            <span>Standard Executive rates · KRW · taxes included</span>
+            <span>Standard Executive rates · KRW · TAX excluded</span>
             <span>
               Thoughtful extras. Always transparent. <ChevronDown size={12} />
             </span>
@@ -494,16 +495,17 @@ export default function App() {
             <p>
               Submitting the form saves a pending request. It does not confirm a
               vehicle, assign a driver, or take payment. Prices are illustrative
-              service rates in Korean won, including applicable taxes. Vehicle
-              images are representative; the final model must be confirmed
-              separately.
+              service rates in Korean won. All displayed prices exclude TAX; any
+              applicable tax is additional. Vehicle images are representative;
+              the final model must be confirmed separately.
             </p>
             <h3>Your details</h3>
             <p>
-              Your name, email, phone number, route, and journey preferences are
-              stored in this application's local reservation database. They are
-              not sent to an operator or an email service. Please use sample
-              details while evaluating this site.
+              Your name, email, phone number, preferred contact app, messenger
+              details, route, and daily vehicle preferences are stored in this
+              application's local reservation database. They are not sent to an
+              operator or an email service. Please use sample details while
+              evaluating this site.
             </p>
             <h3>Availability & changes</h3>
             <p>

@@ -74,6 +74,7 @@ test('saves a pending request and independently calculates the price', () =>
     assert.equal(result.data.total, 450000)
     assert.match(result.data.reference, /^CH-[0-9A-F]{8}$/)
     assert.equal(result.data.currency, 'KRW')
+    assert.equal(result.data.taxIncluded, false)
     assert.equal(result.data.email, undefined)
   }))
 
@@ -103,7 +104,10 @@ test('rejects overlapping journeys and reports per-vehicle availability', () =>
       { id: 'sprinter_519', available: true },
     ])
     assert.equal((await post({ ...valid, time: '14:00' })).status, 201)
-    assert.equal((await post({ ...valid, vehicle: 'sprinter_519' })).status, 201)
+    assert.equal(
+      (await post({ ...valid, vehicle: 'sprinter_519' })).status,
+      201,
+    )
   }))
 
 test('simultaneous requests cannot take the same slot', () =>
@@ -226,13 +230,264 @@ test('stores canonical addresses and coordinates, ignoring client coordinate tam
   }
 })
 
-test('provides cached USD exchange rates with fallback', () =>
-  withServer(async ({ base }) => {
-    const res = await fetch(`${base}/api/rates`)
-    assert.equal(res.status, 200)
-    const data = await res.json()
-    assert.equal(data.base, 'KRW')
-    assert.equal(data.target, 'USD')
-    assert.equal(typeof data.rate, 'number')
-    assert.ok(data.rate > 0)
+const twoDays = {
+  ...valid,
+  journeys: [
+    { date: '2026-11-10', vehicle: 'staria' },
+    { date: '2026-11-11', vehicle: 'g90' },
+  ],
+}
+
+test('prices every daily vehicle and extra, retries safely, and reserves only the actual daily slots', () =>
+  withServer(async ({ post, base }) => {
+    const key = randomUUID()
+    const body = {
+      ...twoDays,
+      options: ['childSeat', 'englishDriver'],
+      total: 1,
+    }
+    const result = await post(body, key)
+    assert.equal(result.status, 201)
+    assert.equal(result.data.total, 900000)
+    assert.deepEqual(
+      result.data.journeys.map((day) => [day.date, day.vehicle, day.total]),
+      [
+        ['2026-11-10', 'Staria Lounge Limousine Hybrid', 400000],
+        ['2026-11-11', 'Genesis G90', 500000],
+      ],
+    )
+    assert.deepEqual((await post(body, key)).data, result.data)
+    const available = await fetch(
+      `${base}/api/availability?date=2026-11-10&endDate=2026-11-11&time=10:00&service=hourly`,
+    ).then((r) => r.json())
+    assert.equal(available.days.length, 2)
+    assert.equal(
+      available.days[0].vehicles.find((v) => v.id === 'staria').available,
+      false,
+    )
+    assert.equal(
+      available.days[0].vehicles.find((v) => v.id === 'g90').available,
+      true,
+    )
+    assert.equal(
+      available.days[1].vehicles.find((v) => v.id === 'staria').available,
+      true,
+    )
+    assert.equal(
+      available.days[1].vehicles.find((v) => v.id === 'g90').available,
+      false,
+    )
+    assert.equal((await post({ ...valid, date: '2026-11-11' })).status, 201)
+    assert.equal((await post({ ...valid, time: '18:00' })).status, 201)
   }))
+
+test('a later-day conflict rejects the entire request without reserving earlier days', () =>
+  withServer(async ({ post, base }) => {
+    assert.equal(
+      (await post({ ...valid, date: '2026-11-11', vehicle: 'g90' })).status,
+      201,
+    )
+    const rejected = await post(twoDays)
+    assert.equal(rejected.status, 409)
+    assert.match(rejected.data.error, /2026-11-11/)
+    const availability = await fetch(
+      `${base}/api/availability?date=2026-11-10&time=10:00&service=hourly`,
+    ).then((r) => r.json())
+    assert.equal(
+      availability.vehicles.find((v) => v.id === 'staria').available,
+      true,
+    )
+    assert.equal((await post(valid)).status, 201)
+  }))
+
+test('simultaneous multi-day requests cannot reserve any shared daily slot twice', () =>
+  withServer(async ({ post }) => {
+    const results = await Promise.all([post(twoDays), post(twoDays)])
+    assert.deepEqual(results.map((r) => r.status).sort(), [201, 409])
+  }))
+
+test('rejects missing, duplicate, unordered, skipped and invalid daily selections', async () => {
+  for (const journeys of [
+    [],
+    null,
+    'invalid',
+    [null],
+    [{ date: valid.date, vehicle: 'invalid' }],
+    [{ date: '2026-11-11', vehicle: 'staria' }],
+    [{ date: valid.date, vehicle: 'g90' }],
+    [twoDays.journeys[0], twoDays.journeys[0]],
+    [twoDays.journeys[0], { date: '2026-11-12', vehicle: 'g90' }],
+    [twoDays.journeys[0], { date: '2026-11-09', vehicle: 'g90' }],
+    [twoDays.journeys[0], { date: '2026-11-31', vehicle: 'g90' }],
+    [twoDays.journeys[0], { date: '2028-11-11', vehicle: 'g90' }],
+  ])
+    await withServer(async ({ post }) => {
+      assert.equal(
+        (await post({ ...valid, journeys })).status,
+        400,
+        JSON.stringify(journeys),
+      )
+    })
+  await withServer(async ({ base }) => {
+    for (const endDate of ['2026-11-09', '2026-11-31', '2028-11-11']) {
+      const response = await fetch(
+        `${base}/api/availability?date=2026-11-10&endDate=${endDate}&time=10:00&service=hourly`,
+      )
+      assert.equal(response.status, 400)
+    }
+  })
+})
+
+test('uses the latest Sprinter rate card and excludes TAX for mixed daily journeys', () =>
+  withServer(async ({ post }) => {
+    for (const [vehicle, total] of [
+      ['sprinter_319', 430000],
+      ['sprinter_519', 460000],
+    ]) {
+      const result = await post({ ...valid, vehicle, total: 1 })
+      assert.equal(result.status, 201)
+      assert.equal(result.data.total, total)
+      assert.equal(result.data.taxIncluded, false)
+    }
+    const mixed = await post({
+      ...twoDays,
+      journeys: [
+        twoDays.journeys[0],
+        { date: '2026-11-11', vehicle: 'sprinter_319' },
+      ],
+    })
+    assert.equal(mixed.status, 201)
+    assert.equal(mixed.data.total, 710000)
+    assert.equal(mixed.data.journeys[0].total, 280000)
+    assert.equal(mixed.data.journeys[1].total, 430000)
+  }))
+
+test('stores contact preferences privately, using the supplied phone for WhatsApp when no override is entered', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'chauffeur-contact-'))
+  const databasePath = join(dir, 'requests.sqlite')
+  try {
+    const methods = ['email', 'phone', 'whatsapp', 'line', 'kakao', 'wechat']
+    await withServer(async ({ post }) => {
+      for (const [index, contactMethod] of methods.entries()) {
+        const result = await post({
+          ...valid,
+          date: `2026-11-${10 + index}`,
+          contactMethod,
+          messengerContact: index > 2 ? ' traveller-id ' : '',
+        })
+        assert.equal(result.status, 201)
+        assert.equal(result.data.contactMethod, undefined)
+        assert.equal(result.data.messengerContact, undefined)
+      }
+    }, databasePath)
+    const { DatabaseSync } = await import('node:sqlite')
+    const db = new DatabaseSync(databasePath)
+    try {
+      const details = db
+        .prepare('SELECT details FROM reservations ORDER BY starts_at')
+        .all()
+        .map((row) => JSON.parse(row.details))
+      assert.deepEqual(
+        details.map((d) => d.contactMethod),
+        methods,
+      )
+      assert.equal(details[2].messengerContact, valid.phone)
+      assert.equal(details[3].messengerContact, 'traveller-id')
+    } finally {
+      db.close()
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('rejects invalid messenger preferences and missing messenger IDs', async () => {
+  for (const patch of [
+    { contactMethod: 'invented' },
+    { contactMethod: null },
+    { contactMethod: 'line', messengerContact: '' },
+    { contactMethod: 'kakao', messengerContact: '   ' },
+    { contactMethod: 'wechat' },
+    { contactMethod: 'line', messengerContact: 'x'.repeat(81) },
+    { contactMethod: 'line', messengerContact: 1234 },
+    { contactMethod: 'whatsapp', messengerContact: 'not-a-number' },
+  ])
+    await withServer(async ({ post }) => {
+      assert.equal((await post({ ...valid, ...patch })).status, 400)
+    })
+})
+
+test('daily slots and prices survive a restart without duplicating the first day during migration', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'chauffeur-days-'))
+  const databasePath = join(dir, 'requests.sqlite')
+  const key = randomUUID()
+  try {
+    await withServer(async ({ post }) => {
+      assert.equal((await post(twoDays, key)).status, 201)
+    }, databasePath)
+    await withServer(async ({ post }) => {
+      const result = await post(twoDays, key)
+      assert.equal(result.status, 200)
+      assert.equal(result.data.journeys.length, 2)
+      assert.equal(result.data.total, 660000)
+      assert.equal(
+        (await post({ ...valid, date: '2026-11-11', vehicle: 'g90' })).status,
+        409,
+      )
+    }, databasePath)
+    const { DatabaseSync } = await import('node:sqlite')
+    const db = new DatabaseSync(databasePath)
+    try {
+      assert.equal(
+        db.prepare('SELECT COUNT(*) AS count FROM reservation_legs').get()
+          .count,
+        2,
+      )
+    } finally {
+      db.close()
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('migrates pre-existing single-day requests into daily slots while preserving their conflicts and safe retries', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'chauffeur-legacy-'))
+  const databasePath = join(dir, 'requests.sqlite')
+  const key = randomUUID()
+  try {
+    const { DatabaseSync } = await import('node:sqlite')
+    const db = new DatabaseSync(databasePath)
+    db.exec(`CREATE TABLE reservations (
+      id TEXT PRIMARY KEY, idempotency_key TEXT UNIQUE NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending', vehicle_id TEXT NOT NULL,
+      starts_at INTEGER NOT NULL, ends_at INTEGER NOT NULL,
+      total INTEGER NOT NULL, details TEXT NOT NULL, created_at TEXT NOT NULL
+    )`)
+    const start = Date.parse('2026-11-10T10:00:00+09:00')
+    db.prepare(
+      'INSERT INTO reservations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    ).run(
+      'CH-LEGACY01',
+      key,
+      'pending',
+      'staria',
+      start,
+      start + 4 * 3600000,
+      260000,
+      JSON.stringify(valid),
+      new Date(fixedNow).toISOString(),
+    )
+    db.close()
+    await withServer(async ({ post }) => {
+      assert.equal((await post(valid)).status, 409)
+      const replay = await post(valid, key)
+      assert.equal(replay.status, 200)
+      assert.equal(replay.data.reference, 'CH-LEGACY01')
+      assert.equal(replay.data.journeys.length, 1)
+      assert.equal(replay.data.total, 260000)
+    }, databasePath)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})

@@ -55,7 +55,8 @@
       "model": "Executive Lounge Cabin · 9 Seats · Hybrid",
       "passengers": 9,
       "surcharge": 0,
-      "image": "/media/fleet/staria.png"
+      "image": "/media/fleet/staria.png",
+      "quoteRequired": false
     },
     {
       "id": "carnival_limousine",
@@ -63,7 +64,8 @@
       "model": "Luxury High-Roof Limousine · 6 Seats · Hybrid",
       "passengers": 6,
       "surcharge": 0,
-      "image": "/media/fleet/carnival_limousine.png"
+      "image": "/media/fleet/carnival_limousine.png",
+      "quoteRequired": false
     },
     {
       "id": "g90",
@@ -71,7 +73,8 @@
       "model": "Flagship Luxury Sedan · 3–4 Seats",
       "passengers": 3,
       "surcharge": 100000,
-      "image": "/media/fleet/g90.png"
+      "image": "/media/fleet/g90.png",
+      "quoteRequired": false
     },
     {
       "id": "sprinter_319",
@@ -79,7 +82,8 @@
       "model": "VIP Protocol High-Roof Van · 6 Seats",
       "passengers": 6,
       "surcharge": 150000,
-      "image": "/media/fleet/sprinter.png"
+      "image": "/media/fleet/sprinter.png",
+      "quoteRequired": false
     },
     {
       "id": "sprinter_519",
@@ -87,7 +91,8 @@
       "model": "Flagship VIP Protocol Limousine · 9 Seats",
       "passengers": 9,
       "surcharge": 180000,
-      "image": "/media/fleet/519_sprinter.png"
+      "image": "/media/fleet/519_sprinter.png",
+      "quoteRequired": false
     }
   ],
   "options": [
@@ -108,6 +113,33 @@
       "name": "Additional Waypoint Stop",
       "description": "Scheduled intermediate pick-up or meeting stop along your route",
       "price": 30000
+    }
+  ],
+  "taxIncluded": false,
+  "contactMethods": [
+    {
+      "id": "email",
+      "name": "Email"
+    },
+    {
+      "id": "phone",
+      "name": "Phone"
+    },
+    {
+      "id": "whatsapp",
+      "name": "WhatsApp"
+    },
+    {
+      "id": "line",
+      "name": "LINE"
+    },
+    {
+      "id": "kakao",
+      "name": "KakaoTalk"
+    },
+    {
+      "id": "wechat",
+      "name": "WeChat"
     }
   ]
 }

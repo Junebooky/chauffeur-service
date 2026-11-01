@@ -7,8 +7,9 @@ const root = resolve(import.meta.dirname, '..')
 
 test('hero fallback and video poster refer to real public assets', () => {
   const hero = readFileSync(join(root, 'src/Hero.tsx'), 'utf8')
-  const references = [...hero.matchAll(/(?:src|poster)="(\/media\/[^"]+)"/g)]
-    .map((match) => match[1])
+  const references = [
+    ...hero.matchAll(/(?:src|poster)="(\/media\/[^"]+)"/g),
+  ].map((match) => match[1])
   assert.ok(references.length > 0, 'No hero media paths found')
   for (const assetPath of new Set(references)) {
     const absolute = join(root, 'public', assetPath.slice(1))
@@ -18,10 +19,7 @@ test('hero fallback and video poster refer to real public assets', () => {
 
 test('reservation submit requires confirmed availability state', () => {
   const booking = readFileSync(join(root, 'src/Booking.tsx'), 'utf8')
-  assert.match(
-    booking,
-    /disabled=\{sending \|\| checking \|\| availability\[vehicle\] !== true\}/,
-  )
+  assert.match(booking, /step === 2 && !allAvailable/)
   assert.match(booking, /Availability check required/)
   assert.match(booking, /Time slot open for a request/)
   assert.doesNotMatch(booking, /Available for instant request/)
