@@ -694,9 +694,13 @@ export default function Booking({
                 <>
                   <X size={12} /> Choose another vehicle or time
                 </>
+              ) : availability[vehicle] === true ? (
+                <>
+                  <Check size={12} /> Time slot open for a request
+                </>
               ) : (
                 <>
-                  <Check size={12} /> Available for instant request
+                  <Clock3 size={12} /> Availability check required
                 </>
               )}
             </p>
@@ -715,7 +719,7 @@ export default function Booking({
             <button
               type="submit"
               className="button gold-button booking-submit"
-              disabled={sending || checking || availability[vehicle] === false}
+              disabled={sending || checking || availability[vehicle] !== true}
             >
               {sending ? (
                 <>
