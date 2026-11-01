@@ -9,7 +9,7 @@
       "price": 200000,
       "unit": "3 hours",
       "duration": 3,
-      "description": "Seamless airport arrivals and departures with real-time flight tracking and personalized meet-and-greet.",
+      "description": "Airport arrival and departure requests with optional flight details and personalized meet-and-greet arrangements.",
       "features": [
         "Meet & greet with personalized name sign",
         "Up to 60 minutes of complimentary wait time",
