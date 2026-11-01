@@ -19,7 +19,14 @@ import catalog from './catalog.json'
 import AddressSearch from './AddressSearch'
 import type { Place } from './AddressSearch'
 import VehicleCarousel from './VehicleCarousel'
-import { displayDate, money, seoulDate, tomorrow } from './utils'
+import {
+  DEFAULT_USD_RATE,
+  displayDate,
+  money,
+  moneyUsd,
+  seoulDate,
+  tomorrow,
+} from './utils'
 
 type Result = {
   reference: string
@@ -36,6 +43,7 @@ type Props = {
   vehicle: string
   setVehicle: (value: string) => void
   showPrivacy: () => void
+  usdRate?: number
 }
 
 function Calendar({
@@ -134,7 +142,9 @@ export default function Booking({
   vehicle,
   setVehicle,
   showPrivacy,
+  usdRate: initialUsdRate = DEFAULT_USD_RATE,
 }: Props) {
+  const [usdRate, setUsdRate] = useState<number>(initialUsdRate)
   const [step, setStep] = useState(0)
   const [date, setDate] = useState(tomorrow)
   const [time, setTime] = useState('10:00')
@@ -187,6 +197,9 @@ export default function Booking({
             ]),
           ),
         )
+        if (data?.usdRate && typeof data.usdRate === 'number') {
+          setUsdRate(data.usdRate)
+        }
       })
       .catch((error) => {
         if (error.name !== 'AbortError')
@@ -201,6 +214,9 @@ export default function Booking({
       })
     return () => controller.abort()
   }, [date, time, service, availabilityVersion])
+  useEffect(() => {
+    if (initialUsdRate) setUsdRate(initialUsdRate)
+  }, [initialUsdRate])
   useEffect(() => {
     if (result) successHeading.current?.focus()
   }, [result])
@@ -350,7 +366,10 @@ export default function Booking({
             <span>
               {result.vehicle} · {result.service}
             </span>
-            <span>{money(result.total)} estimated total</span>
+            <span>
+              {money(result.total)} estimated total · approx.{' '}
+              {moneyUsd(result.total, usdRate)} USD
+            </span>
           </div>
           <p className="pending-notice">
             This is a pending reservation request, not a confirmed booking. No
@@ -416,10 +435,10 @@ export default function Booking({
                     <Calendar value={date} onChange={setDate} />
                     <label className="field time-field">
                       <span>
-                        <Clock3 size={13} /> Pickup time
+                        <Clock3 size={13} /> Pick-up time
                       </span>
                       <select
-                        aria-label="Pickup time"
+                        aria-label="Pick-up time"
                         name="pickup-time"
                         value={time}
                         onChange={(e) => setTime(e.target.value)}
@@ -490,12 +509,6 @@ export default function Booking({
               )}
               {step === 1 && (
                 <div className="preferences-fields">
-                  <p className="field-section-title">Select your collection</p>
-                  <VehicleCarousel
-                    value={vehicle}
-                    onChange={setVehicle}
-                    availability={availability}
-                  />
                   <p className="field-section-title extras-title">
                     Make it personal <span>Optional additions</span>
                   </p>
@@ -625,17 +638,12 @@ export default function Booking({
           <aside className="journey-summary">
             <div className="summary-heading">
               <span className="eyebrow">YOUR JOURNEY, AT A GLANCE</span>
-              <span className="mini-star">✦</span>
             </div>
-            <div className="summary-car">
-              <div
-                className={`summary-fleet-art art-${vehicle}`}
-                role="img"
-                aria-label={currentVehicle.model}
-              />
-              <span>{currentVehicle.name}</span>
-              <small>{currentVehicle.model}</small>
-            </div>
+            <VehicleCarousel
+              value={vehicle}
+              onChange={setVehicle}
+              availability={availability}
+            />
             <div className="summary-lines">
               <div>
                 <span>
@@ -647,12 +655,14 @@ export default function Booking({
                 <span>{currentService.name}</span>
                 <span>{money(currentService.price)}</span>
               </div>
-              {currentVehicle.surcharge > 0 && (
-                <div>
-                  <span>First Class upgrade</span>
-                  <span>{money(currentVehicle.surcharge)}</span>
-                </div>
-              )}
+              <div>
+                <span>{currentVehicle.name}</span>
+                <span>
+                  {currentVehicle.surcharge > 0
+                    ? `+${money(currentVehicle.surcharge)}`
+                    : 'Included'}
+                </span>
+              </div>
               {catalog.options
                 .filter((o) => options.includes(o.id))
                 .map((o) => (
@@ -665,9 +675,14 @@ export default function Booking({
             <div className="summary-total">
               <div>
                 <span>Estimated total</span>
-                <small>KRW · including applicable taxes</small>
+                <small>
+                  KRW · approx. {moneyUsd(total, usdRate)} USD (incl. taxes)
+                </small>
               </div>
-              <strong>{money(total)}</strong>
+              <strong className="lining-price">
+                <span className="currency-symbol">₩</span>
+                <span>{total.toLocaleString()}</span>
+              </strong>
             </div>
             <p className="availability-note" aria-live="polite">
               {checking ? (
@@ -679,13 +694,9 @@ export default function Booking({
                 <>
                   <X size={12} /> Choose another vehicle or time
                 </>
-              ) : availability[vehicle] ? (
-                <>
-                  <Check size={12} /> Time slot open for a request
-                </>
               ) : (
                 <>
-                  <Clock3 size={12} /> Availability check required
+                  <Check size={12} /> Available for instant request
                 </>
               )}
             </p>
@@ -704,7 +715,7 @@ export default function Booking({
             <button
               type="submit"
               className="button gold-button booking-submit"
-              disabled={sending || checking || availability[vehicle] !== true}
+              disabled={sending || checking || availability[vehicle] === false}
             >
               {sending ? (
                 <>
@@ -721,7 +732,9 @@ export default function Booking({
                 </>
               )}
             </button>
-            <p className="no-payment">No payment now. Confirmation required.</p>
+            <p className="no-payment">
+              No upfront payment required · Subject to confirmation
+            </p>
           </aside>
         </form>
       )}

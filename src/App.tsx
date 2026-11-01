@@ -18,7 +18,7 @@ import Hero from './Hero'
 import Booking from './Booking'
 import { useJourneyScroll } from './useJourneyScroll'
 import catalog from './catalog.json'
-import { money } from './utils'
+import { DEFAULT_USD_RATE, moneyUsd } from './utils'
 
 function Brand({ onClick }: { onClick: () => void }) {
   return (
@@ -96,7 +96,8 @@ export default function App() {
   const [mobileMenu, setMobileMenu] = useState(false)
   const [modal, setModal] = useState<'contact' | 'privacy' | null>(null)
   const [service, setService] = useState('hourly')
-  const [vehicle, setVehicle] = useState('executive')
+  const [vehicle, setVehicle] = useState('carnival')
+  const [usdRate, setUsdRate] = useState<number>(DEFAULT_USD_RATE)
   const [fleetView, setFleetView] = useState<'exterior' | 'cabin' | 'cockpit'>(
     'exterior',
   )
@@ -105,6 +106,16 @@ export default function App() {
     setMobileMenu(false)
     scrollRef.current?.focus({ preventScroll: true })
   }
+  useEffect(() => {
+    fetch('/api/rates')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.rate && typeof data.rate === 'number') {
+          setUsdRate(data.rate)
+        }
+      })
+      .catch(() => {})
+  }, [])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMobileMenu(false)
@@ -371,8 +382,13 @@ export default function App() {
                 <p className="service-description">{s.description}</p>
                 <div className="service-price">
                   <span className="price-from">FROM</span>
-                  <strong>{money(s.price)}</strong>
-                  <span>/ {s.unit}</span>
+                  <strong className="lining-price">
+                    <span className="currency-symbol">₩</span>
+                    <span>{s.price.toLocaleString()}</span>
+                  </strong>
+                  <span>
+                    / {s.unit} · approx. {moneyUsd(s.price, usdRate)} USD
+                  </span>
                 </div>
                 <ul>
                   {s.features.map((feature) => (
@@ -395,7 +411,7 @@ export default function App() {
             ))}
           </div>
           <div className="services-footnote">
-            <span>Executive Sedan rates · KRW · taxes included</span>
+            <span>Standard Executive rates · KRW · taxes included</span>
             <span>
               Thoughtful extras. Always transparent. <ChevronDown size={12} />
             </span>
@@ -406,6 +422,7 @@ export default function App() {
           setService={setService}
           vehicle={vehicle}
           setVehicle={setVehicle}
+          usdRate={usdRate}
           showPrivacy={() => setModal('privacy')}
         />
       </main>

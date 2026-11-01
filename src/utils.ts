@@ -1,9 +1,18 @@
+export const DEFAULT_USD_RATE = 0.000749
+
 export const money = (amount: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'KRW',
     maximumFractionDigits: 0,
   }).format(amount)
+
+export const moneyUsd = (amount: number, rate: number = DEFAULT_USD_RATE) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount * rate))
 export const seoulDate = () =>
   new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Seoul',

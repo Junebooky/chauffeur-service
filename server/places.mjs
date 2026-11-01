@@ -19,7 +19,7 @@ const sessionValid = (value) =>
   typeof value === 'string' && /^[a-zA-Z0-9_-]{16,80}$/.test(value)
 
 export function createPlaces({
-  apiKey = process.env.GOOGLE_MAPS_API_KEY,
+  apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_PLACES_API_KEY,
   fetcher,
   now = () => Date.now(),
 } = {}) {
@@ -173,7 +173,11 @@ export function createPlaces({
         Math.abs(data.location?.latitude) > 90 ||
         Math.abs(data.location?.longitude) > 180 ||
         !data.addressComponents?.some(
-          (c) => c.types?.includes('country') && c.shortText === 'KR',
+          (c) =>
+            c.types?.includes('country') &&
+            (c.shortText === 'KR' ||
+              c.longText === 'South Korea' ||
+              c.longText === '대한민국'),
         ) ||
         !Number.isFinite(data.location?.latitude) ||
         !Number.isFinite(data.location?.longitude)

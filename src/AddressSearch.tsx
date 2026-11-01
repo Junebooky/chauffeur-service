@@ -240,7 +240,10 @@ export default function AddressSearch({
           <Check size={14} className="address-check" aria-hidden="true" />
         )}
       </div>
-      <p id={`${id}-help`} className="address-help">
+      <p
+        id={`${id}-help`}
+        className={`address-help ${place ? 'resolved' : ''}`}
+      >
         {place
           ? place.address
           : 'English, Korean or your own language · South Korea'}

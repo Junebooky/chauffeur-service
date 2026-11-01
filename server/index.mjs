@@ -1,9 +1,20 @@
-import { createApp } from './app.mjs'
-import express from 'express'
+import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import express from 'express'
+import { createApp } from './app.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
+
+// Load .env and .env.local if present
+for (const envName of ['.env', '.env.local']) {
+  const envPath = resolve(root, envName)
+  if (existsSync(envPath) && typeof process.loadEnvFile === 'function') {
+    try {
+      process.loadEnvFile(envPath)
+    } catch {}
+  }
+}
 const { app, close } = createApp({
   databasePath:
     process.env.DATABASE_PATH || resolve(root, '.data/reservations.sqlite'),

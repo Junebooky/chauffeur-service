@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { ChevronLeft, ChevronRight, Luggage, Users } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Luggage, Search, Users } from 'lucide-react'
 import catalog from './catalog.json'
 import { money } from './utils'
 
@@ -13,16 +13,69 @@ export default function VehicleCarousel({
   availability: Record<string, boolean>
 }) {
   const active = catalog.vehicles.findIndex((v) => v.id === value)
-  const current = catalog.vehicles[active]
-  const other = catalog.vehicles[(active + 1) % catalog.vehicles.length]
+  const current = catalog.vehicles[active] || catalog.vehicles[0]
   const touch = useRef({ x: 0, y: 0 })
   const suppressed = useRef(0)
-  const change = (direction: number) =>
-    onChange(
-      catalog.vehicles[
-        (active + direction + catalog.vehicles.length) % catalog.vehicles.length
-      ].id,
-    )
+  const [showSpecs, setShowSpecs] = useState(false)
+
+  // Pre-load and pre-decode all 4 vehicle textures into GPU cache
+  useEffect(() => {
+    catalog.vehicles.forEach((v) => {
+      const img = new Image()
+      img.src = v.image
+      if ('decode' in img) {
+        img.decode().catch(() => { })
+      }
+    })
+  }, [])
+
+  const n = catalog.vehicles.length
+  const change = (direction: number) => {
+    const nextIndex = (active + direction + n) % n
+    onChange(catalog.vehicles[nextIndex].id)
+  }
+
+  // Calculate convex mirror fisheye position for 4 vehicles
+  const getCarStyle = (index: number) => {
+    let diff = index - active
+    if (diff > n / 2) diff -= n
+    if (diff <= -n / 2) diff += n
+
+    // 1. Center focused car: dramatic convex zoom & forward pop
+    if (diff === 0) {
+      return {
+        transform: 'translateX(0%) translateY(5%) scale(1.42) rotateY(0deg)',
+        zIndex: 10,
+        opacity: 1,
+      }
+    }
+    // 2. Left flanking car: shifted left without overlapping the center car
+    if (diff === -1) {
+      return {
+        transform:
+          'translateX(-66%) translateY(-2%) scale(0.68) rotateY(22deg)',
+        zIndex: 4,
+        opacity: 0.65,
+      }
+    }
+    // 3. Right flanking car: shifted right without overlapping the center car
+    if (diff === 1) {
+      return {
+        transform:
+          'translateX(66%) translateY(-2%) scale(0.68) rotateY(-22deg)',
+        zIndex: 4,
+        opacity: 0.65,
+      }
+    }
+    // 4. Opposite back car: tucked behind in perspective
+    return {
+      transform: 'translateX(0%) translateY(-12%) scale(0.48) rotateY(0deg)',
+      zIndex: 1,
+      opacity: 0,
+      pointerEvents: 'none' as const,
+    }
+  }
+
   return (
     <div
       className="fleet-selector"
@@ -46,7 +99,7 @@ export default function VehicleCarousel({
       onTouchEnd={(e) => {
         const dx = e.changedTouches[0].clientX - touch.current.x
         const dy = e.changedTouches[0].clientY - touch.current.y
-        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
           if (e.cancelable) e.preventDefault()
           suppressed.current = performance.now() + 350
           change(dx < 0 ? 1 : -1)
@@ -54,37 +107,51 @@ export default function VehicleCarousel({
       }}
     >
       <div className="fleet-selector-heading">
-        <span>Interactive selection</span>
-        <small>
-          0{active + 1} / 0{catalog.vehicles.length}
-        </small>
-      </div>
-      <div className="fleet-stage">
-        <div className="fleet-orbit" aria-hidden="true" />
-        <button
-          type="button"
-          className="fleet-car fleet-echo"
-          aria-label="View previous vehicle"
-          onClick={() => {
-            if (performance.now() >= suppressed.current) change(-1)
-          }}
-        >
-          <span className={`fleet-car-art art-${other.id}`} />
-        </button>
-        {catalog.vehicles.map((v) => (
+        <span className="fleet-heading-title">Select your vehicle</span>
+        <div className="fleet-heading-actions">
           <button
             type="button"
-            key={v.id}
-            aria-label={`${v.name} — ${v.model}`}
-            aria-pressed={value === v.id}
-            className={`fleet-car ${value === v.id ? 'fleet-center' : 'fleet-right'}`}
-            onClick={() => {
-              if (performance.now() >= suppressed.current) onChange(v.id)
-            }}
+            className="fleet-search-btn"
+            aria-label="View fleet overview"
+            title="Overview of all vehicles"
+            onClick={() => setShowSpecs((prev) => !prev)}
           >
-            <span className={`fleet-car-art art-${v.id}`} aria-hidden="true" />
+            <Search size={15} />
           </button>
-        ))}
+        </div>
+      </div>
+
+      <div className="fleet-stage">
+        <div className="fleet-orbit" aria-hidden="true" />
+        <div className="fleet-lens-glow" aria-hidden="true" />
+
+        {catalog.vehicles.map((v, i) => {
+          const style = getCarStyle(i)
+          const isSelected = value === v.id
+          return (
+            <button
+              type="button"
+              key={v.id}
+              aria-label={`${v.name} — ${v.model}`}
+              aria-pressed={isSelected}
+              className={`fleet-car ${isSelected ? 'fleet-center' : ''}`}
+              style={style}
+              onClick={() => {
+                if (performance.now() >= suppressed.current) onChange(v.id)
+              }}
+            >
+              <img
+                src={v.image}
+                alt={v.name}
+                className="fleet-car-image"
+                loading="eager"
+                decoding="sync"
+                draggable={false}
+              />
+            </button>
+          )
+        })}
+
         <button
           type="button"
           className="fleet-arrow fleet-prev"
@@ -102,27 +169,32 @@ export default function VehicleCarousel({
           <ChevronRight size={20} />
         </button>
       </div>
+
       <div className="fleet-pagination" aria-label="Select a vehicle">
-        {catalog.vehicles.map((v) => (
+        {catalog.vehicles.map((v, i) => (
           <button
             key={v.id}
             type="button"
             className={value === v.id ? 'active' : ''}
-            aria-label={`Select ${v.name}`}
+            aria-label={`Select ${v.name} (0${i + 1})`}
             aria-pressed={value === v.id}
             onClick={() => onChange(v.id)}
           />
         ))}
       </div>
+
       <div className="fleet-selected" aria-live="polite" aria-atomic="true">
         <div>
-          <h4>{current.name}</h4>
+          <h4>
+            {current.name}
+          </h4>
           <p>{current.model}</p>
         </div>
         <span className="fleet-surcharge">
           {current.surcharge ? `+${money(current.surcharge)}` : 'Included'}
         </span>
       </div>
+
       <div className="fleet-selected-meta">
         <span>
           <Users size={12} /> {current.passengers} guests
@@ -138,8 +210,35 @@ export default function VehicleCarousel({
             : 'Private chauffeur'}
         </span>
       </div>
+
+      {showSpecs && (
+        <div className="fleet-specs-grid">
+          {catalog.vehicles.map((v) => (
+            <button
+              type="button"
+              key={v.id}
+              className={`fleet-spec-card ${v.id === value ? 'selected' : ''}`}
+              onClick={() => {
+                onChange(v.id)
+                setShowSpecs(false)
+              }}
+            >
+              <img src={v.image} alt={v.name} />
+              <div className="spec-info">
+                <strong>{v.name}</strong>
+                <small>{v.model}</small>
+                <span>
+                  {v.surcharge ? `+${money(v.surcharge)}` : 'Included'}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
       <p className="fleet-hint">
-        Use the arrows, tap a car or swipe to explore. Images are illustrative.
+        Click or swipe vehicles to select. Convex perspective adapts to your
+        collection.
       </p>
     </div>
   )

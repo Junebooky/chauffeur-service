@@ -5,11 +5,13 @@ import { dirname, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import catalog from '../src/catalog.json' with { type: 'json' }
 import { createPlaces } from './places.mjs'
+import { createRatesService } from './rates.mjs'
 
 export function createApp({
   databasePath = resolve('.data/reservations.sqlite'),
   now = () => Date.now(),
   placesOptions = {},
+  ratesOptions = {},
 } = {}) {
   if (databasePath !== ':memory:')
     mkdirSync(dirname(databasePath), { recursive: true })
@@ -33,6 +35,7 @@ export function createApp({
   })
   const places = createPlaces({ now, ...placesOptions })
   app.use('/api/places', places.router)
+  const rates = createRatesService({ now, ...ratesOptions })
 
   function schedule(input) {
     const service = catalog.services.find((s) => s.id === input.service)
@@ -78,14 +81,24 @@ export function createApp({
       res.status(503).json({ error: 'Reservation storage is unavailable.' })
     }
   })
-  app.get('/api/availability', (req, res) => {
+  app.get('/api/rates', async (_req, res) => {
+    try {
+      const data = await rates.getRate()
+      res.json(data)
+    } catch {
+      res.json({ base: 'KRW', target: 'USD', rate: 0.000749 })
+    }
+  })
+  app.get('/api/availability', async (req, res) => {
     try {
       const { startsAt, endsAt } = schedule(req.query)
+      const rateData = await rates.getRate().catch(() => ({ rate: 0.000749 }))
       res.json({
         vehicles: catalog.vehicles.map((v) => ({
           id: v.id,
           available: !occupied.get(v.id, endsAt, startsAt),
         })),
+        usdRate: rateData.rate,
       })
     } catch (error) {
       res.status(400).json({ error: error.message })

@@ -11,7 +11,6 @@ export default function Hero({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [needsPlay, setNeedsPlay] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [ended, setEnded] = useState(false)
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
@@ -73,7 +72,6 @@ export default function Hero({
           </button>
         </div>
         <div className="hero-aside">
-          <span className="mini-star">✦</span>
           <p>
             Some journeys
             <br />
@@ -106,7 +104,6 @@ export default function Hero({
                   setProgress(v.currentTime / v.duration)
               }}
               onEnded={() => {
-                setEnded(true)
                 setProgress(1)
                 setNeedsPlay(false)
               }}
@@ -128,17 +125,7 @@ export default function Hero({
         </div>
         <div className="hero-floor" />
         <div className="hero-bottom">
-          <div className="scroll-prompt">
-            <div className="scroll-mouse" aria-hidden="true">
-              <span />
-            </div>
-            <div>
-              <span>
-                {ended ? 'YOUR DOOR IS OPEN' : 'A WARM WELCOME AWAITS'}
-              </span>
-              <small>Scroll to discover the collection.</small>
-            </div>
-          </div>
+
           {needsPlay && !failed && !reducedMotion && (
             <button className="text-link welcome-play" onClick={play}>
               <Play size={13} /> Play welcome film

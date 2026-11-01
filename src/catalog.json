@@ -5,86 +5,104 @@
     {
       "id": "airport",
       "name": "Airport transfer",
-      "eyebrow": "A seamless welcome",
-      "price": 120000,
-      "unit": "one way",
-      "duration": 2,
-      "description": "From the arrivals hall to your next chapter. We'll take it from here.",
+      "eyebrow": "Incheon & Gimpo Airport Protocol",
+      "price": 200000,
+      "unit": "3 hours",
+      "duration": 3,
+      "description": "Seamless airport arrivals and departures with real-time flight tracking and personalized meet-and-greet.",
       "features": [
-        "Airport meet & greet",
-        "60-minute waiting allowance",
-        "Flight details with your request",
-        "Bottled water & connectivity"
+        "Meet & greet with personalized name sign",
+        "Up to 60 minutes of complimentary wait time",
+        "English-speaking professional chauffeur",
+        "Fuel, tolls, and bottled water included"
       ]
     },
     {
       "id": "hourly",
       "name": "By the hour",
-      "eyebrow": "The city, on your terms",
-      "price": 260000,
+      "eyebrow": "Flexible Hourly Charter",
+      "price": 280000,
       "unit": "4 hours",
       "duration": 4,
-      "description": "A driver at your disposal. A day that moves entirely to your rhythm.",
+      "description": "Bespoke point-to-point travel tailored to your business meetings or private itinerary.",
       "features": [
-        "Four hours of private service",
-        "Multiple stops, your itinerary",
-        "Professional English-speaking driver",
-        "Bottled water & connectivity"
+        "4 hours of dedicated private service",
+        "Unlimited stops within your schedule",
+        "English-speaking professional chauffeur",
+        "Seamless travel across the Seoul metropolitan area"
       ]
     },
     {
       "id": "day",
       "name": "Full day",
-      "eyebrow": "Make a day of it",
-      "price": 480000,
-      "unit": "8 hours",
-      "duration": 8,
-      "description": "The freedom to explore, with every detail quietly taken care of.",
+      "eyebrow": "Full-Day VIP Protocol",
+      "price": 430000,
+      "unit": "9 hours",
+      "duration": 9,
+      "description": "9 hours (09:00–18:00) of dedicated executive service. Uncompromising comfort and prestige.",
       "features": [
-        "Eight hours of private service",
-        "A personalised city itinerary",
-        "Professional English-speaking driver",
-        "Bottled water & connectivity"
+        "9 hours of service (125 km included)",
+        "Dedicated VIP protocol chauffeur",
+        "English-speaking professional chauffeur",
+        "Tailored for corporate events and diplomatic delegations"
       ]
     }
   ],
   "vehicles": [
     {
-      "id": "executive",
-      "name": "Executive Sedan",
-      "model": "BMW 7 Series or similar",
-      "passengers": 3,
-      "luggage": 2,
+      "id": "carnival",
+      "name": "Kia Carnival",
+      "model": "Premium 4th Gen MPV · 7–9 Seats",
+      "passengers": 6,
+      "luggage": 4,
       "surcharge": 0,
-      "image": "/media/hero/000.webp"
+      "image": "/media/fleet/carnival.png"
     },
     {
-      "id": "first",
-      "name": "First Class Sedan",
-      "model": "Mercedes-Benz S-Class or similar",
-      "passengers": 3,
-      "luggage": 2,
-      "surcharge": 60000,
-      "image": "/media/exterior.webp"
+      "id": "carnival_limousine",
+      "name": "Carnival Hi-Limousine",
+      "model": "Luxury High-Roof Limousine · 4–7 Seats",
+      "passengers": 6,
+      "luggage": 5,
+      "surcharge": 30000,
+      "image": "/media/fleet/carnival_limousine.png"
+    },
+    {
+      "id": "staria",
+      "name": "Staria Lounge Limousine",
+      "model": "Executive Lounge Cabin · 7–9 Seats",
+      "passengers": 7,
+      "luggage": 5,
+      "surcharge": 20000,
+      "image": "/media/fleet/staria.png"
+    },
+    {
+      "id": "sprinter",
+      "name": "Mercedes Sprinter 519",
+      "model": "Flagship VIP Protocol Limousine · 9–12 Seats",
+      "passengers": 11,
+      "luggage": 10,
+      "surcharge": 150000,
+      "image": "/media/fleet/sprinter.png"
     }
   ],
   "options": [
     {
+      "id": "englishDriver",
+      "name": "Fluent English Chauffeur",
+      "description": "Dedicated English-fluent VIP chauffeur for diplomatic & corporate delegations",
+      "price": 100000
+    },
+    {
       "id": "childSeat",
-      "name": "Child seat",
-      "description": "For your smallest travelling companion",
+      "name": "Child Safety Seat",
+      "description": "Premium certified safety seat for infants or young passengers",
       "price": 20000
     },
     {
-      "id": "welcome",
-      "name": "Personalised welcome",
-      "description": "A name board, a thoughtful first impression",
-      "price": 10000
-    },
-    {
       "id": "extraStop",
-      "name": "Additional stop",
-      "description": "One more place along the way",
+      "name": "Additional Waypoint Stop",
+      "description": "Scheduled intermediate pick-up or meeting stop along your route",
       "price": 30000
     }
   ]

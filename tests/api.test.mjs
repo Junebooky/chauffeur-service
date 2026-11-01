@@ -11,7 +11,7 @@ const valid = {
   date: '2026-11-10',
   time: '10:00',
   service: 'hourly',
-  vehicle: 'executive',
+  vehicle: 'carnival',
   pickup: 'Incheon Airport Terminal 2',
   destination: 'Four Seasons Hotel Seoul',
   pickupPlace: { id: 'curated:icn-t2' },
@@ -28,6 +28,7 @@ async function withServer(run, databasePath = ':memory:') {
     databasePath,
     now: () => fixedNow,
     placesOptions: { apiKey: '' },
+    ratesOptions: { fetchRate: async () => 0.00075 },
   })
   const server = await new Promise((resolve) => {
     const s = instance.app.listen(0, '127.0.0.1', () => resolve(s))
@@ -64,13 +65,13 @@ test('saves a pending request and independently calculates the price', () =>
   withServer(async ({ post }) => {
     const result = await post({
       ...valid,
-      vehicle: 'first',
-      options: ['childSeat', 'welcome'],
+      vehicle: 'sprinter',
+      options: ['childSeat'],
       total: 1,
     })
     assert.equal(result.status, 201)
     assert.equal(result.data.status, 'pending')
-    assert.equal(result.data.total, 350000)
+    assert.equal(result.data.total, 450000)
     assert.match(result.data.reference, /^CH-[0-9A-F]{8}$/)
     assert.equal(result.data.currency, 'KRW')
     assert.equal(result.data.email, undefined)
@@ -95,11 +96,13 @@ test('rejects overlapping journeys and reports per-vehicle availability', () =>
       `${base}/api/availability?date=2026-11-10&time=12:00&service=hourly`,
     ).then((r) => r.json())
     assert.deepEqual(available.vehicles, [
-      { id: 'executive', available: false },
-      { id: 'first', available: true },
+      { id: 'carnival', available: false },
+      { id: 'carnival_limousine', available: true },
+      { id: 'staria', available: true },
+      { id: 'sprinter', available: true },
     ])
     assert.equal((await post({ ...valid, time: '14:00' })).status, 201)
-    assert.equal((await post({ ...valid, vehicle: 'first' })).status, 201)
+    assert.equal((await post({ ...valid, vehicle: 'sprinter' })).status, 201)
   }))
 
 test('simultaneous requests cannot take the same slot', () =>
@@ -221,3 +224,14 @@ test('stores canonical addresses and coordinates, ignoring client coordinate tam
     rmSync(dir, { recursive: true, force: true })
   }
 })
+
+test('provides cached USD exchange rates with fallback', () =>
+  withServer(async ({ base }) => {
+    const res = await fetch(`${base}/api/rates`)
+    assert.equal(res.status, 200)
+    const data = await res.json()
+    assert.equal(data.base, 'KRW')
+    assert.equal(data.target, 'USD')
+    assert.equal(typeof data.rate, 'number')
+    assert.ok(data.rate > 0)
+  }))
