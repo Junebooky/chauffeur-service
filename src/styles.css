@@ -1,10 +1,6 @@
-@font-face {
-  font-family: Manrope;
-  src: url('/fonts/manrope.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 200 800;
-  font-display: swap;
-}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
 @font-face {
   font-family: Cormorant;
   src: url('/fonts/cormorant-garamond.ttf') format('truetype');
@@ -21,7 +17,6 @@
 }
 :root {
   font-family:
-    Manrope,
     Pretendard,
     -apple-system,
     BlinkMacSystemFont,
@@ -37,7 +32,8 @@
   --gold-light: #e3c581;
   --muted: #979a92;
   --line: rgba(204, 195, 171, 0.16);
-  --serif: Cormorant, 'Noto Serif KR', 'MaruBuri', Georgia, serif;
+  --serif: 'Playfair Display', Cormorant, Georgia, serif;
+  --sans: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
   --gutter: clamp(28px, 6.25vw, 100px);
   --header: 90px;
 }
@@ -47,12 +43,14 @@
 body {
   margin: 0;
   overflow: hidden;
+  font-family: var(--sans);
 }
 button,
 input,
 select,
 textarea {
   font: inherit;
+  font-family: var(--sans);
 }
 button,
 a,
@@ -109,6 +107,7 @@ h3 {
 h1,
 h2,
 h3 {
+  font-family: var(--serif);
   font-weight: 400;
 }
 em {
@@ -191,7 +190,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   letter-spacing: 3.1px;
 }
 .brand small {
-  font-family: Manrope, Arial, sans-serif;
+  font-family: var(--sans);
   display: block;
   font-size: 7.8px;
   letter-spacing: 2.3px;
@@ -859,7 +858,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: #ffffff;
   line-height: 1.1;
   margin-bottom: 10px;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--sans);
+  font-family: var(--serif);
 }
 
 .fleet-subtitle {
@@ -1318,12 +1317,13 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: #ffffff;
   line-height: 1.15;
   margin-bottom: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--sans);
+  font-family: var(--serif);
 }
 
 .fleet-detail-title-sub {
-  font-weight: 300;
+  font-weight: 400;
   color: #d4d4dc;
+  font-family: var(--serif);
 }
 
 .fleet-detail-desc {
@@ -3190,7 +3190,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     color: #d5d6c4;
   }
   .mobile-nav > button > span {
-    font-family: Manrope, Arial, sans-serif;
+    font-family: var(--sans);
     font-size: 11px;
     color: var(--gold);
   }
@@ -4782,7 +4782,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   padding: 0 4px;
 }
 .fleet-heading-title {
-  font-family: var(--sans);
+  font-family: var(--serif);
   font-size: 15px;
   font-weight: 500;
   letter-spacing: -0.2px;
@@ -5221,7 +5221,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   font-weight: 600;
 }
 .summary-total .quote-on-request {
-  font-family: Manrope, Arial, sans-serif;
+  font-family: var(--sans);
   font-size: 16px;
   letter-spacing: 0;
   white-space: normal;
