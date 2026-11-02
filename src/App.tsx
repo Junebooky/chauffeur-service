@@ -7,14 +7,13 @@ import {
   ChevronDown,
   Clock3,
   Globe2,
-  Luggage,
   Menu,
   ShieldCheck,
   Sparkles,
-  Users,
   X,
 } from 'lucide-react'
 import Hero from './Hero'
+import FleetSection from './FleetSection'
 import Booking from './Booking'
 import { useJourneyScroll } from './useJourneyScroll'
 import catalog from './catalog.json'
@@ -98,9 +97,6 @@ export default function App() {
   const [service, setService] = useState('hourly')
   const [vehicle, setVehicle] = useState('staria')
   const [usdRate, setUsdRate] = useState<number>(DEFAULT_USD_RATE)
-  const [fleetView, setFleetView] = useState<'exterior' | 'cabin' | 'cockpit'>(
-    'exterior',
-  )
   const nav = (index: number) => {
     goTo(index)
     setMobileMenu(false)
@@ -114,7 +110,7 @@ export default function App() {
           setUsdRate(data.rate)
         }
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -214,125 +210,7 @@ export default function App() {
         aria-label="Chauffeur experience"
       >
         <Hero reducedMotion={reducedMotion} goTo={nav} />
-        <section
-          id="collection"
-          className="screen collection-screen"
-          aria-labelledby="collection-title"
-        >
-          <div className="section-topline">
-            <span className="eyebrow">
-              <span className="gold-line" /> EXCELLENCE, IN EVERY DETAIL
-            </span>
-            <span className="section-numeral">02 / THE COLLECTION</span>
-          </div>
-          <div className="section-heading">
-            <h2 id="collection-title">
-              A class
-              <br />
-              <em>of its own.</em>
-            </h2>
-            <div className="collection-intro">
-              <p>
-                A quiet sanctuary in a moving city.
-                <br />
-                Meticulously prepared. Beautifully appointed.
-                <br />
-                Sedans & Sprinters, tailored to your party.
-              </p>
-              <span className="small-caps">OUR STANDARD IS EXCEPTIONAL.</span>
-            </div>
-          </div>
-          <div className="collection-layout">
-            <div className={`collection-feature view-${fleetView}`}>
-              <img
-                key={fleetView}
-                src={`/media/${fleetView}.webp`}
-                alt={
-                  fleetView === 'exterior'
-                    ? 'Black luxury sedan with polished alloy wheels and a refined silhouette'
-                    : fleetView === 'cabin'
-                      ? 'A quiet leather cabin with soft ambient lighting'
-                      : 'An immaculate luxury cockpit with a wood-trimmed dashboard'
-                }
-              />
-              <span className="photo-label">
-                {fleetView === 'exterior'
-                  ? '01 — A PRESENCE, NOT A STATEMENT'
-                  : fleetView === 'cabin'
-                    ? '02 — YOUR PRIVATE SANCTUARY'
-                    : '03 — BEAUTY IN EVERY DETAIL'}
-              </span>
-              <div className="view-select" aria-label="Vehicle detail views">
-                {(['exterior', 'cabin', 'cockpit'] as const).map((view) => (
-                  <button
-                    key={view}
-                    onClick={() => setFleetView(view)}
-                    aria-pressed={fleetView === view}
-                    className={fleetView === view ? 'active' : ''}
-                  >
-                    {view}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="collection-details">
-              <div className="cabin-preview">
-                <img
-                  src="/media/cabin.webp"
-                  alt="Premium leather seats and ambient cabin lighting"
-                  loading="lazy"
-                />
-                <span>
-                  <Sparkles size={12} /> A SPACE TO SIMPLY BE.
-                </span>
-              </div>
-              <div className="detail-list">
-                <div>
-                  <ShieldCheck size={20} strokeWidth={1} />
-                  <span>
-                    Immaculately prepared
-                    <small>
-                      A carefully detailed vehicle for every arrival.
-                    </small>
-                  </span>
-                </div>
-                <div>
-                  <Sparkles size={20} strokeWidth={1} />
-                  <span>
-                    Comfort without compromise
-                    <small>Supple leather. A beautifully quiet cabin.</small>
-                  </span>
-                </div>
-                <div>
-                  <Globe2 size={20} strokeWidth={1} />
-                  <span>
-                    Service that understands you
-                    <small>Professional, discreet, English-speaking.</small>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="collection-bottom">
-            <div className="collection-specs">
-              <span>
-                <Users size={15} /> Sedans · up to 3 guests
-              </span>
-              <span>
-                <Luggage size={15} /> Sprinter 319 · 6 seats
-              </span>
-              <span>
-                <ShieldCheck size={15} /> Sprinter 519 · 9 seats
-              </span>
-            </div>
-            <button className="text-link" onClick={() => nav(3)}>
-              Find your perfect ride <ArrowUpRight size={17} />
-            </button>
-          </div>
-          <button className="section-next" onClick={() => nav(2)}>
-            EXPLORE OUR SERVICES
-          </button>
-        </section>
+        <FleetSection goTo={nav} onSelectVehicle={setVehicle} />
         <section
           id="services"
           className="screen services-screen"

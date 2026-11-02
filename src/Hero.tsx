@@ -1,4 +1,4 @@
-import { ArrowUpRight, MoveRight } from 'lucide-react'
+import { MoveRight } from 'lucide-react'
 
 export default function Hero({
   reducedMotion: _reducedMotion,
@@ -33,14 +33,6 @@ export default function Hero({
             <br />
             <em>arriving.</em>
           </h1>
-          <p className="hero-description">
-            Exceptional cars. Considered service.
-            <br />
-            Every journey, a class of its own.
-          </p>
-          <button className="text-link hero-link" onClick={() => goTo(3)}>
-            Make it your journey <ArrowUpRight size={17} />
-          </button>
         </div>
         <div className="hero-aside">
           <p>
@@ -52,7 +44,16 @@ export default function Hero({
           </p>
           <span className="tiny-label">THE CHAUFFEUR STANDARD</span>
         </div>
-        <div className="hero-caption">
+        <div
+          className="hero-caption"
+          role="button"
+          tabIndex={0}
+          onClick={() => goTo(1)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') goTo(1)
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <span>THE EXECUTIVE COLLECTION</span>
           <span>
             Quiet confidence. Unmistakable presence. <MoveRight size={13} />

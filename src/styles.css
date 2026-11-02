@@ -682,166 +682,539 @@ em {
 .collection-screen {
   background: var(--bg);
 }
-.collection-intro {
-  width: 32%;
-  padding-bottom: 2px;
-}
-.collection-intro .small-caps {
-  display: block;
-  margin-top: 17px;
-}
-.collection-layout {
-  display: grid;
-  grid-template-columns: 1.65fr 1fr;
-  gap: 30px;
-  flex: 1;
-  min-height: 0;
-}
-.collection-feature {
-  overflow: hidden;
-  background: var(--panel);
-  border: 1px solid var(--line);
+
+/* ==========================================================================
+   FLEET APPLE-STYLE SECTION (02 / THE COLLECTION)
+   ========================================================================== */
+.fleet-apple-section {
   position: relative;
-  min-height: 0;
+  overflow: hidden;
+  padding: calc(var(--header) + 16px) var(--gutter) 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-.collection-feature:after {
+
+/* Fullscreen Studio Backdrop Layers (2560x1440 aligned ground plane) */
+.fleet-bg-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.fleet-bg-stage::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    0deg,
-    #08090be6,
-    transparent 25%,
-    transparent 75%,
-    #111316aa
+    180deg,
+    rgba(8, 9, 12, 0.45) 0%,
+    transparent 20%,
+    transparent 60%,
+    rgba(8, 9, 12, 0.75) 88%,
+    rgba(8, 9, 12, 0.95) 100%
   );
   pointer-events: none;
 }
-.collection-feature > img {
+
+.fleet-bg-layer {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: fadeIn 0.6s;
+  object-position: center bottom;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
 }
-.collection-feature.view-exterior > img {
-  object-position: 40% 55%;
-  filter: contrast(1.05);
+
+.fleet-bg-layer.active {
+  opacity: 1;
 }
-.collection-feature.view-cabin > img,
-.collection-feature.view-cockpit > img {
-  object-position: 65% 50%;
+
+/* Top bar */
+.fleet-topbar {
+  position: relative;
+  z-index: 10;
+  margin-bottom: 0;
 }
-.photo-label {
-  position: absolute;
-  top: 22px;
-  left: 22px;
-  font-size: 8px;
-  letter-spacing: 2px;
-  color: #c9c9b6;
-  z-index: 2;
+
+.fleet-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e4e4e7;
+  padding: 7px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.22s ease;
 }
-.view-select {
-  position: absolute;
-  bottom: 22px;
-  left: 23px;
-  display: flex;
-  gap: 22px;
-  z-index: 2;
+
+.fleet-back-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #D4AF37;
+  color: #D4AF37;
+  transform: translateX(-2px);
 }
-.view-select button {
-  font-size: 10px;
-  color: #919a8a;
-  text-transform: capitalize;
-  border-bottom: 1px solid transparent;
-  padding: 0 0 7px;
-}
-.view-select button.active {
-  border-color: var(--gold);
-  color: var(--gold);
-}
-.collection-details {
+
+/* Middle Content Area */
+.fleet-stage-content {
+  position: relative;
+  z-index: 10;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   min-height: 0;
 }
-.cabin-preview {
-  height: 42%;
-  min-height: 85px;
+
+/* Overview Header (Matching Reference Image 1) */
+.fleet-overview-header {
   position: relative;
-  overflow: hidden;
+  z-index: 10;
+  text-align: center;
+  margin-top: clamp(10px, 2.5vh, 32px);
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.cabin-preview > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 70% 60%;
-  filter: brightness(0.8);
+
+.fleet-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 8px;
 }
-.cabin-preview > span {
-  position: absolute;
-  left: 16px;
-  bottom: 12px;
-  display: flex;
-  gap: 8px;
+
+.fleet-main-title {
+  font-size: clamp(38px, 4.4vw, 56px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--sans);
+}
+
+.fleet-subtitle {
+  font-size: clamp(14px, 1.15vw, 16px);
+  color: #9d9da6;
+  font-weight: 400;
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Vehicle Detail Info (When a car is selected) */
+.fleet-detail-info {
+  position: relative;
+  z-index: 10;
+  max-width: 600px;
+  margin-top: clamp(8px, 2vh, 26px);
+}
+
+.fleet-detail-badge {
+  display: inline-flex;
   align-items: center;
-  font-size: 7px;
-  letter-spacing: 1.7px;
-  color: #dacdaf;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #D4AF37;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
-.detail-list {
+
+.fleet-detail-title {
+  font-size: clamp(34px, 3.8vw, 48px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  line-height: 1.15;
+  margin-bottom: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--sans);
+}
+
+.fleet-detail-title-sub {
+  font-weight: 300;
+  color: #d4d4dc;
+}
+
+.fleet-detail-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #a6a6b2;
+  margin-bottom: 16px;
+  max-width: 520px;
+}
+
+.fleet-specs-pills {
   display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  flex: 1;
-  padding-top: 12px;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
 }
-.detail-list > div {
+
+.fleet-spec-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 13px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #e4e4e7;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.fleet-detail-actions {
   display: flex;
   align-items: center;
   gap: 16px;
-  border-bottom: 1px solid var(--line);
-  padding: 8px 0 15px;
-  color: var(--gold);
 }
-.detail-list > div:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+
+.fleet-reserve-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #D4AF37;
+  color: #0b0c10;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.35);
 }
-.detail-list > div > span {
-  font-size: 12px;
-  color: #d7d9cd;
-  line-height: 1.4;
+
+.fleet-reserve-btn:hover {
+  background: #e5c158;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.5);
 }
-.detail-list small {
-  display: block;
-  font-size: 10px;
-  color: #88927f;
-  margin-top: 6px;
+
+.fleet-explore-link {
+  background: none;
+  border: none;
+  color: #a1a1aa;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 10px;
+  transition: color 0.2s ease;
 }
-.collection-bottom {
+
+.fleet-explore-link:hover {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   FLEET BOTTOM CARDS / DOCK (CLOCKWISE GLOWING LIGHT BORDER)
+   ========================================================================== */
+.fleet-bottom-dock {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.fleet-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 1.5px;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  overflow: hidden;
+  border: none;
+  outline: none;
+  text-align: left;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  flex: 0 1 230px;
+  max-width: 260px;
+}
+
+/* Clockwise spinning glowing border light ray */
+.fleet-card::before {
+  content: '';
+  position: absolute;
+  inset: -140%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 280deg,
+    rgba(212, 175, 55, 0.35) 315deg,
+    rgba(212, 175, 55, 0.95) 345deg,
+    #ffffff 355deg,
+    transparent 360deg
+  );
+  animation: rotateLight 2.2s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.fleet-card:hover::before {
+  opacity: 1;
+}
+
+.fleet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 22px rgba(212, 175, 55, 0.3);
+}
+
+.fleet-card.is-active {
+  background: #D4AF37;
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.45);
+  transform: translateY(-2px);
+}
+
+.fleet-card.is-active::before {
+  opacity: 0;
+}
+
+.fleet-card-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: 12.5px;
+  background: rgba(12, 14, 18, 0.86);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 24px;
-  gap: 20px;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #fff;
+  height: 56px;
+  width: 100%;
+  box-sizing: border-box;
 }
-.collection-specs {
-  display: flex;
-  gap: 30px;
+
+.fleet-card.is-active .fleet-card-inner {
+  background: rgba(16, 18, 24, 0.94);
 }
-.collection-specs > span {
+
+.fleet-card-brand-icon {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 10px;
-  color: #a2ab99;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #f4f4f5;
 }
-.collection-specs svg {
-  color: #9e987d;
+
+.fleet-card-brand-icon.brand-g90 {
+  width: 34px;
 }
-.collection-bottom .text-link {
+.fleet-card-brand-icon.brand-carnival {
+  width: 26px;
+}
+.fleet-card-brand-icon.brand-staria {
+  width: 24px;
+}
+.fleet-card-brand-icon.brand-sprinter319 {
+  width: 20px;
+  height: 20px;
+}
+
+.fleet-card-brand-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.fleet-card-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fleet-card-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: #f4f4f5;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.fleet-card-sub {
   font-size: 11px;
+  font-weight: 400;
+  color: #8e8e99;
+  line-height: 1.1;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.fleet-card-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+.fleet-arrow-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #d4d4d8;
+  transition: all 0.2s ease;
+}
+
+.fleet-card:hover .fleet-arrow-circle {
+  transform: translateX(2px);
+  border-color: #D4AF37;
+  color: #D4AF37;
+}
+
+.fleet-active-glow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #D4AF37;
+  box-shadow: 0 0 10px #D4AF37, 0 0 4px #fff;
+}
+
+.fleet-next-btn {
+  margin-top: 10px;
+}
+
+@keyframes rotateLight {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fleet-fade-in {
+  animation: fleetFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.fleet-fade-out {
+  animation: fleetFadeOut 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fleetFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fleetFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .fleet-apple-section {
+    padding: calc(var(--header) + 16px) var(--gutter) 20px;
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+  .fleet-bottom-dock {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .fleet-card {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+  .fleet-card-inner {
+    padding: 10px 14px;
+    height: 52px;
+  }
+  .fleet-card-name {
+    font-size: 12.5px;
+  }
+  .fleet-card-sub {
+    font-size: 10px;
+  }
+  .fleet-main-title {
+    font-size: 34px;
+  }
+  .fleet-detail-title {
+    font-size: 28px;
+  }
+  .fleet-detail-desc {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 540px) {
+  .fleet-bottom-dock {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .fleet-detail-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .fleet-reserve-btn {
+    justify-content: center;
+  }
+  .fleet-explore-link {
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fleet-card::before {
+    animation: none;
+  }
+  .fleet-card:hover::before {
+    opacity: 0;
+  }
+  .fleet-card:hover {
+    border-color: #D4AF37;
+  }
 }
 .section-next {
   align-self: center;
