@@ -1,9 +1,30 @@
-import { useState } from 'react'
-import { ArrowUpRight, ArrowLeft } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import {
+  ArrowUpRight,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  Luggage,
+} from 'lucide-react'
 
 export interface FleetSectionProps {
   goTo: (index: number) => void
   onSelectVehicle: (vehicleId: string) => void
+}
+
+type SlideCategory = 'exterior' | 'interior' | 'details' | 'specs'
+
+interface SlideInfo {
+  category: SlideCategory
+  label: string
+  title: string
+  eyebrow: string
+  description: string
+  image: string
 }
 
 interface VehicleInfo {
@@ -13,9 +34,17 @@ interface VehicleInfo {
   subName?: string
   brand: string
   classBadge: string
+  tagline: string
   description: string
-  specs: string[]
+  specs: {
+    passengers: string
+    luggage: string
+    powertrain: string
+    amenities: string
+  }
+  overviewSpecs: string[]
   bgImage: string
+  slides: SlideInfo[]
 }
 
 const FLEET_DATA: VehicleInfo[] = [
@@ -25,9 +54,16 @@ const FLEET_DATA: VehicleInfo[] = [
     name: 'Genesis G90',
     brand: 'Genesis',
     classBadge: 'FLAGSHIP LUXURY SEDAN',
+    tagline: 'The pinnacle of Korean luxury.',
     description:
-      'Supreme ride refinement and whisper-quiet poise. Designed for executive diplomacy, VIP airport arrivals, and private road travel.',
-    specs: [
+      'A refined experience for distinguished guests. Supreme ride refinement and whisper-quiet poise designed for executive diplomacy and airport arrivals.',
+    specs: {
+      passengers: 'Up to 3 Guests',
+      luggage: '3 Large Suitcases + 2 Carry-ons',
+      powertrain: '3.5L V6 Twin-Turbo AWD',
+      amenities: 'Chilled Mineral Water · High-Speed Wi-Fi · Soft-Close Doors',
+    },
+    overviewSpecs: [
       'Up to 3 Guests',
       '3.5L Twin-Turbo AWD',
       'VIP Reclining Comfort',
@@ -35,6 +71,45 @@ const FLEET_DATA: VehicleInfo[] = [
       'Chilled Mineral Water',
     ],
     bgImage: '/media/car_info/g90_car_info.png',
+    slides: [
+      {
+        category: 'exterior',
+        label: 'Exterior',
+        eyebrow: 'EXTERIOR ARCHITECTURE',
+        title: 'Two-Line Headlamps & Diamond Crest Grille',
+        description:
+          'The iconic two-line lamp signature and athletic elegance establish an authoritative, dignified arrival for diplomats and executives.',
+        image: '/media/car_info/g90_car_info.png',
+      },
+      {
+        category: 'interior',
+        label: 'Interior',
+        eyebrow: 'EXECUTIVE SANCTUARY',
+        title: 'VIP Reclining Lounge with Ambient Starlight',
+        description:
+          'Supple quilted Nappa leather, motorized footrests, individual climate zones, and acoustic laminated privacy glass for total serenity.',
+        image:
+          '/media/car_info/g90_interior.png',
+      },
+      {
+        category: 'details',
+        label: 'Details',
+        eyebrow: 'METICULOUS CRAFTSMANSHIP',
+        title: 'Touch Console & Active Noise Cancellation',
+        description:
+          'Chilled console compartment, bespoke fragrance system, and Bang & Olufsen 3D sound engineered for confidential conversations.',
+        image: '/media/cockpit.webp',
+      },
+      {
+        category: 'specs',
+        label: 'Specs',
+        eyebrow: 'EXECUTIVE SPECIFICATIONS',
+        title: 'Engineering & Comfort Specifications',
+        description:
+          'Precision tuned multi-chamber air suspension delivering a magic carpet ride across the Seoul metropolitan area.',
+        image: '/media/car_info/g90_car_info.png',
+      },
+    ],
   },
   {
     id: 'carnival',
@@ -43,9 +118,16 @@ const FLEET_DATA: VehicleInfo[] = [
     subName: 'Hi Limousine',
     brand: 'Kia',
     classBadge: 'VIP HI-LIMOUSINE · HYBRID',
+    tagline: 'High-roof elegance with VIP captain seating.',
     description:
-      'Raised roof architecture with premium captain recliners. Delivers exceptional headroom, privacy curtains, and serene traveling comfort for delegations and families.',
-    specs: [
+      'Raised roof architecture delivers exceptional headroom, privacy curtains, and serene traveling comfort for delegations and families.',
+    specs: {
+      passengers: '6 Passengers',
+      luggage: '4–5 Large Check-in Bags',
+      powertrain: '1.6L Turbo Hybrid System',
+      amenities: '21.5" Smart Display · Air Purifier · Privacy Blinds',
+    },
+    overviewSpecs: [
       '6 Passengers · Hybrid',
       'Hi-Limousine Raised Roof',
       'VIP Captain Recliners',
@@ -53,6 +135,45 @@ const FLEET_DATA: VehicleInfo[] = [
       'Complimentary Wi-Fi',
     ],
     bgImage: '/media/car_info/carnival_car_info.png',
+    slides: [
+      {
+        category: 'exterior',
+        label: 'Exterior',
+        eyebrow: 'AERODYNAMIC STATURE',
+        title: 'Signature Raised Roof & Star-Map LED',
+        description:
+          'Bespoke high-roof contour with integrated third brake lamp and star-map headlights, creating a prestigious executive presence.',
+        image: '/media/car_info/carnival_car_info.png',
+      },
+      {
+        category: 'interior',
+        label: 'Interior',
+        eyebrow: 'VIP CAPTAIN CABIN',
+        title: 'Zero-Gravity Recliners & Starlight Mood Ceiling',
+        description:
+          'Premium captain chairs with power leg rests, ambient starlight headliner, and customized climate settings for peaceful transit.',
+        image:
+          '/media/car_info/carnival_interior.png',
+      },
+      {
+        category: 'details',
+        label: 'Details',
+        eyebrow: 'MOBILE APPOINTMENTS',
+        title: '21.5-Inch Smart Display & Air Filtration',
+        description:
+          'Ceiling-mounted smart monitor with HDMI streaming, built-in HEPA air purification, and wireless smartphone fast-chargers.',
+        image: '/media/cabin.webp',
+      },
+      {
+        category: 'specs',
+        label: 'Specs',
+        eyebrow: 'HYBRID SPECIFICATIONS',
+        title: 'Spacious Dimensions & Efficient Hybrid Power',
+        description:
+          'Ultra-smooth electric-assisted acceleration with expansive cabin walk-through floor for effortless boarding.',
+        image: '/media/car_info/carnival_car_info.png',
+      },
+    ],
   },
   {
     id: 'staria',
@@ -61,9 +182,16 @@ const FLEET_DATA: VehicleInfo[] = [
     subName: 'Lounge Limousine',
     brand: 'Hyundai',
     classBadge: 'EXECUTIVE LOUNGE · HYBRID',
+    tagline: 'Futuristic lounge design with expansive panoramic space.',
     description:
-      'Futuristic lounge design with panoramic windows and expansive cabin space. Outstanding accessibility, comfort, and ample luggage volume for any itinerary.',
-    specs: [
+      'Expansive panoramic cabin space and supreme accessibility. Outstanding comfort, generous luggage volume, and smooth hybrid poise.',
+    specs: {
+      passengers: '9 Passengers',
+      luggage: '8+ Large Suitcases',
+      powertrain: '1.6L Turbo Hybrid System',
+      amenities: 'Dual Panoramic Sunroof · Smart Power Doors · Wi-Fi',
+    },
+    overviewSpecs: [
       '9 Passengers · Hybrid',
       'Executive Lounge Seating',
       'Panoramic Windows',
@@ -71,6 +199,45 @@ const FLEET_DATA: VehicleInfo[] = [
       'Complimentary Wi-Fi',
     ],
     bgImage: '/media/car_info/staria_car_info.png',
+    slides: [
+      {
+        category: 'exterior',
+        label: 'Exterior',
+        eyebrow: 'HORIZON ARCHITECTURE',
+        title: 'Full-Width Horizon Lamp & Low Beltline',
+        description:
+          'Spaceship-inspired silhouette featuring continuous horizontal daytime running lights and massive tinted panoramic windows.',
+        image: '/media/car_info/staria_car_info.png',
+      },
+      {
+        category: 'interior',
+        label: 'Interior',
+        eyebrow: 'PANORAMIC CABIN',
+        title: '9-Seat Executive Lounge & Sky View',
+        description:
+          'Unrivaled cabin volume with reconfigurable seating rows, dual sunroofs, and broad walk-through accessibility for larger parties.',
+        image:
+          '/media/car_info/staria_interior.png',
+      },
+      {
+        category: 'details',
+        label: 'Details',
+        eyebrow: 'SEAMLESS BOARDING',
+        title: 'Smart Sliding Doors & Clean Air Climate',
+        description:
+          'Hands-free electric sliding doors with ultra-low floor step-in height, multi-zone air vents, and rear USB ports for every guest.',
+        image: '/media/cockpit.webp',
+      },
+      {
+        category: 'specs',
+        label: 'Specs',
+        eyebrow: 'CABIN SPECIFICATIONS',
+        title: 'Maximum Luggage Capacity & High Efficiency',
+        description:
+          'Class-leading luggage flexibility accommodating up to 9 passengers and 8 large suitcases without compromise.',
+        image: '/media/car_info/staria_car_info.png',
+      },
+    ],
   },
   {
     id: 'sprinter319',
@@ -79,9 +246,16 @@ const FLEET_DATA: VehicleInfo[] = [
     subName: 'VIP Protocol',
     brand: 'Mercedes-Benz',
     classBadge: 'VIP PROTOCOL HIGH-ROOF COACH',
+    tagline: 'The ultimate luxury coach for state delegations.',
     description:
-      'Full stand-up cabin height with custom leather captain chairs and extended legroom. Built for prestigious corporate delegations, roadshows, and state protocols.',
-    specs: [
+      'Full stand-up cabin height with custom leather captain chairs and extended legroom. Built for prestigious delegations and roadshows.',
+    specs: {
+      passengers: '6 Passengers (Coach Layout)',
+      luggage: '12+ Large Suitcases',
+      powertrain: '3.0L V6 Turbo Diesel',
+      amenities: '1.9m Standing Room · Conference Table · 220V Outlets',
+    },
+    overviewSpecs: [
       '6 Passengers',
       'Full Stand-Up Height',
       'Extended Wheelbase',
@@ -89,6 +263,45 @@ const FLEET_DATA: VehicleInfo[] = [
       'High-Capacity Luggage',
     ],
     bgImage: '/media/car_info/319_car_info.png',
+    slides: [
+      {
+        category: 'exterior',
+        label: 'Exterior',
+        eyebrow: 'STATELY PROPORTIONS',
+        title: 'High-Roof Presence & Mercedes Chrome Line',
+        description:
+          'Stately high-roof architecture with extended wheelbase and privacy glass, making a powerful impression at embassies and summits.',
+        image: '/media/car_info/319_car_info.png',
+      },
+      {
+        category: 'interior',
+        label: 'Interior',
+        eyebrow: 'CONFERENCE CABIN',
+        title: 'Full 1.9m Stand-Up Room & Custom Armchairs',
+        description:
+          'Walk inside without ducking. Hand-crafted wide leather captain recliners in a conference configuration for on-the-road briefings.',
+        image:
+          '/media/car_info/sprinter_interior.png',
+      },
+      {
+        category: 'details',
+        label: 'Details',
+        eyebrow: 'EXECUTIVE APPOINTMENTS',
+        title: 'On-Board Mini Bar & 220V Workstation',
+        description:
+          'Integrated beverage refrigerator, 220V/110V power outlets, high-output auxiliary heating, and tailored luggage security.',
+        image: '/media/cabin.webp',
+      },
+      {
+        category: 'specs',
+        label: 'Specs',
+        eyebrow: 'COMMERCIAL SPECIFICATIONS',
+        title: 'V6 Turbo Power & Unmatched Cargo Volume',
+        description:
+          'Smooth V6 diesel torque with dedicated partition cargo space holding 12+ large check-in bags for international delegations.',
+        image: '/media/car_info/319_car_info.png',
+      },
+    ],
   },
 ]
 
@@ -155,16 +368,38 @@ function BrandLogo({ brand, className }: { brand: string; className?: string }) 
 }
 
 export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProps) {
+  // selectedId is null for Overview, or one of the 4 vehicle ids
   const [selectedId, setSelectedId] = useState<VehicleInfo['id'] | null>(null)
+  // isSlideDetailOpen is true when viewing the full PPT-slide detail view (Ref Image 2)
+  const [isSlideDetailOpen, setIsSlideDetailOpen] = useState(false)
+  // activeSlideIndex: 0=Exterior, 1=Interior, 2=Details, 3=Specs
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0)
 
-  const activeVehicle = FLEET_DATA.find((v) => v.id === selectedId) || null
+  const activeVehicle =
+    FLEET_DATA.find((v) => v.id === selectedId) || FLEET_DATA[0]
 
   const handleCardClick = (id: VehicleInfo['id']) => {
     setSelectedId(id)
+    setIsSlideDetailOpen(false)
+    setActiveSlideIndex(0)
   }
 
   const handleBackToOverview = () => {
     setSelectedId(null)
+    setIsSlideDetailOpen(false)
+  }
+
+  const handleOpenSlide = (index: number) => {
+    setActiveSlideIndex(index)
+    setIsSlideDetailOpen(true)
+  }
+
+  const handlePrevSlide = () => {
+    setActiveSlideIndex((prev) => (prev > 0 ? prev - 1 : 3))
+  }
+
+  const handleNextSlide = () => {
+    setActiveSlideIndex((prev) => (prev < 3 ? prev + 1 : 0))
   }
 
   const handleReserve = (catalogId: string) => {
@@ -172,17 +407,36 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
     goTo(3)
   }
 
+  // Keyboard navigation for PPT slides: Escape to close, Left/Right arrow to change slide
+  useEffect(() => {
+    if (!isSlideDetailOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSlideDetailOpen(false)
+      } else if (e.key === 'ArrowLeft') {
+        setActiveSlideIndex((prev) => (prev > 0 ? prev - 1 : 3))
+      } else if (e.key === 'ArrowRight') {
+        setActiveSlideIndex((prev) => (prev < 3 ? prev + 1 : 0))
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSlideDetailOpen])
+
   return (
     <section
       id="collection"
       className={`screen collection-screen fleet-apple-section ${
-        selectedId ? 'is-detail-view' : 'is-overview-view'
+        selectedId
+          ? isSlideDetailOpen
+            ? 'is-full-slide-mode'
+            : 'is-vehicle-mode'
+          : 'is-overview-mode'
       }`}
       aria-labelledby="fleet-section-title"
     >
-      {/* Background Studio Layers (All 2560x1440 with aligned ground line) */}
+      {/* Background Studio Layers for Overview & Side Profiles */}
       <div className="fleet-bg-stage" aria-hidden="true">
-        {/* Overview Studio Background */}
         <img
           src="/media/car_info/bg_car.png"
           alt=""
@@ -190,20 +444,204 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
           loading="eager"
         />
 
-        {/* Individual Vehicle Side-View Layers */}
         {FLEET_DATA.map((car) => (
           <img
             key={car.id}
             src={car.bgImage}
             alt=""
-            className={`fleet-bg-layer ${selectedId === car.id ? 'active' : ''}`}
+            className={`fleet-bg-layer ${
+              selectedId === car.id && !isSlideDetailOpen ? 'active' : ''
+            }`}
             loading="eager"
           />
         ))}
       </div>
 
-      {/* Topline Bar */}
-      <div className="section-topline fleet-topbar">
+      {/* =========================================================================
+          FULL PPT SLIDE DETAIL OVERLAY (Matching Reference Image 2)
+          ========================================================================= */}
+      <div
+        className={`fleet-full-slide-deck ${
+          isSlideDetailOpen ? 'is-open' : ''
+        }`}
+        aria-hidden={!isSlideDetailOpen}
+      >
+        {/* Top Segmented Tabs Capsule (Ref Image 2) */}
+        <div className="fleet-slide-top-nav">
+          <button
+            type="button"
+            className="fleet-slide-back-btn"
+            onClick={() => setIsSlideDetailOpen(false)}
+            aria-label="Close detail slides and return to vehicle"
+          >
+            <ArrowLeft size={14} />
+            <span>Vehicle</span>
+          </button>
+
+          <div
+            className="fleet-slide-segments"
+            role="tablist"
+            aria-label="Vehicle perspective tabs"
+          >
+            {activeVehicle.slides.map((s, idx) => (
+              <button
+                key={s.category}
+                type="button"
+                role="tab"
+                aria-selected={activeSlideIndex === idx}
+                className={`fleet-segment-pill ${
+                  activeSlideIndex === idx ? 'active' : ''
+                }`}
+                onClick={() => setActiveSlideIndex(idx)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="fleet-slide-close-circle"
+            onClick={() => setIsSlideDetailOpen(false)}
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Side Nav Circular Glass Arrows (Ref Image 2) */}
+        <button
+          type="button"
+          className="fleet-slide-arrow fleet-slide-prev"
+          onClick={handlePrevSlide}
+          aria-label="Previous slide"
+        >
+          <ChevronLeft size={28} />
+        </button>
+
+        <button
+          type="button"
+          className="fleet-slide-arrow fleet-slide-next"
+          onClick={handleNextSlide}
+          aria-label="Next slide"
+        >
+          <ChevronRight size={28} />
+        </button>
+
+        {/* PPT Horizontal Slide Track */}
+        <div
+          className="fleet-slides-track"
+          style={{ transform: `translateX(-${activeSlideIndex * 100}%)` }}
+        >
+          {activeVehicle.slides.map((slide, idx) => (
+            <div
+              key={slide.category}
+              className={`fleet-slide-item slide-${slide.category}`}
+              aria-hidden={activeSlideIndex !== idx}
+            >
+              {/* Slide Background Image */}
+              <div className="fleet-slide-image-wrap">
+                <img
+                  src={slide.image}
+                  alt={`${activeVehicle.name} ${slide.label}`}
+                  className="fleet-slide-img"
+                  loading="eager"
+                />
+                <div className="fleet-slide-vignette" />
+              </div>
+
+              {/* Specs Slide Custom Interactive Presentation */}
+              {slide.category === 'specs' ? (
+                <div className="fleet-specs-slide-card">
+                  <div className="fleet-specs-badge">
+                    {activeVehicle.classBadge}
+                  </div>
+                  <h3 className="fleet-specs-vehicle-title">
+                    {activeVehicle.name}
+                  </h3>
+                  <p className="fleet-specs-summary">
+                    {activeVehicle.description}
+                  </p>
+
+                  <div className="fleet-specs-grid">
+                    <div className="fleet-spec-box">
+                      <Users size={18} className="fleet-spec-icon" />
+                      <div>
+                        <div className="fleet-spec-k">Seating Capacity</div>
+                        <div className="fleet-spec-v">
+                          {activeVehicle.specs.passengers}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="fleet-spec-box">
+                      <Luggage size={18} className="fleet-spec-icon" />
+                      <div>
+                        <div className="fleet-spec-k">Luggage Capacity</div>
+                        <div className="fleet-spec-v">
+                          {activeVehicle.specs.luggage}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="fleet-spec-box">
+                      <Sparkles size={18} className="fleet-spec-icon" />
+                      <div>
+                        <div className="fleet-spec-k">Powertrain</div>
+                        <div className="fleet-spec-v">
+                          {activeVehicle.specs.powertrain}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="fleet-spec-box">
+                      <ShieldCheck size={18} className="fleet-spec-icon" />
+                      <div>
+                        <div className="fleet-spec-k">Chauffeur Standard</div>
+                        <div className="fleet-spec-v">
+                          {activeVehicle.specs.amenities}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="fleet-specs-cta-row">
+                    <button
+                      type="button"
+                      className="fleet-reserve-btn"
+                      onClick={() => handleReserve(activeVehicle.catalogId)}
+                    >
+                      Reserve {activeVehicle.name} <ArrowUpRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Editorial Caption for Exterior / Interior / Details */
+                <div className="fleet-slide-caption-bar">
+                  <div className="fleet-slide-caption-content">
+                    <span className="fleet-slide-caption-eyebrow">
+                      {slide.eyebrow}
+                    </span>
+                    <h3 className="fleet-slide-caption-title">{slide.title}</h3>
+                    <p className="fleet-slide-caption-desc">
+                      {slide.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* =========================================================================
+          STANDARD SECTION TOPLINE BAR (Overview & Vehicle View)
+          ========================================================================= */}
+      <div
+        className={`section-topline fleet-topbar ${
+          isSlideDetailOpen ? 'is-hidden' : ''
+        }`}
+      >
         {selectedId ? (
           <button
             type="button"
@@ -222,26 +660,29 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
         <span className="section-numeral">02 / THE COLLECTION</span>
       </div>
 
-      {/* Middle Content Area */}
-      <div className="fleet-stage-content">
-        {/* Overview Header (Reference Image 1) */}
-        <div
-          className={`fleet-overview-header ${
-            selectedId ? 'fleet-fade-out' : 'fleet-fade-in'
-          }`}
-          aria-hidden={selectedId !== null}
-        >
-          <span className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</span>
-          <h2 id="fleet-section-title" className="fleet-main-title">
-            Our Fleet
-          </h2>
-          <p className="fleet-subtitle">
-            A curated fleet for every occasion, with professional chauffeurs.
-          </p>
-        </div>
+      {/* =========================================================================
+          MIDDLE STAGE CONTENT (Overview or Vehicle View)
+          ========================================================================= */}
+      <div
+        className={`fleet-stage-content ${
+          isSlideDetailOpen ? 'is-hidden' : ''
+        }`}
+      >
+        {/* 1. Overview Header (Reference Image 1) */}
+        {!selectedId && (
+          <div className="fleet-overview-header fleet-fade-in">
+            <span className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</span>
+            <h2 id="fleet-section-title" className="fleet-main-title">
+              Our Fleet
+            </h2>
+            <p className="fleet-subtitle">
+              A curated fleet for every occasion, with professional chauffeurs.
+            </p>
+          </div>
+        )}
 
-        {/* Vehicle Detail Info (When a car is selected) */}
-        {activeVehicle && (
+        {/* 2. Vehicle View Left Info (First Reference Image) */}
+        {selectedId && activeVehicle && (
           <div
             key={activeVehicle.id}
             className="fleet-detail-info fleet-fade-in"
@@ -257,10 +698,11 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                 </span>
               )}
             </h2>
+            <p className="fleet-vehicle-tagline">{activeVehicle.tagline}</p>
             <p className="fleet-detail-desc">{activeVehicle.description}</p>
 
             <div className="fleet-specs-pills">
-              {activeVehicle.specs.map((spec) => (
+              {activeVehicle.overviewSpecs.map((spec) => (
                 <span key={spec} className="fleet-spec-pill">
                   {spec}
                 </span>
@@ -285,13 +727,38 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             </div>
           </div>
         )}
+
+        {/* 3. RIGHT-SIDE VIEW SWITCH BUTTONS (Ref Image 1: placed on the right) */}
+        {selectedId && activeVehicle && (
+          <div
+            className="fleet-right-view-tabs fleet-fade-in"
+            aria-label="Vehicle viewpoints"
+          >
+            {activeVehicle.slides.map((s, idx) => (
+              <button
+                key={s.category}
+                type="button"
+                className="fleet-right-tab-btn"
+                onClick={() => handleOpenSlide(idx)}
+                aria-label={`Open detailed ${s.label} view`}
+              >
+                <span className="fleet-right-tab-label">{s.label}</span>
+                <span className="fleet-right-tab-arrow" aria-hidden="true">
+                  →
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Bottom Vehicle Selector (4 Cards with Clockwise Glowing Light Border) */}
+      {/* =========================================================================
+          BOTTOM VEHICLE DOCK (Overview & Vehicle View)
+          ========================================================================= */}
       <div
         className={`fleet-bottom-dock ${
-          selectedId ? 'is-dock-mode' : 'is-cards-mode'
-        }`}
+          isSlideDetailOpen ? 'is-hidden' : ''
+        } ${selectedId ? 'is-dock-mode' : 'is-cards-mode'}`}
         role="region"
         aria-label="Fleet vehicle selection"
       >
@@ -333,7 +800,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
       </div>
 
       {/* Subtle down chevron / explore prompt for overview */}
-      {!selectedId && (
+      {!selectedId && !isSlideDetailOpen && (
         <button
           type="button"
           className="section-next fleet-next-btn"
