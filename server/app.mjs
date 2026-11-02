@@ -70,9 +70,31 @@ export function createApp({
     return { service, startsAt, endsAt: startsAt + service.duration * 3600000 }
   }
   function requestedDays(input) {
+    if (input.dates) {
+      const dateList = Array.isArray(input.dates)
+        ? input.dates
+        : String(input.dates)
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+      if (dateList.length === 0)
+        throw new Error('Please select at least one journey date.')
+      const timesList = input.times
+        ? Array.isArray(input.times)
+          ? input.times
+          : String(input.times)
+              .split(',')
+              .map((s) => s.trim())
+        : []
+      return dateList.map((d, index) => {
+        const t = timesList[index] || input.time
+        const slot = schedule({ ...input, date: d, time: t })
+        return { date: d, time: t, ...slot }
+      })
+    }
     const first = schedule(input)
     if (!input.endDate || input.endDate === input.date)
-      return [{ date: input.date, ...first }]
+      return [{ date: input.date, time: input.time, ...first }]
     const last = schedule({ ...input, date: input.endDate })
     if (last.startsAt < first.startsAt)
       throw new Error('The last day must be on or after your first day.')
@@ -84,6 +106,7 @@ export function createApp({
     )
       days.push({
         date: new Date(startsAt + 9 * 3600000).toISOString().slice(0, 10),
+        time: input.time,
         service: first.service,
         startsAt,
         endsAt: startsAt + first.service.duration * 3600000,
@@ -107,10 +130,10 @@ export function createApp({
       service: catalog.services.find((s) => s.id === d.service).name,
       vehicle: catalog.vehicles.find((v) => v.id === d.vehicle).name,
       journeys: (
-        d.journeys || [{ date: d.date, vehicle: d.vehicle, total: row.total }]
+        d.journeys || [{ date: d.date, time: d.time, vehicle: d.vehicle, total: row.total }]
       ).map((day) => ({
         date: day.date,
-        time: d.time,
+        time: day.time || d.time,
         service: catalog.services.find((s) => s.id === d.service).name,
         vehicle: catalog.vehicles.find((v) => v.id === day.vehicle).name,
         total: day.total,
@@ -136,8 +159,9 @@ export function createApp({
   app.get('/api/availability', async (req, res) => {
     try {
       const days = requestedDays(req.query).map(
-        ({ date, startsAt, endsAt }) => ({
+        ({ date, time, startsAt, endsAt }) => ({
           date,
+          time,
           vehicles: catalog.vehicles.map((v) => ({
             id: v.id,
             available: !occupied.get(v.id, endsAt, startsAt),
@@ -192,23 +216,31 @@ export function createApp({
       const days = submittedDays.map((day, index) => {
         if (!day || typeof day !== 'object' || Array.isArray(day))
           throw new Error('Please enter valid daily journey details.')
-        const slot = schedule({ ...b, date: day.date })
+        const dayTime = day.time || b.time
+        const slot = schedule({ ...b, date: day.date, time: dayTime })
         const selected = catalog.vehicles.find((v) => v.id === day.vehicle)
         if (!selected)
           throw new Error('Please select a valid vehicle for every day.')
-        if (index === 0 && (day.date !== b.date || day.vehicle !== b.vehicle))
+        if (
+          index === 0 &&
+          (day.date !== b.date ||
+            day.vehicle !== b.vehicle ||
+            (day.time && b.time && day.time !== b.time))
+        )
           throw new Error(
             'Your first day must match the start of your journey.',
           )
-        return { date: day.date, vehicle: selected, ...slot }
+        return { date: day.date, time: dayTime, vehicle: selected, ...slot }
       })
       if (
         days.some(
-          (day, i) => i > 0 && day.startsAt !== days[i - 1].startsAt + 86400000,
+          (day, i) =>
+            i > 0 &&
+            (day.date <= days[i - 1].date || day.startsAt < days[i - 1].endsAt),
         )
       )
         throw new Error(
-          'Please include each consecutive journey date once, in date order.',
+          'Please include each journey date once, in chronological order.',
         )
       const vehicle = days[0].vehicle
       const pickupPlace = places.selected(b.pickupPlace)
@@ -303,6 +335,7 @@ export function createApp({
       details.options = b.options
       details.journeys = days.map((day) => ({
         date: day.date,
+        time: day.time,
         vehicle: day.vehicle.id,
         total: day.vehicle.quoteRequired
           ? null

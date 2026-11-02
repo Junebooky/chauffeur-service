@@ -306,7 +306,7 @@ test('simultaneous multi-day requests cannot reserve any shared daily slot twice
     assert.deepEqual(results.map((r) => r.status).sort(), [201, 409])
   }))
 
-test('rejects missing, duplicate, unordered, skipped and invalid daily selections', async () => {
+test('rejects missing, duplicate, unordered and invalid daily selections', async () => {
   for (const journeys of [
     [],
     null,
@@ -316,7 +316,6 @@ test('rejects missing, duplicate, unordered, skipped and invalid daily selection
     [{ date: '2026-11-11', vehicle: 'staria' }],
     [{ date: valid.date, vehicle: 'g90' }],
     [twoDays.journeys[0], twoDays.journeys[0]],
-    [twoDays.journeys[0], { date: '2026-11-12', vehicle: 'g90' }],
     [twoDays.journeys[0], { date: '2026-11-09', vehicle: 'g90' }],
     [twoDays.journeys[0], { date: '2026-11-31', vehicle: 'g90' }],
     [twoDays.journeys[0], { date: '2028-11-11', vehicle: 'g90' }],
@@ -337,6 +336,50 @@ test('rejects missing, duplicate, unordered, skipped and invalid daily selection
     }
   })
 })
+
+test('supports non-consecutive dates with custom times and vehicles, calculating dynamic prices', () =>
+  withServer(async ({ post, base }) => {
+    // Nov 10 with staria at 10:00, and Nov 12 with sprinter_519 at 14:00
+    const nonConsecutive = {
+      ...valid,
+      date: '2026-11-10',
+      time: '10:00',
+      vehicle: 'staria',
+      journeys: [
+        { date: '2026-11-10', time: '10:00', vehicle: 'staria' },
+        { date: '2026-11-12', time: '14:00', vehicle: 'sprinter_519' },
+      ],
+      total: 1,
+    }
+    const res = await post(nonConsecutive)
+    assert.equal(res.status, 201)
+    // hourly service (280,000) * 2 = 560,000 + staria (0) + sprinter_519 (180,000) = 740,000
+    assert.equal(res.data.total, 740000)
+    assert.equal(res.data.journeys.length, 2)
+    assert.equal(res.data.journeys[0].date, '2026-11-10')
+    assert.equal(res.data.journeys[0].time, '10:00')
+    assert.equal(res.data.journeys[0].total, 280000)
+    assert.equal(res.data.journeys[1].date, '2026-11-12')
+    assert.equal(res.data.journeys[1].time, '14:00')
+    assert.equal(res.data.journeys[1].total, 460000)
+
+    // Check availability endpoint handles discrete dates & times
+    const availRes = await fetch(
+      `${base}/api/availability?dates=2026-11-10,2026-11-12&times=10:00,14:00&service=hourly`,
+    )
+    assert.equal(availRes.status, 200)
+    const availData = await availRes.json()
+    assert.equal(availData.days.length, 2)
+    // staria is booked on day 1
+    const day1Staria = availData.days[0].vehicles.find((v) => v.id === 'staria')
+    assert.equal(day1Staria.available, false)
+    // sprinter_519 is booked on day 2
+    const day2Sprinter = availData.days[1].vehicles.find((v) => v.id === 'sprinter_519')
+    assert.equal(day2Sprinter.available, false)
+    // but staria is available on day 2
+    const day2Staria = availData.days[1].vehicles.find((v) => v.id === 'staria')
+    assert.equal(day2Staria.available, true)
+  }))
 
 test('uses the latest Sprinter rate card and excludes TAX for mixed daily journeys', () =>
   withServer(async ({ post }) => {

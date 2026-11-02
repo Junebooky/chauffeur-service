@@ -4,6 +4,8 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarDays,
+  CalendarRange,
+  Car,
   Check,
   CheckCircle2,
   ChevronLeft,
@@ -29,6 +31,10 @@ import {
   seoulDate,
   tomorrow,
 } from './utils'
+
+const timeOptions = Array.from({ length: 48 }, (_, i) => {
+  return `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`
+})
 
 type Result = {
   reference: string
@@ -57,33 +63,80 @@ type Props = {
 }
 
 function Calendar({
-  value,
-  onChange,
+  selectedDates,
+  onChangeDates,
+  multiDay,
+  mode,
 }: {
-  value: string
-  onChange: (value: string) => void
+  selectedDates: string[]
+  onChangeDates: (dates: string[]) => void
+  multiDay: boolean
+  mode: 'range' | 'discrete'
 }) {
-  const [localValue, setLocalValue] = useState(value)
-  useEffect(() => {
-    setLocalValue(value)
-  }, [value])
-  const [month, setMonth] = useState(
-    () => new Date(`${value.slice(0, 7)}-01T12:00:00`),
-  )
   const today = seoulDate()
-  const lastDate = new Date(`${today}T12:00:00`)
-  lastDate.setDate(lastDate.getDate() + 365)
-  const maxDate = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}-${String(lastDate.getDate()).padStart(2, '0')}`
-  const prefix = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`
-  const total = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
-  const first = (month.getDay() + 6) % 7
-  const changeMonth = (delta: number) =>
-    setMonth(new Date(month.getFullYear(), month.getMonth() + delta, 1, 12))
+  const maxDate = addDays(today, 365)
+  const initialDate = selectedDates[0] || tomorrow()
+  const [viewMonth, setViewMonth] = useState(() => initialDate.slice(0, 7))
+  const [rangeAnchor, setRangeAnchor] = useState<string | null>(null)
+
+  useEffect(() => {
+    setRangeAnchor(null)
+  }, [multiDay, mode])
+
+  const [y, m] = viewMonth.split('-').map(Number)
+  const first = (new Date(y, m - 1, 1, 12).getDay() + 6) % 7
+  const total = new Date(y, m, 0).getDate()
+
+  const changeMonth = (delta: number) => {
+    const next = new Date(y, m - 1 + delta, 1, 12)
+    setViewMonth(
+      `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`,
+    )
+  }
+
+  const handleDateClick = (date: string) => {
+    if (!multiDay) {
+      onChangeDates([date])
+      return
+    }
+
+    if (mode === 'range') {
+      if (!rangeAnchor) {
+        setRangeAnchor(date)
+        onChangeDates([date])
+      } else {
+        if (date >= rangeAnchor) {
+          const newDates = journeyDates(rangeAnchor, date)
+          setRangeAnchor(null)
+          onChangeDates(newDates)
+        } else {
+          setRangeAnchor(date)
+          onChangeDates([date])
+        }
+      }
+      return
+    }
+
+    // Discrete / Specific dates mode
+    if (selectedDates.includes(date)) {
+      if (selectedDates.length > 1) {
+        onChangeDates(selectedDates.filter((d) => d !== date))
+      }
+    } else {
+      const updated = [...selectedDates, date].sort()
+      onChangeDates(updated)
+    }
+  }
+
+  const startDate = selectedDates[0] || ''
+  const endDate =
+    selectedDates.length > 1 ? selectedDates[selectedDates.length - 1] : ''
+
   return (
-    <div className="calendar">
+    <div className="calendar" role="region" aria-label="Journey calendar">
       <div className="calendar-heading">
         <span>
-          {month.toLocaleDateString('en-US', {
+          {new Date(`${viewMonth}-01T12:00:00`).toLocaleDateString('en-US', {
             month: 'long',
             year: 'numeric',
           })}
@@ -92,7 +145,7 @@ function Calendar({
           <button
             type="button"
             className="icon-button"
-            disabled={prefix <= today.slice(0, 7)}
+            disabled={viewMonth <= today.slice(0, 7)}
             onClick={() => changeMonth(-1)}
             aria-label="Previous month"
           >
@@ -101,7 +154,7 @@ function Calendar({
           <button
             type="button"
             className="icon-button"
-            disabled={prefix >= maxDate.slice(0, 7)}
+            disabled={viewMonth >= maxDate.slice(0, 7)}
             onClick={() => changeMonth(1)}
             aria-label="Next month"
           >
@@ -127,19 +180,43 @@ function Calendar({
           <span key={`empty${i}`} />
         ))}
         {Array.from({ length: total }, (_, i) => {
-          const date = `${prefix}-${String(i + 1).padStart(2, '0')}`
+          const date = `${viewMonth}-${String(i + 1).padStart(2, '0')}`
+          const isSelected = selectedDates.includes(date)
+          const isRangeStart =
+            multiDay &&
+            mode === 'range' &&
+            (rangeAnchor ? date === rangeAnchor : date === startDate)
+          const isRangeEnd =
+            multiDay &&
+            mode === 'range' &&
+            !rangeAnchor &&
+            endDate &&
+            date === endDate &&
+            startDate !== endDate
+          const isInRange =
+            multiDay &&
+            mode === 'range' &&
+            !rangeAnchor &&
+            startDate &&
+            endDate &&
+            date > startDate &&
+            date < endDate
+
+          const classes = []
+          if (isSelected) classes.push('selected')
+          if (isRangeStart) classes.push('range-start')
+          if (isRangeEnd) classes.push('range-end')
+          if (isInRange) classes.push('in-range')
+
           return (
             <button
               type="button"
               key={date}
               aria-label={displayDate(date)}
-              aria-pressed={localValue === date}
-              className={localValue === date ? 'selected' : ''}
+              aria-pressed={isSelected}
+              className={classes.join(' ')}
               disabled={date < today || date > maxDate}
-              onClick={() => {
-                setLocalValue(date)
-                onChange(date)
-              }}
+              onClick={() => handleDateClick(date)}
             >
               {i + 1}
             </button>
@@ -163,15 +240,15 @@ export default function Booking({
 }: Props) {
   const [usdRate, setUsdRate] = useState<number>(initialUsdRate)
   const [step, setStep] = useState(0)
-  const [date, setDate] = useState(tomorrow)
   const [multiDay, setMultiDay] = useState(false)
-  const [endDate, setEndDate] = useState(() => addDays(tomorrow(), 1))
-  const [dailyVehicles, setDailyVehicles] = useState(false)
+  const [multiDayMode, setMultiDayMode] = useState<'range' | 'discrete'>('range')
+  const [dates, setDates] = useState<string[]>(() => [tomorrow()])
+  const [timesByDate, setTimesByDate] = useState<Record<string, string>>({})
+  const [defaultTime, setDefaultTime] = useState('10:00')
   const [vehiclesByDate, setVehiclesByDate] = useState<Record<string, string>>(
     {},
   )
-  const [editingDate, setEditingDate] = useState('')
-  const [time, setTime] = useState('10:00')
+  const [activeDate, setActiveDate] = useState('')
   const [pickup, setPickup] = useState('')
   const [destination, setDestination] = useState('')
   const [pickupPlace, setPickupPlace] = useState<Place | null>(null)
@@ -197,56 +274,108 @@ export default function Booking({
   const heading = useRef<HTMLHeadingElement>(null)
   const successHeading = useRef<HTMLHeadingElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
-  const lastDate = multiDay ? (endDate >= date ? endDate : date) : date
-  const dates = journeyDates(date, lastDate)
-  const customVehicles = multiDay && dailyVehicles
+
+  const currentActiveDate = dates.includes(activeDate)
+    ? activeDate
+    : dates[0] || tomorrow()
+
+  const getTime = (d: string) => timesByDate[d] || defaultTime
+  const setTimeForDate = (d: string, t: string) => {
+    setTimesByDate((prev) => ({ ...prev, [d]: t }))
+  }
+  const applyTimeToAll = (t: string) => {
+    const updated: Record<string, string> = {}
+    dates.forEach((d) => {
+      updated[d] = t
+    })
+    setTimesByDate(updated)
+    setDefaultTime(t)
+  }
+
+  const getVehicle = (d: string) => vehiclesByDate[d] || vehicle
+  const setVehicleForDate = (d: string, vId: string) => {
+    setVehiclesByDate((prev) => ({ ...prev, [d]: vId }))
+    if (d === dates[0]) {
+      setVehicle(vId)
+    }
+  }
+  const applyVehicleToAll = (vId: string) => {
+    const updated: Record<string, string> = {}
+    dates.forEach((d) => {
+      updated[d] = vId
+    })
+    setVehiclesByDate(updated)
+    setVehicle(vId)
+  }
+
+  const activeVehicle = getVehicle(currentActiveDate)
+  const changeVehicle = (vId: string) => {
+    setVehicleForDate(currentActiveDate, vId)
+  }
+
+  const handleModeChange = (newMode: 'range' | 'discrete') => {
+    setMultiDayMode(newMode)
+    if (newMode === 'range' && dates.length > 1) {
+      const start = dates[0]
+      const end = dates[dates.length - 1]
+      setDates(journeyDates(start, end))
+    }
+  }
+
   const journeys = dates.map((day) => ({
     date: day,
-    vehicle: customVehicles ? vehiclesByDate[day] || vehicle : vehicle,
+    time: getTime(day),
+    vehicle: getVehicle(day),
   }))
-  const activeDate =
-    customVehicles && dates.includes(editingDate) ? editingDate : date
-  const activeVehicle = journeys.find((day) => day.date === activeDate)!.vehicle
+
   const extras = catalog.options
     .filter((o) => options.includes(o.id))
     .reduce((sum, o) => sum + o.price, 0)
+
   const quoteRequired = journeys.some(
     (day) => catalog.vehicles.find((v) => v.id === day.vehicle)!.quoteRequired,
   )
+
   const vehicleSurcharges = journeys.reduce(
     (sum, day) =>
       sum + catalog.vehicles.find((v) => v.id === day.vehicle)!.surcharge,
     0,
   )
-  const total =
-    (currentService.price + extras) * dates.length + vehicleSurcharges
-  const allAvailable = journeys.every(
-    (day) => availability[day.date]?.[day.vehicle] === true,
-  )
+
+  const total = journeys.reduce((sum, day) => {
+    const v = catalog.vehicles.find((veh) => veh.id === day.vehicle)
+    return sum + currentService.price + (v?.surcharge || 0) + extras
+  }, 0)
+
+  const allAvailable =
+    journeys.length > 0 &&
+    journeys.every((day) => availability[day.date]?.[day.vehicle] === true)
+
   const unavailableDay = journeys.find(
     (day) => availability[day.date]?.[day.vehicle] === false,
   )
-  const changeVehicle = (value: string) => {
-    if (customVehicles)
-      setVehiclesByDate((previous) => ({ ...previous, [activeDate]: value }))
-    else setVehicle(value)
-  }
-  const changeDate = (value: string) => {
-    setDate(value)
-    if (endDate < value) setEndDate(value)
-  }
+
+  const datesKey = dates.join(',')
+  const timesKey = dates.map((d) => getTime(d)).join(',')
 
   useEffect(() => {
     const controller = new AbortController()
     setChecking(true)
     setAvailability({})
     setError('')
-    fetch(
-      `/api/availability?${new URLSearchParams({ date, endDate: lastDate, time, service })}`,
-      {
-        signal: controller.signal,
-      },
-    )
+    const params = new URLSearchParams()
+    params.set('service', service)
+    params.set('dates', dates.join(','))
+    params.set('times', dates.map((d) => getTime(d)).join(','))
+    params.set('date', dates[0] || tomorrow())
+    params.set('time', getTime(dates[0] || tomorrow()))
+    if (dates.length > 1) {
+      params.set('endDate', dates[dates.length - 1])
+    }
+
+    fetch(`/api/availability?${params.toString()}`, {
+      signal: controller.signal,
+    })
       .then(async (response) => {
         const data = await response.json()
         if (!response.ok)
@@ -282,7 +411,7 @@ export default function Booking({
         if (!controller.signal.aborted) setChecking(false)
       })
     return () => controller.abort()
-  }, [date, lastDate, time, service, availabilityVersion])
+  }, [datesKey, timesKey, service, availabilityVersion])
   useEffect(() => {
     if (initialUsdRate) setUsdRate(initialUsdRate)
   }, [initialUsdRate])
@@ -295,7 +424,7 @@ export default function Booking({
     if (target > step && step === 1 && !allAvailable) {
       setError(
         unavailableDay
-          ? `Please choose another vehicle for ${displayDate(unavailableDay.date)}.`
+          ? `Please choose another vehicle or time for ${displayDate(unavailableDay.date)}.`
           : 'Please wait for availability to be checked for every day, or retry.',
       )
       return
@@ -324,8 +453,8 @@ export default function Booking({
           'Idempotency-Key': idempotency.current,
         },
         body: JSON.stringify({
-          date,
-          time,
+          date: journeys[0].date,
+          time: journeys[0].time,
           pickup,
           destination,
           pickupPlace,
@@ -525,63 +654,153 @@ export default function Booking({
               {step === 0 && (
                 <div className="journey-fields">
                   <div>
-                    <Calendar value={date} onChange={changeDate} />
+                    <Calendar
+                      selectedDates={dates}
+                      onChangeDates={(newDates) => {
+                        setDates(newDates)
+                        if (!newDates.includes(activeDate)) {
+                          setActiveDate(newDates[0] || '')
+                        }
+                      }}
+                      multiDay={multiDay}
+                      mode={multiDayMode}
+                    />
                     <div className="multi-day-control">
                       <label className="multi-day-toggle">
                         <input
                           type="checkbox"
                           checked={multiDay}
                           onChange={(event) => {
-                            setMultiDay(event.target.checked)
-                            if (endDate <= date)
-                              setEndDate(
-                                addDays(date, 1) <= addDays(seoulDate(), 365)
-                                  ? addDays(date, 1)
-                                  : date,
-                              )
+                            const checked = event.target.checked
+                            setMultiDay(checked)
+                            if (checked && dates.length <= 1) {
+                              const nextDay = addDays(dates[0] || tomorrow(), 1)
+                              if (nextDay <= addDays(seoulDate(), 365)) {
+                                setDates([dates[0] || tomorrow(), nextDay])
+                              }
+                            }
                           }}
                         />
                         <span>Travel over multiple days</span>
                       </label>
                       {multiDay && (
-                        <label className="field last-day-field">
-                          <span>
-                            Last day{' '}
-                            <small>
-                              {dates.length}{' '}
-                              {dates.length === 1 ? 'day' : 'days'}, including
-                              your first day
-                            </small>
-                          </span>
-                          <input
-                            type="date"
-                            name="end-date"
-                            aria-label="Last day"
-                            required
-                            min={date}
-                            max={addDays(seoulDate(), 365)}
-                            value={endDate}
-                            onChange={(event) => setEndDate(event.target.value)}
-                          />
-                        </label>
+                        <>
+                          <div
+                            className="multi-day-mode-toggle"
+                            role="radiogroup"
+                            aria-label="Journey scheduling type"
+                          >
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={multiDayMode === 'range'}
+                              className={`mode-btn ${multiDayMode === 'range' ? 'active' : ''}`}
+                              onClick={() => handleModeChange('range')}
+                            >
+                              <span>
+                                <CalendarRange size={13} /> Consecutive Range
+                              </span>
+                              <small>e.g. Nov 9 to Nov 12 (every day)</small>
+                            </button>
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={multiDayMode === 'discrete'}
+                              className={`mode-btn ${multiDayMode === 'discrete' ? 'active' : ''}`}
+                              onClick={() => handleModeChange('discrete')}
+                            >
+                              <span>
+                                <CalendarDays size={13} /> Specific Dates
+                              </span>
+                              <small>e.g. Nov 9 & Nov 12 only</small>
+                            </button>
+                          </div>
+                          <div className="selected-dates-summary">
+                            <span>
+                              <strong>
+                                {dates.length}{' '}
+                                {dates.length === 1 ? 'day' : 'days'} selected
+                              </strong>
+                              {multiDayMode === 'range' && dates.length > 1
+                                ? ` · ${displayDate(dates[0])} — ${displayDate(dates[dates.length - 1])}`
+                                : ` · ${dates.map((d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })).join(', ')}`}
+                            </span>
+                            {dates.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => setDates([dates[0]])}
+                              >
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
-                    <label className="field time-field">
-                      <span>
-                        <Clock3 size={13} /> Pick-up time
-                      </span>
-                      <select
-                        aria-label="Pick-up time"
-                        name="pickup-time"
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                      >
-                        {Array.from({ length: 48 }, (_, i) => {
-                          const t = `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`
-                          return <option key={t}>{t}</option>
-                        })}
-                      </select>
-                    </label>
+                    {!multiDay ? (
+                      <label className="field time-field">
+                        <span>
+                          <Clock3 size={13} /> Pick-up time
+                        </span>
+                        <select
+                          aria-label="Pick-up time"
+                          name="pickup-time"
+                          value={getTime(dates[0] || tomorrow())}
+                          onChange={(e) => {
+                            setDefaultTime(e.target.value)
+                            setTimeForDate(dates[0] || tomorrow(), e.target.value)
+                          }}
+                        >
+                          {timeOptions.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <div className="daily-times-section">
+                        <div className="daily-times-header">
+                          <span className="field-label">
+                            <Clock3 size={13} /> Daily Pick-up Times
+                          </span>
+                          {dates.length > 1 && (
+                            <button
+                              type="button"
+                              className="apply-all-btn"
+                              onClick={() =>
+                                applyTimeToAll(getTime(dates[0]))
+                              }
+                            >
+                              Apply Day 1 time to all
+                            </button>
+                          )}
+                        </div>
+                        <div className="daily-times-grid">
+                          {dates.map((d, index) => (
+                            <div key={d} className="daily-time-item">
+                              <div className="daily-time-info">
+                                <span className="day-badge">Day 0{index + 1}</span>
+                                <span className="day-date">{displayDate(d)}</span>
+                              </div>
+                              <select
+                                aria-label={`Pick-up time for Day ${index + 1}`}
+                                value={getTime(d)}
+                                onChange={(e) =>
+                                  setTimeForDate(d, e.target.value)
+                                }
+                              >
+                                {timeOptions.map((t) => (
+                                  <option key={t} value={t}>
+                                    {t} KST
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="route-fields">
                     <label className="field">
@@ -651,85 +870,116 @@ export default function Booking({
                 <div className="preferences-fields">
                   <p className="field-section-title">Select your collection</p>
                   {multiDay && dates.length > 1 && (
-                    <>
-                      <fieldset className="vehicle-mode">
-                        <legend>
-                          Vehicles for your {dates.length}-day journey
-                        </legend>
-                        <label>
-                          <input
-                            type="radio"
-                            name="vehicle-mode"
-                            value="same"
-                            checked={!dailyVehicles}
-                            onChange={() => setDailyVehicles(false)}
-                          />
-                          <span>Same vehicle every day</span>
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name="vehicle-mode"
-                            value="daily"
-                            checked={dailyVehicles}
-                            onChange={() => setDailyVehicles(true)}
-                          />
-                          <span>Choose a vehicle by date</span>
-                        </label>
-                      </fieldset>
-                      {dailyVehicles && (
-                        <div className="daily-vehicle-picker">
-                          <p>Select a day, then choose its vehicle below.</p>
-                          <div
-                            className="daily-vehicle-list"
-                            role="group"
-                            aria-label="Daily vehicle selections"
-                          >
-                            {journeys.map((day, index) => {
-                              const selected = catalog.vehicles.find(
-                                (v) => v.id === day.vehicle,
-                              )!
-                              const available =
-                                availability[day.date]?.[day.vehicle]
-                              return (
-                                <button
-                                  key={day.date}
-                                  type="button"
-                                  className={`daily-vehicle-day ${activeDate === day.date ? 'active' : ''}`}
-                                  aria-pressed={activeDate === day.date}
-                                  onClick={() => setEditingDate(day.date)}
-                                >
-                                  <span>
-                                    Day {index + 1}
-                                    <small>{displayDate(day.date)}</small>
-                                  </span>
-                                  <span>
-                                    {selected.name}
-                                    <small
-                                      className={
-                                        available === false
-                                          ? 'day-unavailable'
-                                          : ''
-                                      }
-                                    >
-                                      {available === false
-                                        ? 'Unavailable — choose another'
-                                        : checking
-                                          ? 'Checking…'
-                                          : 'Select vehicle'}
-                                    </small>
-                                  </span>
-                                  <ChevronRight size={14} />
-                                </button>
-                              )
-                            })}
-                          </div>
-                          <p className="editing-day" aria-live="polite">
-                            Choosing for {displayDate(activeDate)}
-                          </p>
+                    <div className="daily-schedule-configuration">
+                      <div className="daily-schedule-header">
+                        <div>
+                          <strong>Daily Fleet & Schedule</strong>
+                          <small>Configure custom vehicle and time for each day</small>
                         </div>
-                      )}
-                    </>
+                        <button
+                          type="button"
+                          className="apply-all-btn"
+                          onClick={() =>
+                            applyVehicleToAll(getVehicle(currentActiveDate))
+                          }
+                        >
+                          Apply current vehicle to all days
+                        </button>
+                      </div>
+                      <div
+                        className="daily-schedule-cards"
+                        role="group"
+                        aria-label="Daily fleet selections"
+                      >
+                        {dates.map((d, index) => {
+                          const currentVehicleId = getVehicle(d)
+                          const vInfo = catalog.vehicles.find(
+                            (v) => v.id === currentVehicleId,
+                          )!
+                          const dayTime = getTime(d)
+                          const isAvail = availability[d]?.[currentVehicleId]
+                          const daySubtotal =
+                            currentService.price + vInfo.surcharge + extras
+                          const isActive = currentActiveDate === d
+
+                          return (
+                            <div
+                              key={d}
+                              className={`daily-journey-card ${isActive ? 'active-day-card' : ''}`}
+                              onClick={() => setActiveDate(d)}
+                            >
+                              <div className="card-top">
+                                <div className="day-indicator">
+                                  <span className="badge">Day 0{index + 1}</span>
+                                  <strong>{displayDate(d)}</strong>
+                                </div>
+                                <div className="day-price">
+                                  <span>Day subtotal</span>
+                                  <strong>
+                                    {vInfo.quoteRequired
+                                      ? 'Quote on request'
+                                      : money(daySubtotal)}
+                                  </strong>
+                                </div>
+                              </div>
+                              <div className="card-controls">
+                                <label className="card-control-field">
+                                  <span>
+                                    <Clock3 size={12} /> Pick-up Time
+                                  </span>
+                                  <select
+                                    value={dayTime}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) =>
+                                      setTimeForDate(d, e.target.value)
+                                    }
+                                  >
+                                    {timeOptions.map((t) => (
+                                      <option key={t} value={t}>
+                                        {t} KST
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label className="card-control-field">
+                                  <span>
+                                    <Car size={12} /> Assigned Vehicle
+                                  </span>
+                                  <select
+                                    value={currentVehicleId}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) =>
+                                      setVehicleForDate(d, e.target.value)
+                                    }
+                                  >
+                                    {catalog.vehicles.map((v) => (
+                                      <option key={v.id} value={v.id}>
+                                        {v.name}{' '}
+                                        {v.surcharge > 0
+                                          ? `(+${money(v.surcharge)})`
+                                          : ''}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              </div>
+                              {isAvail === false && (
+                                <div className="card-availability-warning">
+                                  <X size={12} /> Unavailable on {displayDate(d)} at {dayTime} KST. Please choose another vehicle or time.
+                                </div>
+                              )}
+                              <div className="card-footer">
+                                <span className="active-hint">
+                                  {isActive
+                                    ? '✦ Active in Showroom'
+                                    : 'Click to preview in Showroom'}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
                   )}
                   <p className="field-section-title extras-title">
                     Make it personal{' '}
@@ -947,39 +1197,66 @@ export default function Booking({
               <span className="eyebrow">YOUR JOURNEY, AT A GLANCE</span>
               <span className="mini-star">✦</span>
             </div>
+            {multiDay && dates.length > 1 && (
+              <div className="showroom-day-bar">
+                <span>
+                  Fleet Showroom: <strong>Day 0{dates.indexOf(currentActiveDate) + 1}</strong> ({displayDate(currentActiveDate)})
+                </span>
+                <div className="showroom-day-pills">
+                  {dates.map((d, index) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`showroom-day-pill ${currentActiveDate === d ? 'active' : ''}`}
+                      onClick={() => setActiveDate(d)}
+                    >
+                      Day 0{index + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <VehicleCarousel
               value={activeVehicle}
               onChange={changeVehicle}
-              availability={availability[activeDate] || {}}
+              availability={availability[currentActiveDate] || {}}
             />
             <div className="summary-lines">
               <div>
                 <span>
-                  <CalendarDays size={13} /> {displayDate(date)}
+                  <CalendarDays size={13} /> {displayDate(dates[0] || tomorrow())}
                 </span>
-                <span>{time} KST</span>
+                <span>{getTime(dates[0] || tomorrow())} KST</span>
               </div>
               {dates.length > 1 && (
                 <div>
-                  <span>Through {displayDate(lastDate)}</span>
+                  <span>
+                    {multiDayMode === 'range'
+                      ? `Through ${displayDate(dates[dates.length - 1])}`
+                      : `${dates.length} scheduled dates`}
+                  </span>
                   <span>{dates.length} days</span>
                 </div>
               )}
               {dates.length > 1 && (
                 <div className="summary-daily-vehicles">
-                  {journeys.map((day, index) => (
-                    <div key={day.date}>
-                      <span>
-                        Day {index + 1} · {displayDate(day.date)}
-                      </span>
-                      <span>
-                        {
-                          catalog.vehicles.find((v) => v.id === day.vehicle)!
-                            .name
-                        }
-                      </span>
-                    </div>
-                  ))}
+                  {journeys.map((day, index) => {
+                    const v = catalog.vehicles.find(
+                      (veh) => veh.id === day.vehicle,
+                    )!
+                    const dayTotal =
+                      currentService.price + v.surcharge + extras
+                    return (
+                      <div key={day.date}>
+                        <span>
+                          Day 0{index + 1} · {displayDate(day.date)} ({day.time})
+                        </span>
+                        <span>
+                          {v.name} · {v.quoteRequired ? 'Quote' : money(dayTotal)}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               <div>
