@@ -273,11 +273,27 @@ export default function Booking({
   const idempotency = useRef(crypto.randomUUID())
   const heading = useRef<HTMLHeadingElement>(null)
   const successHeading = useRef<HTMLHeadingElement>(null)
+  const pillsContainerRef = useRef<HTMLDivElement>(null)
+  const activePillRef = useRef<HTMLButtonElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
+
+  const scrollPills = (delta: number) => {
+    pillsContainerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
+  }
 
   const currentActiveDate = dates.includes(activeDate)
     ? activeDate
     : dates[0] || tomorrow()
+
+  const activeDayIndex = Math.max(0, dates.indexOf(currentActiveDate))
+
+  useEffect(() => {
+    activePillRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'center',
+    })
+  }, [currentActiveDate])
 
   const getTime = (d: string) => timesByDate[d] || defaultTime
   const setTimeForDate = (d: string, t: string) => {
@@ -1199,20 +1215,82 @@ export default function Booking({
             </div>
             {multiDay && dates.length > 1 && (
               <div className="showroom-day-bar">
-                <span>
-                  Fleet Showroom: <strong>Day 0{dates.indexOf(currentActiveDate) + 1}</strong> ({displayDate(currentActiveDate)})
-                </span>
-                <div className="showroom-day-pills">
-                  {dates.map((d, index) => (
+                <div className="showroom-header-row">
+                  <div className="showroom-title-group">
+                    <span className="showroom-label">FLEET SHOWROOM</span>
+                    <div className="showroom-date-info">
+                      <strong>Day 0{activeDayIndex + 1}</strong>
+                      <span className="showroom-dot">·</span>
+                      <span>{displayDate(currentActiveDate)}</span>
+                      <span className="showroom-time">({getTime(currentActiveDate)} KST)</span>
+                    </div>
+                  </div>
+                  <div className="showroom-nav-arrows">
                     <button
-                      key={d}
                       type="button"
-                      className={`showroom-day-pill ${currentActiveDate === d ? 'active' : ''}`}
-                      onClick={() => setActiveDate(d)}
+                      className="showroom-arrow-btn"
+                      disabled={activeDayIndex <= 0}
+                      onClick={() => {
+                        if (activeDayIndex > 0) {
+                          setActiveDate(dates[activeDayIndex - 1])
+                        }
+                      }}
+                      aria-label="Previous day"
                     >
-                      Day 0{index + 1}
+                      <ChevronLeft size={14} />
                     </button>
-                  ))}
+                    <span className="showroom-page-counter">
+                      {activeDayIndex + 1} / {dates.length}
+                    </span>
+                    <button
+                      type="button"
+                      className="showroom-arrow-btn"
+                      disabled={activeDayIndex >= dates.length - 1}
+                      onClick={() => {
+                        if (activeDayIndex < dates.length - 1) {
+                          setActiveDate(dates[activeDayIndex + 1])
+                        }
+                      }}
+                      aria-label="Next day"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="showroom-pills-row">
+                  {dates.length > 4 && (
+                    <button
+                      type="button"
+                      className="pills-scroll-btn left"
+                      onClick={() => scrollPills(-120)}
+                      aria-label="Scroll days left"
+                    >
+                      <ChevronLeft size={13} />
+                    </button>
+                  )}
+                  <div className="showroom-day-pills" ref={pillsContainerRef}>
+                    {dates.map((d, index) => (
+                      <button
+                        key={d}
+                        type="button"
+                        ref={currentActiveDate === d ? activePillRef : null}
+                        className={`showroom-day-pill ${currentActiveDate === d ? 'active' : ''}`}
+                        onClick={() => setActiveDate(d)}
+                      >
+                        Day 0{index + 1}
+                      </button>
+                    ))}
+                  </div>
+                  {dates.length > 4 && (
+                    <button
+                      type="button"
+                      className="pills-scroll-btn right"
+                      onClick={() => scrollPills(120)}
+                      aria-label="Scroll days right"
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                  )}
                 </div>
               </div>
             )}
