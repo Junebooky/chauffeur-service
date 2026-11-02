@@ -375,6 +375,19 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
   // activeSlideIndex: 0=Exterior, 1=Interior, 2=Details, 3=Specs
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
 
+  // Active stage index on the showroom carousel track:
+  // 0: Overview (4 cars together)
+  // 1: Genesis G90
+  // 2: Kia Carnival Hi Limousine
+  // 3: Hyundai Staria
+  // 4: Mercedes Sprinter 319
+  const getStageIndex = (id: VehicleInfo['id'] | null): number => {
+    if (!id) return 0
+    const idx = FLEET_DATA.findIndex((car) => car.id === id)
+    return idx >= 0 ? idx + 1 : 0
+  }
+  const activeStageIndex = getStageIndex(selectedId)
+
   const activeVehicle =
     FLEET_DATA.find((v) => v.id === selectedId) || FLEET_DATA[0]
 
@@ -407,63 +420,67 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
     goTo(3)
   }
 
-  // Keyboard navigation for PPT slides: Escape to close, Left/Right arrow to change slide
+  // Keyboard navigation for PPT slides and Showroom horizontal sliding
   useEffect(() => {
-    if (!isSlideDetailOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsSlideDetailOpen(false)
-      } else if (e.key === 'ArrowLeft') {
-        setActiveSlideIndex((prev) => (prev > 0 ? prev - 1 : 3))
-      } else if (e.key === 'ArrowRight') {
-        setActiveSlideIndex((prev) => (prev < 3 ? prev + 1 : 0))
+      // Don't intercept if user is typing in form field
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return
+      }
+
+      if (isSlideDetailOpen) {
+        // PPT Slide Deck mode
+        if (e.key === 'Escape') {
+          setIsSlideDetailOpen(false)
+        } else if (e.key === 'ArrowLeft') {
+          setActiveSlideIndex((prev) => (prev > 0 ? prev - 1 : 3))
+        } else if (e.key === 'ArrowRight') {
+          setActiveSlideIndex((prev) => (prev < 3 ? prev + 1 : 0))
+        }
+      } else {
+        // Showroom mode: smooth push navigation
+        if (e.key === 'Escape' && selectedId !== null) {
+          handleBackToOverview()
+        } else if (e.key === 'ArrowLeft') {
+          if (activeStageIndex === 1) {
+            handleBackToOverview()
+          } else if (activeStageIndex > 1) {
+            setSelectedId(FLEET_DATA[activeStageIndex - 2].id)
+          }
+        } else if (e.key === 'ArrowRight') {
+          if (activeStageIndex === 0) {
+            setSelectedId(FLEET_DATA[0].id)
+          } else if (activeStageIndex < FLEET_DATA.length) {
+            setSelectedId(FLEET_DATA[activeStageIndex].id)
+          }
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isSlideDetailOpen])
+  }, [isSlideDetailOpen, selectedId, activeStageIndex])
 
   return (
     <section
       id="collection"
-      className={`screen collection-screen fleet-apple-section ${
-        selectedId
-          ? isSlideDetailOpen
-            ? 'is-full-slide-mode'
-            : 'is-vehicle-mode'
-          : 'is-overview-mode'
-      }`}
+      className={`screen collection-screen fleet-apple-section ${selectedId
+        ? isSlideDetailOpen
+          ? 'is-full-slide-mode'
+          : 'is-vehicle-mode'
+        : 'is-overview-mode'
+        }`}
       aria-labelledby="fleet-section-title"
     >
-      {/* Background Studio Layers for Overview & Side Profiles */}
-      <div className="fleet-bg-stage" aria-hidden="true">
-        <img
-          src="/media/car_info/bg_car.png"
-          alt=""
-          className={`fleet-bg-layer ${selectedId === null ? 'active' : ''}`}
-          loading="eager"
-        />
-
-        {FLEET_DATA.map((car) => (
-          <img
-            key={car.id}
-            src={car.bgImage}
-            alt=""
-            className={`fleet-bg-layer ${
-              selectedId === car.id && !isSlideDetailOpen ? 'active' : ''
-            }`}
-            loading="eager"
-          />
-        ))}
-      </div>
-
       {/* =========================================================================
           FULL PPT SLIDE DETAIL OVERLAY (Matching Reference Image 2)
           ========================================================================= */}
       <div
-        className={`fleet-full-slide-deck ${
-          isSlideDetailOpen ? 'is-open' : ''
-        }`}
+        className={`fleet-full-slide-deck ${isSlideDetailOpen ? 'is-open' : ''
+          }`}
         aria-hidden={!isSlideDetailOpen}
       >
         {/* Top Segmented Tabs Capsule (Ref Image 2) */}
@@ -489,9 +506,8 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                 type="button"
                 role="tab"
                 aria-selected={activeSlideIndex === idx}
-                className={`fleet-segment-pill ${
-                  activeSlideIndex === idx ? 'active' : ''
-                }`}
+                className={`fleet-segment-pill ${activeSlideIndex === idx ? 'active' : ''
+                  }`}
                 onClick={() => setActiveSlideIndex(idx)}
               >
                 {s.label}
@@ -635,130 +651,177 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
       </div>
 
       {/* =========================================================================
-          STANDARD SECTION TOPLINE BAR (Overview & Vehicle View)
+          SHOWROOM HORIZONTAL CAROUSEL VIEWPORT & SLIDE PUSH TRACK
+          Slide 0: Overview (4 cars parked together + header + next button)
+          Slide 1: Genesis G90 (side profile + details + right view tabs)
+          Slide 2: Kia Carnival Hi Limousine
+          Slide 3: Hyundai Staria Lounge Limousine
+          Slide 4: Mercedes Sprinter 319
           ========================================================================= */}
       <div
-        className={`section-topline fleet-topbar ${
-          isSlideDetailOpen ? 'is-hidden' : ''
-        }`}
+        className={`fleet-carousel-viewport ${isSlideDetailOpen ? 'is-hidden' : ''
+          }`}
+        aria-hidden={isSlideDetailOpen}
       >
-        {selectedId ? (
-          <button
-            type="button"
-            className="fleet-back-btn"
-            onClick={handleBackToOverview}
-            aria-label="Back to fleet overview"
+        <div
+          className="fleet-carousel-track"
+          style={{ transform: `translateX(-${activeStageIndex * 100}%)` }}
+        >
+          {/* SLIDE 0: Overview */}
+          <div
+            className={`fleet-carousel-slide slide-overview ${activeStageIndex === 0 ? 'is-active-slide' : ''
+              }`}
+            aria-hidden={activeStageIndex !== 0}
           >
-            <ArrowLeft size={14} />
-            <span>All Fleet</span>
-          </button>
-        ) : (
-          <span className="eyebrow">
-            <span className="gold-line" /> EXCELLENCE, IN EVERY DETAIL
-          </span>
-        )}
-        <span className="section-numeral">02 / THE COLLECTION</span>
+            <img
+              src="/media/car_info/bg_car.png"
+              alt="Chauffeur Fleet Overview"
+              className="fleet-slide-bg"
+              loading="eager"
+            />
+            <div className="fleet-slide-overlay" aria-hidden="true" />
+            <div className="fleet-slide-content fleet-overview-content">
+              <div className="fleet-overview-header">
+                <span className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</span>
+                <h2 id="fleet-section-title" className="fleet-main-title">
+                  Our Fleet
+                </h2>
+                <p className="fleet-subtitle">
+                  A curated fleet for every occasion, with professional chauffeurs.
+                </p>
+              </div>
+
+
+            </div>
+          </div>
+
+          {/* SLIDES 1 to 4: Each Vehicle Stage */}
+          {FLEET_DATA.map((car, idx) => {
+            const slideIndex = idx + 1
+            const isActive = activeStageIndex === slideIndex
+            return (
+              <div
+                key={car.id}
+                className={`fleet-carousel-slide slide-vehicle slide-${car.id} ${isActive ? 'is-active-slide' : ''
+                  }`}
+                aria-hidden={!isActive}
+              >
+                <img
+                  src={car.bgImage}
+                  alt={`${car.name} side profile`}
+                  className="fleet-slide-bg"
+                  loading="eager"
+                />
+                <div className="fleet-slide-overlay" aria-hidden="true" />
+
+                <div className="fleet-slide-content fleet-vehicle-content">
+                  {/* Left Info Column */}
+                  <div className="fleet-detail-info" aria-live="polite">
+                    <div className="fleet-detail-badge">{car.classBadge}</div>
+                    <h2 className="fleet-detail-title">
+                      {car.name}
+                      {car.subName && (
+                        <span className="fleet-detail-title-sub">
+                          {' '}
+                          {car.subName}
+                        </span>
+                      )}
+                    </h2>
+                    <p className="fleet-vehicle-tagline">{car.tagline}</p>
+                    <p className="fleet-detail-desc">{car.description}</p>
+
+                    <div className="fleet-specs-pills">
+                      {car.overviewSpecs.map((spec) => (
+                        <span key={spec} className="fleet-spec-pill">
+                          {spec}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="fleet-detail-actions">
+                      <button
+                        type="button"
+                        className="fleet-reserve-btn"
+                        onClick={() => handleReserve(car.catalogId)}
+                      >
+                        Reserve This Vehicle <ArrowUpRight size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="fleet-explore-link"
+                        onClick={() => goTo(2)}
+                      >
+                        Explore Services
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right-Side View Switch Buttons (Exterior, Interior, Details, Specs) */}
+                  <div
+                    className="fleet-right-view-tabs"
+                    aria-label={`${car.name} viewpoints`}
+                  >
+                    {car.slides.map((s, sIdx) => (
+                      <button
+                        key={s.category}
+                        type="button"
+                        className="fleet-right-tab-btn"
+                        onClick={() => {
+                          setSelectedId(car.id)
+                          handleOpenSlide(sIdx)
+                        }}
+                        aria-label={`Open detailed ${s.label} view of ${car.name}`}
+                      >
+                        <span className="fleet-right-tab-label">{s.label}</span>
+                        <span
+                          className="fleet-right-tab-arrow"
+                          aria-hidden="true"
+                        >
+                          →
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* =========================================================================
-          MIDDLE STAGE CONTENT (Overview or Vehicle View)
+          STANDARD SECTION TOPLINE BAR (Overview & Vehicle View)
           ========================================================================= */}
       <div
-        className={`fleet-stage-content ${
-          isSlideDetailOpen ? 'is-hidden' : ''
-        }`}
+        className={`section-topline fleet-topbar ${isSlideDetailOpen ? 'is-hidden' : ''
+          }`}
       >
-        {/* 1. Overview Header (Reference Image 1) */}
-        {!selectedId && (
-          <div className="fleet-overview-header fleet-fade-in">
-            <span className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</span>
-            <h2 id="fleet-section-title" className="fleet-main-title">
-              Our Fleet
-            </h2>
-            <p className="fleet-subtitle">
-              A curated fleet for every occasion, with professional chauffeurs.
-            </p>
-          </div>
-        )}
-
-        {/* 2. Vehicle View Left Info (First Reference Image) */}
-        {selectedId && activeVehicle && (
-          <div
-            key={activeVehicle.id}
-            className="fleet-detail-info fleet-fade-in"
-            aria-live="polite"
-          >
-            <div className="fleet-detail-badge">{activeVehicle.classBadge}</div>
-            <h2 className="fleet-detail-title">
-              {activeVehicle.name}
-              {activeVehicle.subName && (
-                <span className="fleet-detail-title-sub">
-                  {' '}
-                  {activeVehicle.subName}
-                </span>
-              )}
-            </h2>
-            <p className="fleet-vehicle-tagline">{activeVehicle.tagline}</p>
-            <p className="fleet-detail-desc">{activeVehicle.description}</p>
-
-            <div className="fleet-specs-pills">
-              {activeVehicle.overviewSpecs.map((spec) => (
-                <span key={spec} className="fleet-spec-pill">
-                  {spec}
-                </span>
-              ))}
-            </div>
-
-            <div className="fleet-detail-actions">
-              <button
-                type="button"
-                className="fleet-reserve-btn"
-                onClick={() => handleReserve(activeVehicle.catalogId)}
-              >
-                Reserve This Vehicle <ArrowUpRight size={15} />
-              </button>
-              <button
-                type="button"
-                className="fleet-explore-link"
-                onClick={() => goTo(2)}
-              >
-                Explore Services
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 3. RIGHT-SIDE VIEW SWITCH BUTTONS (Ref Image 1: placed on the right) */}
-        {selectedId && activeVehicle && (
-          <div
-            className="fleet-right-view-tabs fleet-fade-in"
-            aria-label="Vehicle viewpoints"
-          >
-            {activeVehicle.slides.map((s, idx) => (
-              <button
-                key={s.category}
-                type="button"
-                className="fleet-right-tab-btn"
-                onClick={() => handleOpenSlide(idx)}
-                aria-label={`Open detailed ${s.label} view`}
-              >
-                <span className="fleet-right-tab-label">{s.label}</span>
-                <span className="fleet-right-tab-arrow" aria-hidden="true">
-                  →
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="fleet-topbar-left">
+          {selectedId ? (
+            <button
+              type="button"
+              className="fleet-back-btn"
+              onClick={handleBackToOverview}
+              aria-label="Back to fleet overview"
+            >
+              <ArrowLeft size={14} />
+              <span>All Fleet</span>
+            </button>
+          ) : (
+            <span className="eyebrow">
+              <span className="gold-line" /> EXCELLENCE, IN EVERY DETAIL
+            </span>
+          )}
+        </div>
+        <span className="section-numeral">02 / THE COLLECTION</span>
       </div>
 
       {/* =========================================================================
           BOTTOM VEHICLE DOCK (Overview & Vehicle View)
           ========================================================================= */}
       <div
-        className={`fleet-bottom-dock ${
-          isSlideDetailOpen ? 'is-hidden' : ''
-        } ${selectedId ? 'is-dock-mode' : 'is-cards-mode'}`}
+        className={`fleet-bottom-dock ${isSlideDetailOpen ? 'is-hidden' : ''
+          } ${selectedId ? 'is-dock-mode' : 'is-cards-mode'}`}
         role="region"
         aria-label="Fleet vehicle selection"
       >
@@ -798,17 +861,6 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
           )
         })}
       </div>
-
-      {/* Subtle down chevron / explore prompt for overview */}
-      {!selectedId && !isSlideDetailOpen && (
-        <button
-          type="button"
-          className="section-next fleet-next-btn"
-          onClick={() => goTo(2)}
-        >
-          EXPLORE OUR SERVICES
-        </button>
-      )}
     </section>
   )
 }
