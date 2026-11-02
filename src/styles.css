@@ -769,9 +769,10 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .fleet-back-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-color: #D4AF37;
-  color: #D4AF37;
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
   transform: translateX(-2px);
+  box-shadow: 0 0 16px rgba(220, 235, 255, 0.3);
 }
 
 /* Middle Content Area */
@@ -877,11 +878,11 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .fleet-right-tab-btn:hover {
-  background: rgba(28, 30, 38, 0.95);
-  border-color: #D4AF37;
+  background: rgba(30, 33, 42, 0.96);
+  border-color: rgba(255, 255, 255, 0.65);
   color: #ffffff;
   transform: translateX(-5px);
-  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(220, 235, 255, 0.4);
 }
 
 .fleet-right-tab-label {
@@ -895,8 +896,8 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .fleet-right-tab-btn:hover .fleet-right-tab-arrow {
-  transform: translateX(3px);
-  color: #D4AF37;
+  transform: translateX(4px);
+  color: #ffffff;
 }
 
 /* ==========================================================================
@@ -960,10 +961,11 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .fleet-slide-back-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: #D4AF37;
-  color: #D4AF37;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: #ffffff;
   transform: translateX(-2px);
+  box-shadow: 0 0 16px rgba(220, 235, 255, 0.35);
 }
 
 .fleet-slide-segments {
@@ -996,7 +998,8 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .fleet-segment-pill:hover {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 14px rgba(220, 235, 255, 0.25);
 }
 
 .fleet-segment-pill.active {
@@ -1024,9 +1027,11 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .fleet-slide-close-circle:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.6);
   color: #ffffff;
-  transform: scale(1.05);
+  transform: scale(1.06);
+  box-shadow: 0 0 16px rgba(220, 235, 255, 0.35);
 }
 
 /* Side Navigation Circular Glass Arrows (Ref Image 2) */
@@ -1052,11 +1057,11 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .fleet-slide-arrow:hover {
-  background: rgba(30, 32, 42, 0.9);
-  border-color: #D4AF37;
-  color: #D4AF37;
+  background: rgba(36, 38, 48, 0.94);
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
   transform: translateY(-50%) scale(1.08);
-  box-shadow: 0 10px 32px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7), 0 0 26px rgba(220, 235, 255, 0.45);
 }
 
 .fleet-slide-prev {
@@ -1314,23 +1319,25 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #D4AF37;
+  background: #ffffff;
   color: #0b0c10;
   padding: 10px 22px;
   border-radius: 9999px;
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   cursor: pointer;
-  transition: all 0.22s ease;
-  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.35);
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), 0 0 16px rgba(220, 235, 255, 0.25);
 }
 
 .fleet-reserve-btn:hover {
-  background: #e5c158;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.5);
+  background: #f4f6fb;
+  color: #000000;
+  transform: translateY(-2px);
+  border-color: #ffffff;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6), 0 0 24px rgba(220, 235, 255, 0.55);
 }
 
 .fleet-explore-link {
@@ -1383,9 +1390,9 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    transparent 280deg,
-    rgba(212, 175, 55, 0.35) 315deg,
-    rgba(212, 175, 55, 0.95) 345deg,
+    transparent 270deg,
+    rgba(170, 185, 210, 0.18) 300deg,
+    rgba(225, 235, 255, 0.85) 340deg,
     #ffffff 355deg,
     transparent 360deg
   );
@@ -1401,12 +1408,12 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .fleet-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 22px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 22px rgba(220, 235, 255, 0.4);
 }
 
 .fleet-card.is-active {
-  background: #D4AF37;
-  box-shadow: 0 0 24px rgba(212, 175, 55, 0.45);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(160, 175, 200, 0.82));
+  box-shadow: 0 0 24px rgba(220, 235, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.7);
   transform: translateY(-2px);
 }
 
@@ -1512,16 +1519,17 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .fleet-card:hover .fleet-arrow-circle {
   transform: translateX(2px);
-  border-color: #D4AF37;
-  color: #D4AF37;
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(220, 235, 255, 0.4);
 }
 
 .fleet-active-glow-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #D4AF37;
-  box-shadow: 0 0 10px #D4AF37, 0 0 4px #fff;
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.95), 0 0 4px #ffffff;
 }
 
 .fleet-next-btn {
