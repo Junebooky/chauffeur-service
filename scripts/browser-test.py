@@ -37,6 +37,14 @@ def choose_place(page, label, query, result, touch=False):
     choice.tap() if touch else choice.click()
     expect(field).to_have_attribute('aria-expanded', 'false')
 
+def open_glass_booking(page):
+    trigger = page.locator('#reservation .booking-glass-trigger')
+    expect(trigger).to_be_visible()
+    assert page.locator('#reservation .booking-panel').count() == 0
+    trigger.click()
+    expect(page.locator('#reservation .booking-panel')).to_be_visible()
+    expect(page.locator('#reservation .booking-glass-stage')).to_have_class('booking-glass-stage is-expanded')
+
 def aligned(page, id):
     return page.evaluate('(id) => Math.abs(document.querySelector("main").scrollTop - document.getElementById(id).offsetTop) < 3', id)
 
@@ -93,22 +101,15 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 page.locator('#services article').first.get_by_role('button').click()
                 page.wait_for_timeout(1000)
                 assert aligned(page, 'reservation')
+                open_glass_booking(page)
                 expect(page.locator('select[name="service"]')).to_have_value('airport')
                 passed('Pricing selection carries through to reservation')
-                colours = page.evaluate("""() => {
-                    const style = (selector) => {
-                        const s = getComputedStyle(document.querySelector(selector));
-                        return { background: s.backgroundColor, image: s.backgroundImage };
-                    };
-                    return { page: style('#reservation'), panel: style('.booking-panel'), card: style('.service-card'), featured: style('.service-card.featured'), gold: getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() };
-                }""")
-                assert colours['page']['background'] == 'rgb(8, 9, 11)'
-                assert colours['panel']['background'] == 'rgb(17, 19, 22)'
-                assert colours['card']['background'] == 'rgb(17, 19, 22)'
-                assert colours['featured']['background'] == 'rgb(21, 23, 27)'
-                assert all(colours[key]['image'] == 'none' for key in ['page', 'panel', 'card', 'featured'])
-                assert colours['gold'] == '#c5a059'
-                passed('Dark neutral surfaces use the updated metallic gold accents')
+                # Translucent surfaces must stay dark, legible, and deliberately restrained.
+                assert page.locator('.booking-glass-surface').evaluate('(e) => getComputedStyle(e).borderRadius') != '0px'
+                assert page.locator('#reservation').evaluate('(e) => getComputedStyle(e).backgroundImage') != 'none'
+                assert page.locator('.booking-panel').evaluate('(e) => getComputedStyle(e).backgroundColor') in ['rgba(0, 0, 0, 0)', 'transparent']
+                assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--gold').trim()") == '#abb8c9'
+                passed('A option dark Liquid Glass surface and metallic silver controls')
 
                 pickup_input = page.get_by_role('combobox', name='Pick-up location', exact=True)
                 pickup_input.fill('Unconfirmed text')
@@ -187,7 +188,8 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                         assert responsive.locator('#services .service-card').last.evaluate('(e)=>e.getBoundingClientRect().bottom < innerHeight - 20'), 'Pricing must fit on a laptop screen'
                     responsive.screenshot(path=str(OUT / f'{width}-services.png'))
                     nav(responsive, 'Your journey')
-                    expect(responsive.get_by_label('Pick-up location', exact=False)).to_be_attached()
+                    open_glass_booking(responsive)
+                expect(responsive.get_by_label('Pick-up location', exact=False)).to_be_attached()
                     responsive.screenshot(path=str(OUT / f'{width}-reservation.png'))
                     responsive.close()
                 passed('Responsive layouts: laptop, compact desktop, tablet, 390px and 360px mobile')
@@ -198,6 +200,7 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                 mobile.get_by_role('button', name='Open navigation').click()
                 mobile.locator('#mobile-nav').get_by_role('button', name='Your journey').click()
                 mobile.wait_for_timeout(950)
+                open_glass_booking(mobile)
                 mobile.mouse.move(180, 450)
                 mobile.mouse.wheel(0, 220)
                 mobile.wait_for_timeout(300)
@@ -242,6 +245,7 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                     assert daily.locator('.service-tax-notice').count() == 3
                     expect(daily.locator('.services-footnote')).to_contain_text('TAX excluded')
                     nav(daily, 'Your journey')
+                    open_glass_booking(daily)
                     start_date = datetime.now(ZoneInfo('Asia/Seoul')).date() + timedelta(days=1)
                     last_date = start_date + timedelta(days=2)
                     daily.get_by_label('Travel over multiple days').check()
