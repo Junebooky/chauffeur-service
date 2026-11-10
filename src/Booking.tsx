@@ -21,6 +21,7 @@ import catalog from './catalog.json'
 import AddressSearch from './AddressSearch'
 import type { Place } from './AddressSearch'
 import VehicleCarousel from './VehicleCarousel'
+import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import {
   DEFAULT_USD_RATE,
   moneyUsd,
@@ -586,12 +587,18 @@ export default function Booking({
         </p>
       </div>
       <div className={`booking-glass-stage ${glassOpen || result ? 'is-expanded' : 'is-idle'}`}>
-        <div className="booking-glass-surface">
+        <div
+          className="booking-glass-surface"
+          data-liquid-glass="surface"
+          onPointerMove={trackGlassPointer}
+          onPointerLeave={resetGlassPointer}
+        >
           {!glassOpen && !result && (
             <button
               ref={glassTrigger}
               type="button"
               className="booking-glass-trigger"
+              aria-label="예약을 하시겠습니까? Begin your journey"
               aria-controls="reservation-glass-content"
               aria-expanded={false}
               onClick={() => setGlassOpen(true)}
@@ -1461,6 +1468,9 @@ export default function Booking({
             <button
               type="submit"
               className="button gold-button booking-submit"
+              data-liquid-glass="control"
+              onPointerMove={trackGlassPointer}
+              onPointerLeave={resetGlassPointer}
               disabled={
                 sending ||
                 (step > 0 && checking) ||

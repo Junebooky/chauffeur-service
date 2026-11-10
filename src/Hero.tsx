@@ -1,4 +1,5 @@
 import { MoveRight } from 'lucide-react'
+import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 
 export default function Hero({
   reducedMotion: _reducedMotion,
@@ -46,6 +47,9 @@ export default function Hero({
         </div>
         <div
           className="hero-caption"
+          data-liquid-glass="control"
+          onPointerMove={trackGlassPointer}
+          onPointerLeave={resetGlassPointer}
           role="button"
           tabIndex={0}
           onClick={() => goTo(1)}

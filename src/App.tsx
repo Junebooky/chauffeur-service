@@ -15,6 +15,7 @@ import {
 import Hero from './Hero'
 import FleetSection from './FleetSection'
 import Booking from './Booking'
+import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import { useJourneyScroll } from './useJourneyScroll'
 import catalog from './catalog.json'
 import { DEFAULT_USD_RATE, moneyUsd } from './utils'
@@ -161,7 +162,11 @@ export default function App() {
           <span className="language">
             <Globe2 size={13} /> EN
           </span>
-          <button className="header-book" onClick={() => nav(3)}>
+          <button className="header-book"
+            data-liquid-glass="control"
+            onPointerMove={trackGlassPointer}
+            onPointerLeave={resetGlassPointer}
+            onClick={() => nav(3)}>
             Reserve your journey <ArrowUpRight size={14} />
           </button>
           <button
@@ -279,6 +284,9 @@ export default function App() {
                 </ul>
                 <button
                   className={`button ${s.id === 'hourly' ? 'gold-button' : 'outline-button'}`}
+                  data-liquid-glass="control"
+                  onPointerMove={trackGlassPointer}
+                  onPointerLeave={resetGlassPointer}
                   onClick={() => {
                     setService(s.id)
                     nav(3)

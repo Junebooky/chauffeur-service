@@ -51,7 +51,7 @@ The reservation chapter initially displays **one long, glass-like invitation** w
 
 The booking invitation can be closed and reopened without discarding its in-memory selections. A keyboard focus move announces the expanded form; `prefers-reduced-motion` skips the morph. The shared A-option treatment uses subtle silver/graphite glass controls in the header, fleet and services while preserving matte panels for content legibility. Vehicle and pricing logic, request-only availability, TAX exclusion and no-payment status remain unchanged.
 
-The new behavior is staged on a review branch until the main-branch merge is approved. Browser integration tests must open the reservation invitation before addressing the form.
+The Liquid Glass reservation entry is merged into `main`. The new material is a browser-compatible web approximation, not Apple's native compositor: specular edges, pointer-following light and a transparent morph use CSS layers and backdrop filtering, with reduced-motion/transparency fallbacks. Browser integration tests must open the invitation before interacting with the form. CI checks types, API/UI tests and the build; browser screenshots are validated separately.
 
 ## What reservations do
 

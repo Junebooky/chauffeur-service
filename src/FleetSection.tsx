@@ -10,6 +10,7 @@ import {
   Users,
   Luggage,
 } from 'lucide-react'
+import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 
 export interface FleetSectionProps {
   goTo: (index: number) => void
@@ -621,6 +622,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     <button
                       type="button"
                       className="fleet-reserve-btn"
+                        data-liquid-glass="control"
+                        onPointerMove={trackGlassPointer}
+                        onPointerLeave={resetGlassPointer}
                       onClick={() => handleReserve(activeVehicle.catalogId)}
                     >
                       Reserve {activeVehicle.name} <ArrowUpRight size={15} />
@@ -737,6 +741,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                       <button
                         type="button"
                         className="fleet-reserve-btn"
+                        data-liquid-glass="control"
+                        onPointerMove={trackGlassPointer}
+                        onPointerLeave={resetGlassPointer}
                         onClick={() => handleReserve(car.catalogId)}
                       >
                         Reserve This Vehicle <ArrowUpRight size={15} />
@@ -744,6 +751,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                       <button
                         type="button"
                         className="fleet-explore-link"
+                        data-liquid-glass="control"
+                        onPointerMove={trackGlassPointer}
+                        onPointerLeave={resetGlassPointer}
                         onClick={() => goTo(2)}
                       >
                         Explore Services
@@ -761,6 +771,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         key={s.category}
                         type="button"
                         className="fleet-right-tab-btn"
+                        data-liquid-glass="control"
+                        onPointerMove={trackGlassPointer}
+                        onPointerLeave={resetGlassPointer}
                         onClick={() => {
                           setSelectedId(car.id)
                           handleOpenSlide(sIdx)
