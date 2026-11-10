@@ -71,6 +71,6 @@ test('glass controls track light, preserve booking and honor accessibility fallb
   assert.match(styles, /\.booking-glass-surface::before\s*\{/)
   assert.match(styles, /\.booking-glass-surface::after\s*\{/)
   assert.match(styles, /mask-composite:\s*exclude/)
-  assert.match(styles, /prefers-reduced-transparency: reduce/)
+  assert.match(styles, /prefers-reduced-transparency:\s*reduce/)
   assert.doesNotMatch(styles.slice(styles.indexOf('LIQUID GLASS / CHAUFFEUR')), /backdrop-filter:\s*url\(/)
 })
