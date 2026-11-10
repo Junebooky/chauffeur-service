@@ -45,6 +45,14 @@ Every chapter, including the hero, occupies one viewport. The first vertical whe
 
 The mobile navigation, section rail, and direct CTAs provide alternatives to scrolling. Reduced-motion preferences replace the film with a still image and use immediate chapter navigation. Native dialogs provide focus trapping and Escape handling. Fonts and media are self-hosted.
 
+## A-option Liquid Glass reservation experience
+
+The reservation chapter initially displays **one long, glass-like invitation** with the requested Korean prompt, `예약을 하시겠습니까?`. It is an accessible button styled as an input-like control, not a free-text field. Clicking it expands the **same surface** into the existing reservation form (date/time, service, address search, vehicle selector, daily vehicle choices, optional extras, contact, and a pending request). No bubble, droplet or particle artwork is used.
+
+The booking invitation can be closed and reopened without discarding its in-memory selections. A keyboard focus move announces the expanded form; `prefers-reduced-motion` skips the morph. The shared A-option treatment uses subtle silver/graphite glass controls in the header, fleet and services while preserving matte panels for content legibility. Vehicle and pricing logic, request-only availability, TAX exclusion and no-payment status remain unchanged.
+
+The new behavior is staged on a review branch until the main-branch merge is approved. Browser integration tests must open the reservation invitation before addressing the form.
+
 ## What reservations do
 
 `POST /api/reservations` validates the request, calculates known prices from the server-side catalog, prevents overlapping requests for each daily vehicle class in a SQLite transaction, and persists a **pending** request. If any daily slot conflicts, no part of the request is saved. An idempotency key makes retrying the same submission safe. Dates require at least two hours' notice and cannot be more than a year ahead. Times use **Asia/Seoul (UTC+9)**.
