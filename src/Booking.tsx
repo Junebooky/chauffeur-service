@@ -240,6 +240,7 @@ export default function Booking({
 }: Props) {
   const [usdRate, setUsdRate] = useState<number>(initialUsdRate)
   const [step, setStep] = useState(0)
+  const [glassOpen, setGlassOpen] = useState(false)
   const [multiDay, setMultiDay] = useState(false)
   const [multiDayMode, setMultiDayMode] = useState<'range' | 'discrete'>('range')
   const [dates, setDates] = useState<string[]>(() => [tomorrow()])
@@ -273,6 +274,7 @@ export default function Booking({
   const idempotency = useRef(crypto.randomUUID())
   const heading = useRef<HTMLHeadingElement>(null)
   const successHeading = useRef<HTMLHeadingElement>(null)
+  const glassTrigger = useRef<HTMLButtonElement>(null)
   const pillsContainerRef = useRef<HTMLDivElement>(null)
   const activePillRef = useRef<HTMLButtonElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
@@ -434,6 +436,11 @@ export default function Booking({
   useEffect(() => {
     if (result) successHeading.current?.focus()
   }, [result])
+  useEffect(() => {
+    if (!glassOpen || result) return
+    const frame = requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }))
+    return () => cancelAnimationFrame(frame)
+  }, [glassOpen, result])
 
   const moveStep = (target: number) => {
     if (target > step && !form.current?.reportValidity()) return
@@ -558,7 +565,7 @@ export default function Booking({
   return (
     <section
       id="reservation"
-      className="screen booking-screen"
+      className={`screen booking-screen ${glassOpen || result ? "booking-glass-open" : "booking-glass-closed"}`}
       aria-labelledby="booking-title"
     >
       <div className="section-topline">
@@ -578,6 +585,35 @@ export default function Booking({
           We'll take care of the road ahead.
         </p>
       </div>
+      <div className={`booking-glass-stage ${glassOpen || result ? 'is-expanded' : 'is-idle'}`}>
+        <div className="booking-glass-surface">
+          {!glassOpen && !result && (
+            <button
+              ref={glassTrigger}
+              type="button"
+              className="booking-glass-trigger"
+              aria-controls="reservation-glass-content"
+              aria-expanded={false}
+              onClick={() => setGlassOpen(true)}
+            >
+              <span className="booking-glass-prompt" lang="ko">예약을 하시겠습니까?</span>
+              <span className="booking-glass-subtitle">Begin your journey</span>
+              <ArrowRight size={18} strokeWidth={1.4} aria-hidden="true" />
+            </button>
+          )}
+          {glassOpen && !result && (
+            <button
+              type="button"
+              className="booking-glass-close"
+              onClick={() => {
+                setGlassOpen(false)
+                requestAnimationFrame(() => glassTrigger.current?.focus({ preventScroll: true }))
+              }}
+            >
+              Close <X size={14} aria-hidden="true" />
+            </button>
+          )}
+          <div id="reservation-glass-content" className="booking-glass-content">
       {result ? (
         <div className="booking-success">
           <div className="success-symbol">
@@ -621,6 +657,7 @@ export default function Booking({
               onClick={() => {
                 setResult(null)
                 setStep(0)
+                setGlassOpen(false)
                 setName('')
                 setEmail('')
                 setPhone('')
@@ -635,7 +672,7 @@ export default function Booking({
             </button>
           </div>
         </div>
-      ) : (
+      ) : glassOpen ? (
         <form ref={form} onSubmit={submit} className="booking-panel">
           <div className="booking-main">
             <div className="booking-steps" aria-label="Reservation steps">
@@ -1294,6 +1331,7 @@ export default function Booking({
                 </div>
               </div>
             )}
+            <div className="booking-glass-fleet-label"><span>Select your vehicle</span><small>Click or swipe to explore the collection</small></div>
             <VehicleCarousel
               value={activeVehicle}
               onChange={changeVehicle}
@@ -1449,7 +1487,10 @@ export default function Booking({
             </p>
           </aside>
         </form>
-      )}
+      ) : null}
+          </div>
+        </div>
+      </div>
       <footer className="site-footer">
         <span>
           © {new Date().getFullYear()} CHAUFFEUR. A more considered way to
