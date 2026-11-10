@@ -15,9 +15,11 @@
   },
   "dependencies": {
     "express": "5.1.0",
+    "liquid-glass-react": "1.1.1",
     "lucide-react": "0.468.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
+    "simple-liquid-glass": "5.6.0",
     "undici": "7.30.1"
   },
   "devDependencies": {

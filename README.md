@@ -53,6 +53,10 @@ The booking invitation can be closed and reopened without discarding its in-memo
 
 The Liquid Glass reservation entry is merged into `main`. The new material is a browser-compatible web approximation, not Apple's native compositor: specular edges, pointer-following light and a transparent morph use CSS layers and backdrop filtering, with reduced-motion/transparency fallbacks. Browser integration tests must open the invitation before interacting with the form. CI checks types, API/UI tests and the build; browser screenshots are validated separately.
 
+## Open-source Liquid Glass comparison
+
+The reservation invitation now uses `simple-liquid-glass@5.6.0` for a rounded refractive lens with a sibling backdrop source, allowing WebGL rendering on iPhone Safari. The existing morphing surface, request form, and server logic are unchanged. A CSS glass fallback remains available for browsers that cannot render the effect. A side-by-side lab is available at `/?glass-lab=1`, comparing `simple-liquid-glass` with `liquid-glass-react@1.1.1` on a matching lighting background. This lab is deliberately separate from reservations and does not submit booking requests. Test both in real Chromium and iPhone Safari before promoting the visual results as verified; browser screenshots are not included in CI.
+
 ## What reservations do
 
 `POST /api/reservations` validates the request, calculates known prices from the server-side catalog, prevents overlapping requests for each daily vehicle class in a SQLite transaction, and persists a **pending** request. If any daily slot conflicts, no part of the request is saved. An idempotency key makes retrying the same submission safe. Dates require at least two hours' notice and cannot be more than a year ahead. Times use **Asia/Seoul (UTC+9)**.
