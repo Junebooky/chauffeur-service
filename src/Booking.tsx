@@ -609,7 +609,6 @@ export default function Booking({
                 radius={42}
                 scale={120}
                 quality="standard"
-                maxScale={1.5}
                 blur={0}
                 frost={0}
                 saturation={155}
