@@ -21,6 +21,7 @@ import catalog from './catalog.json'
 import AddressSearch from './AddressSearch'
 import type { Place } from './AddressSearch'
 import VehicleCarousel from './VehicleCarousel'
+import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import {
   DEFAULT_USD_RATE,
@@ -276,6 +277,7 @@ export default function Booking({
   const heading = useRef<HTMLHeadingElement>(null)
   const successHeading = useRef<HTMLHeadingElement>(null)
   const glassTrigger = useRef<HTMLButtonElement>(null)
+  const refractionBackdrop = useRef<HTMLDivElement>(null)
   const pillsContainerRef = useRef<HTMLDivElement>(null)
   const activePillRef = useRef<HTMLButtonElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
@@ -587,12 +589,34 @@ export default function Booking({
         </p>
       </div>
       <div className={`booking-glass-stage ${glassOpen || result ? 'is-expanded' : 'is-idle'}`}>
+        <div className="booking-glass-refraction-backdrop" ref={refractionBackdrop} aria-hidden="true" />
         <div
           className="booking-glass-surface"
           data-liquid-glass="surface"
           onPointerMove={trackGlassPointer}
           onPointerLeave={resetGlassPointer}
         >
+          {!glassOpen && !result && (
+            <div className="booking-optical-lens" aria-hidden="true">
+              <LiquidGlass
+                className="booking-optical-engine"
+                backdropRef={refractionBackdrop}
+                renderer="auto"
+                material="clear"
+                refraction="lens"
+                lensProfile="player"
+                lensOptions={{ strength: 0.16, sheen: 2, specular: 1.35 }}
+                radius={42}
+                scale={120}
+                quality="standard"
+                blur={0}
+                frost={0}
+                saturation={155}
+                background="rgba(171, 191, 216, 0.11)"
+                style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+              />
+            </div>
+          )}
           {!glassOpen && !result && (
             <button
               ref={glassTrigger}
