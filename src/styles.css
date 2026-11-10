@@ -5997,3 +5997,20 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     -webkit-backdrop-filter:none;backdrop-filter:none;background:#141c27;
   }
 }
+
+/* Hero caption and concierge dialog: glass only on floating controls. */
+.hero-caption {
+  border:1px solid rgba(194,211,233,.25);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(48,64,85,.26),rgba(10,17,27,.47));
+  box-shadow:inset 0 1px 0 rgba(239,248,255,.13);
+  -webkit-backdrop-filter:blur(13px);
+  backdrop-filter:blur(13px);
+  transition:border-color .3s ease,background .3s ease;
+}
+.hero-caption:hover {border-color:rgba(222,234,251,.53);background:rgba(36,48,65,.52)}
+.info-dialog .dialog-content {
+  border:1px solid rgba(196,214,238,.27);
+  background:linear-gradient(155deg,rgba(27,37,51,.96),rgba(9,15,24,.98));
+  box-shadow:inset 0 1px 0 rgba(246,250,255,.16),0 28px 70px rgba(0,0,0,.42);
+}
