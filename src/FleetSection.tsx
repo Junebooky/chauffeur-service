@@ -54,7 +54,7 @@ const FLEET_DATA: VehicleInfo[] = [
     name: 'Genesis G90',
     brand: 'Genesis',
     classBadge: 'FLAGSHIP LUXURY SEDAN',
-    tagline: 'The pinnacle of Korean luxury.',
+    tagline: 'Quiet confidence. Exceptional comfort.',
     description:
       'A refined experience for distinguished guests. Supreme ride refinement and whisper-quiet poise designed for executive diplomacy and airport arrivals.',
     specs: {
@@ -65,10 +65,9 @@ const FLEET_DATA: VehicleInfo[] = [
     },
     overviewSpecs: [
       'Up to 3 Guests',
-      '3.5L Twin-Turbo AWD',
-      'VIP Reclining Comfort',
-      'Complimentary Wi-Fi',
-      'Chilled Mineral Water',
+      '3.5L Twin-Turbo',
+      'VIP Comfort',
+      'Wi-Fi',
     ],
     bgImage: '/media/car_info/g90_car_info.png',
     slides: [
@@ -118,7 +117,7 @@ const FLEET_DATA: VehicleInfo[] = [
     subName: 'Hi Limousine',
     brand: 'Kia',
     classBadge: 'VIP HI-LIMOUSINE · HYBRID',
-    tagline: 'High-roof elegance with VIP captain seating.',
+    tagline: 'More space. A more considered journey.',
     description:
       'Raised roof architecture delivers exceptional headroom, privacy curtains, and serene traveling comfort for delegations and families.',
     specs: {
@@ -128,11 +127,10 @@ const FLEET_DATA: VehicleInfo[] = [
       amenities: '21.5" Smart Display · Air Purifier · Privacy Blinds',
     },
     overviewSpecs: [
-      '6 Passengers · Hybrid',
-      'Hi-Limousine Raised Roof',
-      'VIP Captain Recliners',
-      'Air Purifier & Mood Lighting',
-      'Complimentary Wi-Fi',
+      '6 Guests',
+      'Hybrid',
+      'Raised Roof',
+      'VIP Captain Seats',
     ],
     bgImage: '/media/car_info/carnival_car_info.png',
     slides: [
@@ -182,7 +180,7 @@ const FLEET_DATA: VehicleInfo[] = [
     subName: 'Lounge Limousine',
     brand: 'Hyundai',
     classBadge: 'EXECUTIVE LOUNGE · HYBRID',
-    tagline: 'Futuristic lounge design with expansive panoramic space.',
+    tagline: 'Room to travel comfortably.',
     description:
       'Expansive panoramic cabin space and supreme accessibility. Outstanding comfort, generous luggage volume, and smooth hybrid poise.',
     specs: {
@@ -192,11 +190,10 @@ const FLEET_DATA: VehicleInfo[] = [
       amenities: 'Dual Panoramic Sunroof · Smart Power Doors · Wi-Fi',
     },
     overviewSpecs: [
-      '9 Passengers · Hybrid',
-      'Executive Lounge Seating',
+      '9 Guests',
+      'Hybrid',
+      'Lounge Seating',
       'Panoramic Windows',
-      '8+ Luggage Capacity',
-      'Complimentary Wi-Fi',
     ],
     bgImage: '/media/car_info/staria_car_info.png',
     slides: [
@@ -246,7 +243,7 @@ const FLEET_DATA: VehicleInfo[] = [
     subName: 'VIP Protocol',
     brand: 'Mercedes-Benz',
     classBadge: 'VIP PROTOCOL HIGH-ROOF COACH',
-    tagline: 'The ultimate luxury coach for state delegations.',
+    tagline: 'A private lounge on the move.',
     description:
       'Full stand-up cabin height with custom leather captain chairs and extended legroom. Built for prestigious delegations and roadshows.',
     specs: {
@@ -256,11 +253,10 @@ const FLEET_DATA: VehicleInfo[] = [
       amenities: '1.9m Standing Room · Conference Table · 220V Outlets',
     },
     overviewSpecs: [
-      '6 Passengers',
-      'Full Stand-Up Height',
-      'Extended Wheelbase',
-      'VIP Conference Layout',
-      'High-Capacity Luggage',
+      '6 Guests',
+      'Stand-Up Cabin',
+      'VIP Conference',
+      'Extra Luggage',
     ],
     bgImage: '/media/car_info/319_car_info.png',
     slides: [
@@ -728,7 +724,6 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                       )}
                     </h2>
                     <p className="fleet-vehicle-tagline">{car.tagline}</p>
-                    <p className="fleet-detail-desc">{car.description}</p>
 
                     <div className="fleet-specs-pills">
                       {car.overviewSpecs.map((spec) => (

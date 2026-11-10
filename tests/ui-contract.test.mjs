@@ -24,3 +24,13 @@ test('reservation submit requires confirmed availability state', () => {
   assert.match(booking, /Time slot open for a request/)
   assert.doesNotMatch(booking, /Available for instant request/)
 })
+
+test('fleet details stay concise with silver accents and single-row desktop specs', () => {
+  const fleet = readFileSync(join(root, 'src/FleetSection.tsx'), 'utf8')
+  const styles = readFileSync(join(root, 'src/styles.css'), 'utf8')
+  assert.doesNotMatch(fleet, /<p className="fleet-detail-desc">/)
+  assert.match(fleet, /className="fleet-specs-pills"/)
+  assert.match(styles, /\.fleet-specs-pills\s*\{[^}]*flex-wrap:\s*nowrap;/)
+  assert.match(styles, /@media \(max-width: 960px\) \{[\s\S]*?\.fleet-specs-pills\s*\{[^}]*flex-wrap:\s*wrap;/)
+  assert.match(styles, /\.fleet-detail-badge\s*\{[^}]*color:\s*#B8C0CB;/)
+})
