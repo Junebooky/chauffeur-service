@@ -189,7 +189,7 @@ with tempfile.TemporaryDirectory(prefix='chauffeur-browser-') as tmp:
                     responsive.screenshot(path=str(OUT / f'{width}-services.png'))
                     nav(responsive, 'Your journey')
                     open_glass_booking(responsive)
-                expect(responsive.get_by_label('Pick-up location', exact=False)).to_be_attached()
+                    expect(responsive.get_by_label('Pick-up location', exact=False)).to_be_attached()
                     responsive.screenshot(path=str(OUT / f'{width}-reservation.png'))
                     responsive.close()
                 passed('Responsive layouts: laptop, compact desktop, tablet, 390px and 360px mobile')
