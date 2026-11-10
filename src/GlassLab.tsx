@@ -20,7 +20,6 @@ function GlassCard({ engine }: { engine: 'simple' | 'rdev' }) {
               scale={120}
               radius={42}
               quality="standard"
-              maxScale={1.5}
               blur={0}
               frost={0}
               background="rgba(171, 191, 216, .11)"
