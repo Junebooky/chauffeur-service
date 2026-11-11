@@ -96,3 +96,15 @@ test('open-source glass engine is attached only to the invitation, with a standa
   assert.match(css, /prefers-reduced-motion: reduce/)
   assert.match(css, /booking-glass-refraction-backdrop/)
 })
+
+test('fleet dock shows only a selected glow dot, never an arrow on vehicle cards', () => {
+  const fleet = readFileSync(join(root, 'src/FleetSection.tsx'), 'utf8')
+  const styles = readFileSync(join(root, 'src/styles.css'), 'utf8')
+  assert.match(fleet, /FLEET_DATA\.map\(\(car\)/)
+  assert.match(fleet, /aria-pressed=\{isSelected\}/)
+  assert.match(fleet, /\{isSelected && \(\s*<span className="fleet-card-action-icon"/)
+  assert.match(fleet, /className="fleet-active-glow-dot"/)
+  assert.doesNotMatch(fleet, /fleet-arrow-circle/)
+  assert.doesNotMatch(styles, /\.fleet-arrow-circle/)
+})
+

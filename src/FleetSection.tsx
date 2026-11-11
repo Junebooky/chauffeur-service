@@ -857,13 +857,11 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     <span className="fleet-card-sub">{car.subName}</span>
                   )}
                 </span>
-                <span className="fleet-card-action-icon" aria-hidden="true">
-                  {isSelected ? (
+                {isSelected && (
+                  <span className="fleet-card-action-icon" aria-hidden="true">
                     <span className="fleet-active-glow-dot" />
-                  ) : (
-                    <span className="fleet-arrow-circle">→</span>
-                  )}
-                </span>
+                  </span>
+                )}
               </div>
             </button>
           )
