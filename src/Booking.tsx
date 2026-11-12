@@ -914,7 +914,7 @@ export default function Booking({
                             >
                               {catalog.services.map((s) => (
                                 <option value={s.id} key={s.id}>
-                                  {s.name} · {s.duration}h
+                                  {s.name} – {s.duration}h
                                 </option>
                               ))}
                             </select>
@@ -1425,7 +1425,7 @@ export default function Booking({
                     )}
                     <div>
                       <span>
-                        {currentService.name}
+                        <Car size={13} /> {currentService.name} ({currentService.duration}h)
                         {dates.length > 1 ? ` × ${dates.length} days` : ''}
                       </span>
                       <span>

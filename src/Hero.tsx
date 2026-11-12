@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { MoveRight } from 'lucide-react'
 
-const HERO_SLIDE_COUNT = 5
+const HERO_SLIDE_COUNT = 4
 const HERO_SLIDE_INTERVAL_MS = 5000
 
 export default function Hero({
@@ -80,15 +80,6 @@ export default function Hero({
             <div className="hero-backdrop-slide">
               <img
                 src="/media/hero/bg_003.png"
-                alt=""
-                fetchPriority="low"
-                decoding="async"
-                className="hero-backdrop-img"
-              />
-            </div>
-            <div className="hero-backdrop-slide">
-              <img
-                src="/media/hero/bg_01.png"
                 alt=""
                 fetchPriority="low"
                 decoding="async"
