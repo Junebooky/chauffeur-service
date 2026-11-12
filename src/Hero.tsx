@@ -58,13 +58,11 @@ export default function Hero({
           <div className="hero-backdrop-overlay" />
         </div>
         <div className="hero-heading">
-          <p className="eyebrow">
-            <span className="gold-line" /> PRIVATE CHAUFFEUR · SEOUL
-          </p>
+          <p className="hero-eyebrow">Private Chauffeur · Seoul</p>
           <h1>
             The art of
             <br />
-            <em>arriving.</em>
+            arriving.
           </h1>
           <p className="hero-subtitle">
             Quiet confidence. Unmistakable presence.
