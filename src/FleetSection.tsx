@@ -674,7 +674,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             aria-hidden={activeStageIndex !== 0}
           >
             <img
-              src="/media/car_info/bg_car.png"
+              src="/media/fleet/bg_fleet.png"
               alt="Chauffeur Fleet Overview"
               className="fleet-slide-bg"
               loading="eager"
@@ -682,7 +682,14 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             <div className="fleet-slide-overlay" aria-hidden="true" />
             <div className="fleet-slide-content fleet-overview-content">
               <div className="fleet-overview-header">
-                <span className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</span>
+                <div className="fleet-eyebrow-wrap">
+                  <span className="fleet-eyebrow-rule" aria-hidden="true" />
+                  <span className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</span>
+                  <span
+                    className="fleet-eyebrow-rule is-right"
+                    aria-hidden="true"
+                  />
+                </div>
                 <h2 id="fleet-section-title" className="fleet-main-title">
                   Our Fleet
                 </h2>
@@ -844,6 +851,12 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               aria-pressed={isSelected}
               aria-label={`View ${car.name}`}
             >
+              <span className="fleet-card-beam-halo" aria-hidden="true">
+                <span className="fleet-card-beam-spinner" />
+              </span>
+              <span className="fleet-card-beam-ring" aria-hidden="true">
+                <span className="fleet-card-beam-spinner" />
+              </span>
               <div className="fleet-card-inner">
                 <span
                   className={`fleet-card-brand-icon brand-${car.id}`}
