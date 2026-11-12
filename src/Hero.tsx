@@ -1,13 +1,25 @@
-import { MoveRight } from 'lucide-react'
-import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
+import { useEffect, useState } from 'react'
+
+const HERO_SLIDE_COUNT = 4
+const HERO_SLIDE_INTERVAL_MS = 5000
 
 export default function Hero({
-  reducedMotion: _reducedMotion,
-  goTo,
+  reducedMotion,
+  goTo: _goTo,
 }: {
   reducedMotion: boolean
-  goTo: (index: number) => void
+  goTo?: (index: number) => void
 }) {
+  const [activeSlide, setActiveSlide] = useState(0)
+
+  useEffect(() => {
+    if (reducedMotion) return
+    const timer = window.setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % HERO_SLIDE_COUNT)
+    }, HERO_SLIDE_INTERVAL_MS)
+    return () => window.clearInterval(timer)
+  }, [reducedMotion])
+
   return (
     <section
       id="welcome"
@@ -15,16 +27,36 @@ export default function Hero({
       aria-label="Welcome to Chauffeur"
     >
       <div className="hero-stage">
-        <div className="hero-backdrop">
+        <div className="hero-backdrop" aria-hidden="true">
           <img
-            src="/media/bg_01.png"
-            alt="Chauffeur Luxury Fleet"
-            className="hero-backdrop-img"
+            src="/media/hero/bg_004.png"
+            alt=""
+            fetchPriority="high"
+            className={`hero-backdrop-img ${activeSlide === 0 ? 'is-active' : ''}`}
+          />
+          <img
+            src="/media/hero/bg_02.png"
+            alt=""
+            fetchPriority="low"
+            decoding="async"
+            className={`hero-backdrop-img ${activeSlide === 1 ? 'is-active' : ''}`}
+          />
+          <img
+            src="/media/hero/bg_003.png"
+            alt=""
+            fetchPriority="low"
+            decoding="async"
+            className={`hero-backdrop-img ${activeSlide === 2 ? 'is-active' : ''}`}
+          />
+          <img
+            src="/media/hero/bg_01.png"
+            alt=""
+            fetchPriority="low"
+            decoding="async"
+            className={`hero-backdrop-img ${activeSlide === 3 ? 'is-active' : ''}`}
           />
           <div className="hero-backdrop-overlay" />
         </div>
-        <div className="hero-orbit orbit-one" />
-        <div className="hero-orbit orbit-two" />
         <div className="hero-heading">
           <p className="eyebrow">
             <span className="gold-line" /> PRIVATE CHAUFFEUR · SEOUL
@@ -34,34 +66,9 @@ export default function Hero({
             <br />
             <em>arriving.</em>
           </h1>
-        </div>
-        <div className="hero-aside">
-          <p>
-            Some journeys
-            <br />
-            deserve more
-            <br />
-            than a destination.
+          <p className="hero-subtitle">
+            Quiet confidence. Unmistakable presence.
           </p>
-          <span className="tiny-label">THE CHAUFFEUR STANDARD</span>
-        </div>
-        <div
-          className="hero-caption"
-          data-liquid-glass="control"
-          onPointerMove={trackGlassPointer}
-          onPointerLeave={resetGlassPointer}
-          role="button"
-          tabIndex={0}
-          onClick={() => goTo(1)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') goTo(1)
-          }}
-          style={{ cursor: 'pointer' }}
-        >
-          <span>THE EXECUTIVE COLLECTION</span>
-          <span>
-            Quiet confidence. Unmistakable presence. <MoveRight size={13} />
-          </span>
         </div>
       </div>
     </section>
