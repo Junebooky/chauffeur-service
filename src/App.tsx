@@ -3,22 +3,19 @@ import type { ReactNode } from 'react'
 import {
   ArrowRight,
   ArrowUpRight,
-  Check,
-  ChevronDown,
   Clock3,
   Globe2,
   Menu,
   ShieldCheck,
-  Sparkles,
   X,
 } from 'lucide-react'
 import Hero from './Hero'
 import FleetSection from './FleetSection'
+import PricingSection from './PricingSection'
 import Booking from './Booking'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import { useJourneyScroll } from './useJourneyScroll'
-import catalog from './catalog.json'
-import { DEFAULT_USD_RATE, moneyUsd } from './utils'
+import { DEFAULT_USD_RATE } from './utils'
 
 function Brand({ onClick }: { onClick: () => void }) {
   return (
@@ -216,94 +213,7 @@ export default function App() {
       >
         <Hero reducedMotion={reducedMotion} goTo={nav} />
         <FleetSection goTo={nav} onSelectVehicle={setVehicle} />
-        <section
-          id="services"
-          className="screen services-screen"
-          aria-labelledby="services-title"
-        >
-          <div className="section-topline">
-            <span className="eyebrow">
-              <span className="gold-line" /> HOWEVER YOUR DAY UNFOLDS
-            </span>
-            <span className="section-numeral">03 / OUR SERVICES</span>
-          </div>
-          <div className="section-heading services-heading">
-            <h2 id="services-title">
-              Extraordinary service.
-              <br />
-              <em>Perfectly simple.</em>
-            </h2>
-            <p>
-              One exceptional standard.
-              <br />
-              Three ways to make it yours.
-            </p>
-          </div>
-          <div className="service-cards">
-            {catalog.services.map((s, i) => (
-              <article
-                key={s.id}
-                className={`service-card ${s.id === 'hourly' ? 'featured' : ''}`}
-              >
-                {s.id === 'hourly' && (
-                  <span className="popular-label">
-                    <span className="live-dot" /> THE SIGNATURE EXPERIENCE
-                  </span>
-                )}
-                <div className="service-card-top">
-                  <span className="service-number">0{i + 1}</span>
-                  {s.id === 'airport' ? (
-                    <ArrowUpRight size={24} strokeWidth={1} />
-                  ) : s.id === 'hourly' ? (
-                    <Clock3 size={24} strokeWidth={1} />
-                  ) : (
-                    <Sparkles size={24} strokeWidth={1} />
-                  )}
-                </div>
-                <p className="service-eyebrow">{s.eyebrow}</p>
-                <h3>{s.name}</h3>
-                <p className="service-description">{s.description}</p>
-                <div className="service-price">
-                  <span className="price-from">FROM</span>
-                  <strong className="lining-price">
-                    <span className="currency-symbol">₩</span>
-                    <span>{s.price.toLocaleString()}</span>
-                  </strong>
-                  <span>
-                    / {s.unit} · approx. {moneyUsd(s.price, usdRate)} USD
-                  </span>
-                </div>
-                <p className="service-tax-notice">TAX excluded</p>
-                <ul>
-                  {s.features.map((feature) => (
-                    <li key={feature}>
-                      <Check size={13} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  className={`button ${s.id === 'hourly' ? 'gold-button' : 'outline-button'}`}
-                  data-liquid-glass="control"
-                  onPointerMove={trackGlassPointer}
-                  onPointerLeave={resetGlassPointer}
-                  onClick={() => {
-                    setService(s.id)
-                    nav(3)
-                  }}
-                >
-                  Choose your journey <ArrowUpRight size={16} />
-                </button>
-              </article>
-            ))}
-          </div>
-          <div className="services-footnote">
-            <span>Standard Executive rates · KRW · TAX excluded</span>
-            <span>
-              Thoughtful extras. Always transparent. <ChevronDown size={12} />
-            </span>
-          </div>
-        </section>
+        <PricingSection onSelectService={setService} goTo={nav} />
         <Booking
           service={service}
           setService={setService}
