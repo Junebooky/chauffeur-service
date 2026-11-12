@@ -606,25 +606,33 @@ export default function Booking({
           onPointerLeave={resetGlassPointer}
         >
           {!glassOpen && !result && (
-            <div className="booking-optical-lens" aria-hidden="true">
-              <LiquidGlass
-                className="booking-optical-engine"
-                backdropRef={refractionBackdrop}
-                renderer="auto"
-                material="clear"
-                refraction="lens"
-                lensProfile="player"
-                lensOptions={{ strength: 0.16, sheen: 2, specular: 1.35 }}
-                radius={42}
-                scale={120}
-                quality="standard"
-                blur={0}
-                frost={0}
-                saturation={155}
-                background="rgba(220, 226, 234, 0.08)"
-                style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-              />
-            </div>
+            <>
+              <span className="booking-glass-beam-halo" aria-hidden="true">
+                <span className="booking-glass-beam-spinner" />
+              </span>
+              <span className="booking-glass-beam-ring" aria-hidden="true">
+                <span className="booking-glass-beam-spinner" />
+              </span>
+              <div className="booking-optical-lens" aria-hidden="true">
+                <LiquidGlass
+                  className="booking-optical-engine"
+                  backdropRef={refractionBackdrop}
+                  renderer="auto"
+                  material="clear"
+                  refraction="lens"
+                  lensProfile="player"
+                  lensOptions={{ strength: 0.1, sheen: 0.45, specular: 0.5 }}
+                  radius={42}
+                  scale={120}
+                  quality="standard"
+                  blur={0}
+                  frost={0}
+                  saturation={115}
+                  background="rgba(255, 255, 255, 0.01)"
+                  style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                />
+              </div>
+            </>
           )}
           {!glassOpen && !result && (
             <button
