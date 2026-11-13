@@ -1794,14 +1794,12 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   }
 }
 
-.fleet-bottom-dock.is-cards-mode:not(:has(.fleet-card:hover)) .fleet-card:first-child .fleet-card-beam-halo,
 .fleet-card:hover .fleet-card-beam-halo,
 .fleet-card:focus-visible .fleet-card-beam-halo,
 .fleet-card.is-active .fleet-card-beam-halo {
   opacity: 0.45;
 }
 
-.fleet-bottom-dock.is-cards-mode:not(:has(.fleet-card:hover)) .fleet-card:first-child .fleet-card-beam-ring,
 .fleet-card:hover .fleet-card-beam-ring,
 .fleet-card:focus-visible .fleet-card-beam-ring,
 .fleet-card.is-active .fleet-card-beam-ring {
