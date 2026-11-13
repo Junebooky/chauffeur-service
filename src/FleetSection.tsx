@@ -73,7 +73,7 @@ const FLEET_DATA: VehicleInfo[] = [
       'Wi-Fi',
     ],
     bgImage: '/media/fleet/bg_fleet_vehicle.png',
-    fgImage: '/media/fleet/fleet_g90.png',
+    fgImage: '/media/fleet/g90.png',
     slides: [
       {
         category: 'exterior',
@@ -83,7 +83,7 @@ const FLEET_DATA: VehicleInfo[] = [
         description:
           'The iconic two-line lamp signature and athletic elegance establish an authoritative, dignified arrival for diplomats and executives.',
         image: '/media/fleet/bg_fleet_vehicle.png',
-        fgImage: '/media/fleet/fleet_g90.png',
+        fgImage: '/media/fleet/g90.png',
       },
       {
         category: 'interior',
@@ -112,7 +112,7 @@ const FLEET_DATA: VehicleInfo[] = [
         description:
           'Precision tuned multi-chamber air suspension delivering a magic carpet ride across the Seoul metropolitan area.',
         image: '/media/fleet/bg_fleet_vehicle.png',
-        fgImage: '/media/fleet/fleet_g90.png',
+        fgImage: '/media/fleet/g90.png',
       },
     ],
   },
