@@ -622,9 +622,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     <button
                       type="button"
                       className="fleet-reserve-btn"
-                        data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
+                      data-liquid-glass="control"
+                      onPointerMove={trackGlassPointer}
+                      onPointerLeave={resetGlassPointer}
                       onClick={() => handleReserve(activeVehicle.catalogId)}
                     >
                       Reserve {activeVehicle.name} <ArrowUpRight size={15} />
@@ -828,7 +828,6 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             </span>
           )}
         </div>
-        <span className="section-numeral">02 / THE COLLECTION</span>
       </div>
 
       {/* =========================================================================

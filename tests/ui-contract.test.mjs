@@ -55,7 +55,6 @@ test('reservation starts as a single Liquid Glass invitation and expands into th
 
 test('glass controls track light, preserve booking and honor accessibility fallbacks', () => {
   const booking = readFileSync(join(root, 'src/Booking.tsx'), 'utf8')
-  const app = readFileSync(join(root, 'src/App.tsx'), 'utf8')
   const fleet = readFileSync(join(root, 'src/FleetSection.tsx'), 'utf8')
   const styles = readFileSync(join(root, 'src/styles.css'), 'utf8')
   const pointer = readFileSync(join(root, 'src/liquidGlass.ts'), 'utf8')
@@ -63,7 +62,7 @@ test('glass controls track light, preserve booking and honor accessibility fallb
   assert.match(booking, /onPointerLeave=\{resetGlassPointer\}/)
   assert.match(booking, /onClick=\{\(\) => setGlassOpen\(true\)\}/)
   assert.match(booking, /pending reservation request, not a confirmed booking/)
-  assert.match(app, /data-liquid-glass="control"/)
+  assert.match(booking, /data-liquid-glass="control"/)
   assert.match(fleet, /data-liquid-glass="control"/)
   assert.match(pointer, /getBoundingClientRect\(\)/)
   assert.match(pointer, /pointerType === 'touch'/)

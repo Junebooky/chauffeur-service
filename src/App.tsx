@@ -13,7 +13,6 @@ import Hero from './Hero'
 import FleetSection from './FleetSection'
 import PricingSection from './PricingSection'
 import Booking from './Booking'
-import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import { useJourneyScroll } from './useJourneyScroll'
 import { DEFAULT_USD_RATE } from './utils'
 
@@ -130,7 +129,7 @@ export default function App() {
       >
         Skip to reservation
       </a>
-      <header className={`site-header ${active > 0 ? 'header-solid' : ''}`}>
+      <header className="site-header">
         <Brand onClick={() => nav(0)} />
         <nav className="desktop-nav" aria-label="Main navigation">
           <button
@@ -159,13 +158,6 @@ export default function App() {
           <span className="language">
             <Globe2 size={13} /> EN
           </span>
-          <button className="header-book"
-            data-liquid-glass="control"
-            onPointerMove={trackGlassPointer}
-            onPointerLeave={resetGlassPointer}
-            onClick={() => nav(3)}>
-            Reserve your journey <ArrowUpRight size={14} />
-          </button>
           <button
             className="icon-button mobile-menu-toggle"
             aria-label={mobileMenu ? 'Close navigation' : 'Open navigation'}

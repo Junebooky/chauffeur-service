@@ -4,4 +4,14 @@
 @theme {
   --font-sans: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
   --font-serif: 'Playfair Display', Cormorant, Georgia, serif;
+  --animate-border-beam: border-beam-spin 5.2s linear infinite;
+
+  @keyframes border-beam-spin {
+    from {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
 }
