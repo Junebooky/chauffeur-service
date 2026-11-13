@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, LoaderCircle, MapPin, Search } from 'lucide-react'
+import { Check, LoaderCircle, MapPin, Navigation, Search } from 'lucide-react'
 
 export type Place = {
   id: string
@@ -18,6 +18,8 @@ type Props = {
   label: string
   value: string
   place: Place | null
+  placeholder?: string
+  rightIcon?: 'pin' | 'nav' | 'none'
   onChange: (value: string, place: Place | null) => void
 }
 export default function AddressSearch({
@@ -25,6 +27,8 @@ export default function AddressSearch({
   label,
   value,
   place,
+  placeholder = 'Airport, hotel or address in any language',
+  rightIcon = 'none',
   onChange,
 }: Props) {
   const id = useId()
@@ -199,7 +203,7 @@ export default function AddressSearch({
           autoComplete="off"
           spellCheck={false}
           value={value}
-          placeholder="Airport, hotel or address in any language"
+          placeholder={placeholder}
           onFocus={() => {
             if (!place) setOpen(true)
           }}
@@ -236,9 +240,17 @@ export default function AddressSearch({
             }
           }}
         />
-        {place && (
-          <Check size={14} className="address-check" aria-hidden="true" />
-        )}
+        {place ? (
+          <Check size={15} className="address-check" aria-hidden="true" />
+        ) : rightIcon === 'nav' ? (
+          <Navigation
+            size={15}
+            className="address-end-icon"
+            aria-hidden="true"
+          />
+        ) : rightIcon === 'pin' ? (
+          <MapPin size={15} className="address-end-icon" aria-hidden="true" />
+        ) : null}
       </div>
       <p
         id={`${id}-help`}

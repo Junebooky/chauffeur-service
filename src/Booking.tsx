@@ -14,12 +14,12 @@ import {
   LoaderCircle,
   LockKeyhole,
   Plus,
-  ShieldCheck,
   X,
 } from 'lucide-react'
 import catalog from './catalog.json'
 import AddressSearch from './AddressSearch'
 import type { Place } from './AddressSearch'
+import GlassSelect from './GlassSelect'
 import VehicleCarousel from './VehicleCarousel'
 import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
@@ -86,7 +86,7 @@ function Calendar({
   }, [multiDay, mode])
 
   const [y, m] = viewMonth.split('-').map(Number)
-  const first = (new Date(y, m - 1, 1, 12).getDay() + 6) % 7
+  const first = new Date(y, m - 1, 1, 12).getDay()
   const total = new Date(y, m, 0).getDate()
 
   const changeMonth = (delta: number) => {
@@ -169,9 +169,9 @@ function Calendar({
         role="group"
         aria-label="Select your journey date"
       >
-        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => (
+        {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
           <span
-            key={`day${i}`}
+            key={day}
             className="calendar-day-name"
             aria-hidden="true"
           >
@@ -599,8 +599,42 @@ export default function Booking({
       </div>
       <div className={`booking-glass-stage ${glassOpen || result ? 'is-expanded' : 'is-idle'}`}>
         <div className="booking-glass-refraction-backdrop" ref={refractionBackdrop} aria-hidden="true" />
+        {(glassOpen || result) && (
+          <nav className="booking-outer-stepper" aria-label="Reservation steps">
+            {['Schedule', 'Vehicle', 'Your Details', 'Confirmation'].map((label, i, arr) => {
+              const displayStep = result ? 3 : step
+              const isActive = displayStep === i
+              const isComplete = i < displayStep
+              const canJump = !result && i < step && !sending
+              return (
+                <div className="booking-stepper-item" key={label}>
+                  <button
+                    type="button"
+                    disabled={!canJump && !isActive}
+                    className={`booking-stepper-btn ${isActive ? 'active' : isComplete ? 'complete' : ''}`}
+                    aria-current={isActive ? 'step' : undefined}
+                    onClick={() => {
+                      if (canJump) moveStep(i)
+                    }}
+                  >
+                    <span className="booking-stepper-num">
+                      {isComplete ? <Check size={14} /> : i + 1}
+                    </span>
+                    <span className="booking-stepper-label">{label}</span>
+                  </button>
+                  {i < arr.length - 1 && (
+                    <span
+                      className={`booking-stepper-line ${i < displayStep ? 'is-complete' : ''}`}
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </nav>
+        )}
         <div
-          className="booking-glass-surface"
+          className={`booking-glass-surface ${step === 0 && glassOpen && !result ? 'is-schedule-step' : ''}`}
           data-liquid-glass="surface"
           onPointerMove={trackGlassPointer}
           onPointerLeave={resetGlassPointer}
@@ -634,6 +668,16 @@ export default function Booking({
               </div>
             </>
           )}
+          {(glassOpen || result) && (
+            <>
+              <span className="booking-glass-beam-halo booking-card-beam-halo" aria-hidden="true">
+                <span className="booking-glass-beam-spinner" />
+              </span>
+              <span className="booking-glass-beam-ring booking-card-beam-ring" aria-hidden="true">
+                <span className="booking-glass-beam-spinner" />
+              </span>
+            </>
+          )}
           {!glassOpen && !result && (
             <button
               ref={glassTrigger}
@@ -653,12 +697,13 @@ export default function Booking({
             <button
               type="button"
               className="booking-glass-close"
+              aria-label="Close reservation panel"
               onClick={() => {
                 setGlassOpen(false)
                 requestAnimationFrame(() => glassTrigger.current?.focus({ preventScroll: true }))
               }}
             >
-              Close <X size={14} aria-hidden="true" />
+              <X size={18} aria-hidden="true" />
             </button>
           )}
           <div id="reservation-glass-content" className="booking-glass-content">
@@ -721,40 +766,30 @@ export default function Booking({
                 </div>
               </div>
             ) : glassOpen ? (
-              <form ref={form} onSubmit={submit} className="booking-panel">
+              <form
+                id="booking-request-form"
+                ref={form}
+                onSubmit={submit}
+                className={`booking-panel ${step === 0 ? 'is-schedule-only' : 'is-split-view'}`}
+              >
                 <div className="booking-main">
-                  <div className="booking-steps" aria-label="Reservation steps">
-                    {['When & where', 'The finer details', 'About you'].map(
-                      (label, i) => (
-                        <button
-                          type="button"
-                          key={label}
-                          disabled={i > step || sending}
-                          className={
-                            step === i ? 'active' : i < step ? 'complete' : ''
-                          }
-                          aria-current={step === i ? 'step' : undefined}
-                          onClick={() => moveStep(i)}
-                        >
-                          <span>{i < step ? <Check size={12} /> : `0${i + 1}`}</span>
-                          <span>{label}</span>
-                        </button>
-                      ),
-                    )}
-                  </div>
                   <div className="booking-fields" key={step}>
                     <h3 className="sr-only" tabIndex={-1} ref={heading}>
                       {
                         [
-                          'Choose your date and route',
+                          'Select your schedule and route',
                           'Choose your vehicle and options',
                           'Enter your contact details',
                         ][step]
                       }
                     </h3>
                     {step === 0 && (
-                      <div className="journey-fields">
-                        <div>
+                      <div className="schedule-fields">
+                        <div className="schedule-date-col">
+                          <div className="schedule-col-header">
+                            <CalendarDays size={16} aria-hidden="true" />
+                            <span>Select Date</span>
+                          </div>
                           <Calendar
                             selectedDates={dates}
                             onChangeDates={(newDates) => {
@@ -766,177 +801,162 @@ export default function Booking({
                             multiDay={multiDay}
                             mode={multiDayMode}
                           />
-                          <div className="multi-day-control">
-                            <label className="multi-day-toggle">
-                              <input
-                                type="checkbox"
-                                checked={multiDay}
-                                onChange={(event) => {
-                                  const checked = event.target.checked
-                                  setMultiDay(checked)
-                                  if (checked && dates.length <= 1) {
-                                    const nextDay = addDays(dates[0] || tomorrow(), 1)
-                                    if (nextDay <= addDays(seoulDate(), 365)) {
-                                      setDates([dates[0] || tomorrow(), nextDay])
-                                    }
+                          <div
+                            className="day-mode-segmented"
+                            role="radiogroup"
+                            aria-label="Trip duration mode"
+                          >
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={!multiDay}
+                              className={`day-mode-pill ${!multiDay ? 'active' : ''}`}
+                              onClick={() => {
+                                setMultiDay(false)
+                                const first = dates[0] || tomorrow()
+                                setDates([first])
+                                setActiveDate(first)
+                              }}
+                            >
+                              Single Day
+                            </button>
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={multiDay}
+                              className={`day-mode-pill ${multiDay ? 'active' : ''}`}
+                              onClick={() => {
+                                setMultiDay(true)
+                                if (dates.length <= 1) {
+                                  const first = dates[0] || tomorrow()
+                                  const nextDay = addDays(first, 1)
+                                  if (nextDay <= addDays(seoulDate(), 365)) {
+                                    setDates([first, nextDay])
                                   }
-                                }}
-                              />
-                              <span>Travel over multiple days</span>
-                            </label>
-                            {multiDay && (
-                              <>
-                                <div
-                                  className="multi-day-mode-toggle"
-                                  role="radiogroup"
-                                  aria-label="Journey scheduling type"
-                                >
-                                  <button
-                                    type="button"
-                                    role="radio"
-                                    aria-checked={multiDayMode === 'range'}
-                                    className={`mode-btn ${multiDayMode === 'range' ? 'active' : ''}`}
-                                    onClick={() => handleModeChange('range')}
-                                  >
-                                    <span>
-                                      <CalendarRange size={13} /> Consecutive Range
-                                    </span>
-                                    <small>e.g. Nov 9 to Nov 12 (every day)</small>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    role="radio"
-                                    aria-checked={multiDayMode === 'discrete'}
-                                    className={`mode-btn ${multiDayMode === 'discrete' ? 'active' : ''}`}
-                                    onClick={() => handleModeChange('discrete')}
-                                  >
-                                    <span>
-                                      <CalendarDays size={13} /> Specific Dates
-                                    </span>
-                                    <small>e.g. Nov 9 & Nov 12 only</small>
-                                  </button>
-                                </div>
-                                <div className="selected-dates-summary">
-                                  <span>
-                                    <strong>
-                                      {dates.length}{' '}
-                                      {dates.length === 1 ? 'day' : 'days'} selected
-                                    </strong>
-                                    {multiDayMode === 'range' && dates.length > 1
-                                      ? ` · ${displayDate(dates[0])} — ${displayDate(dates[dates.length - 1])}`
-                                      : ` · ${dates.map((d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })).join(', ')}`}
-                                  </span>
-                                  {dates.length > 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => setDates([dates[0]])}
-                                    >
-                                      Reset
-                                    </button>
-                                  )}
-                                </div>
-                              </>
-                            )}
+                                }
+                              }}
+                            >
+                              Multiple Days
+                            </button>
                           </div>
-                          {!multiDay ? (
-                            <label className="field time-field">
-                              <span>
-                                <Clock3 size={13} /> Pick-up time
-                              </span>
-                              <select
-                                aria-label="Pick-up time"
-                                name="pickup-time"
-                                value={getTime(dates[0] || tomorrow())}
-                                onChange={(e) => {
-                                  setDefaultTime(e.target.value)
-                                  setTimeForDate(dates[0] || tomorrow(), e.target.value)
-                                }}
+                          {multiDay && (
+                            <div className="multi-day-control">
+                              <div
+                                className="multi-day-mode-toggle"
+                                role="radiogroup"
+                                aria-label="Journey scheduling type"
                               >
-                                {timeOptions.map((t) => (
-                                  <option key={t} value={t}>
-                                    {t}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                          ) : (
-                            <div className="daily-times-section">
-                              <div className="daily-times-header">
-                                <span className="field-label">
-                                  <Clock3 size={13} /> Daily Pick-up Times
+                                <button
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={multiDayMode === 'range'}
+                                  className={`mode-btn ${multiDayMode === 'range' ? 'active' : ''}`}
+                                  onClick={() => handleModeChange('range')}
+                                >
+                                  <span>
+                                    <CalendarRange size={14} /> Consecutive Range
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={multiDayMode === 'discrete'}
+                                  className={`mode-btn ${multiDayMode === 'discrete' ? 'active' : ''}`}
+                                  onClick={() => handleModeChange('discrete')}
+                                >
+                                  <span>
+                                    <CalendarDays size={14} /> Specific Dates
+                                  </span>
+                                </button>
+                              </div>
+                              <div className="selected-dates-summary">
+                                <span>
+                                  <strong>
+                                    {dates.length}{' '}
+                                    {dates.length === 1 ? 'day' : 'days'}
+                                  </strong>
+                                  {multiDayMode === 'range' && dates.length > 1
+                                    ? ` · ${displayDate(dates[0])} — ${displayDate(dates[dates.length - 1])}`
+                                    : ` · ${dates.map((d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })).join(', ')}`}
                                 </span>
                                 {dates.length > 1 && (
                                   <button
                                     type="button"
-                                    className="apply-all-btn"
-                                    onClick={() =>
-                                      applyTimeToAll(getTime(dates[0]))
-                                    }
+                                    onClick={() => setDates([dates[0]])}
                                   >
-                                    Apply Day 1 time to all
+                                    Reset
                                   </button>
                                 )}
                               </div>
-                              <div className="daily-times-grid">
-                                {dates.map((d, index) => (
-                                  <div key={d} className="daily-time-item">
-                                    <div className="daily-time-info">
-                                      <span className="day-badge">Day 0{index + 1}</span>
-                                      <span className="day-date">{displayDate(d)}</span>
-                                    </div>
-                                    <select
-                                      aria-label={`Pick-up time for Day ${index + 1}`}
-                                      value={getTime(d)}
-                                      onChange={(e) =>
-                                        setTimeForDate(d, e.target.value)
+                              {dates.length > 1 && (
+                                <div className="daily-times-section">
+                                  <div className="daily-times-header">
+                                    <span className="field-label">
+                                      <Clock3 size={14} /> Daily Pick-up Times
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className="apply-all-btn"
+                                      onClick={() =>
+                                        applyTimeToAll(getTime(dates[0]))
                                       }
                                     >
-                                      {timeOptions.map((t) => (
-                                        <option key={t} value={t}>
-                                          {t} KST
-                                        </option>
-                                      ))}
-                                    </select>
+                                      Apply Day 1 to all
+                                    </button>
                                   </div>
-                                ))}
-                              </div>
+                                  <div className="daily-times-grid" data-native-scroll>
+                                    {dates.map((d, index) => (
+                                      <div key={d} className="daily-time-item">
+                                        <div className="daily-time-info">
+                                          <span className="day-badge">Day 0{index + 1}</span>
+                                          <span className="day-date">{displayDate(d)}</span>
+                                        </div>
+                                        <GlassSelect
+                                          compact
+                                          ariaLabel={`Pick-up time for Day ${index + 1}`}
+                                          value={getTime(d)}
+                                          onChange={(t) => setTimeForDate(d, t)}
+                                          options={timeOptions.map((t) => ({
+                                            value: t,
+                                            label: `${t} KST`,
+                                          }))}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                        <div className="route-fields">
-                          <label className="field">
-                            <span>Your service</span>
-                            <select
-                              aria-label="Your service"
+                        <div className="schedule-divider" aria-hidden="true" />
+                        <div className="route-fields schedule-route-col">
+                          <div className="field">
+                            <span>
+                              <Car size={15} aria-hidden="true" /> Service
+                            </span>
+                            <GlassSelect
+                              ariaLabel="Service"
                               name="service"
                               value={service}
-                              onChange={(e) => setService(e.target.value)}
-                            >
-                              {catalog.services.map((s) => (
-                                <option value={s.id} key={s.id}>
-                                  {s.name} – {s.duration}h
-                                </option>
-                              ))}
-                            </select>
-                          </label>
+                              onChange={setService}
+                              options={catalog.services.map((s) => ({
+                                value: s.id,
+                                label: s.name,
+                                meta: s.unit,
+                              }))}
+                            />
+                          </div>
                           <AddressSearch
                             name="pickup"
-                            label="Pick-up location"
+                            label="Pickup Location"
+                            placeholder="Enter pickup location"
+                            rightIcon="nav"
                             value={pickup}
                             place={pickupPlace}
                             onChange={(value, selected) => {
                               setPickup(value)
                               setPickupPlace(selected)
-                            }}
-                          />
-                          <AddressSearch
-                            name="destination"
-                            label="Destination"
-                            value={destination}
-                            place={destinationPlace}
-                            onChange={(value, selected) => {
-                              setDestination(value)
-                              setDestinationPlace(selected)
                             }}
                           />
                           {service === 'airport' && (
@@ -953,17 +973,43 @@ export default function Booking({
                               />
                             </label>
                           )}
-                          <p className="field-note">
-                            <ShieldCheck size={14} /> A minimum of two hours' notice,
-                            please.
-                          </p>
-                          {multiDay && (
-                            <p className="field-note multi-day-note">
-                              Your pickup time, service and route apply each day. You
-                              can choose a different vehicle for each date in the next
-                              step.
-                            </p>
-                          )}
+                          <AddressSearch
+                            name="destination"
+                            label="Destination"
+                            placeholder="Enter destination"
+                            rightIcon="nav"
+                            value={destination}
+                            place={destinationPlace}
+                            onChange={(value, selected) => {
+                              setDestination(value)
+                              setDestinationPlace(selected)
+                            }}
+                          />
+                          <div className="field time-field">
+                            <span>
+                              <Clock3 size={15} aria-hidden="true" />{' '}
+                              {multiDay ? 'Default Pick-up Time' : 'Pick-up Time'}
+                            </span>
+                            <GlassSelect
+                              ariaLabel={
+                                multiDay ? 'Default Pick-up Time' : 'Pick-up Time'
+                              }
+                              name="pickup-time"
+                              value={getTime(dates[0] || tomorrow())}
+                              onChange={(t) => {
+                                if (multiDay) {
+                                  applyTimeToAll(t)
+                                } else {
+                                  setDefaultTime(t)
+                                  setTimeForDate(dates[0] || tomorrow(), t)
+                                }
+                              }}
+                              options={timeOptions.map((t) => ({
+                                value: t,
+                                label: `${t} KST`,
+                              }))}
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1024,49 +1070,41 @@ export default function Booking({
                                       </div>
                                     </div>
                                     <div className="card-controls">
-                                      <label className="card-control-field">
+                                      <div className="card-control-field">
                                         <span>
-                                          <Clock3 size={12} /> Pick-up Time
+                                          <Clock3 size={14} /> Pick-up Time
                                         </span>
-                                        <select
+                                        <GlassSelect
+                                          compact
+                                          ariaLabel={`Pick-up time for Day ${index + 1}`}
                                           value={dayTime}
-                                          onClick={(e) => e.stopPropagation()}
-                                          onChange={(e) =>
-                                            setTimeForDate(d, e.target.value)
-                                          }
-                                        >
-                                          {timeOptions.map((t) => (
-                                            <option key={t} value={t}>
-                                              {t} KST
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </label>
-                                      <label className="card-control-field">
+                                          onChange={(t) => setTimeForDate(d, t)}
+                                          options={timeOptions.map((t) => ({
+                                            value: t,
+                                            label: `${t} KST`,
+                                          }))}
+                                        />
+                                      </div>
+                                      <div className="card-control-field">
                                         <span>
-                                          <Car size={12} /> Assigned Vehicle
+                                          <Car size={14} /> Assigned Vehicle
                                         </span>
-                                        <select
+                                        <GlassSelect
+                                          compact
+                                          ariaLabel={`Vehicle for Day ${index + 1}`}
                                           value={currentVehicleId}
-                                          onClick={(e) => e.stopPropagation()}
-                                          onChange={(e) =>
-                                            setVehicleForDate(d, e.target.value)
-                                          }
-                                        >
-                                          {catalog.vehicles.map((v) => (
-                                            <option key={v.id} value={v.id}>
-                                              {v.name}{' '}
-                                              {v.surcharge > 0
-                                                ? `(+${money(v.surcharge)})`
-                                                : ''}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </label>
+                                          onChange={(vId) => setVehicleForDate(d, vId)}
+                                          options={catalog.vehicles.map((v) => ({
+                                            value: v.id,
+                                            label: v.name,
+                                            meta: v.surcharge > 0 ? `+${money(v.surcharge)}` : 'Included',
+                                          }))}
+                                        />
+                                      </div>
                                     </div>
                                     {isAvail === false && (
                                       <div className="card-availability-warning">
-                                        <X size={12} /> Unavailable on {displayDate(d)} at {dayTime} KST. Please choose another vehicle or time.
+                                        <X size={14} /> Unavailable on {displayDate(d)} at {dayTime} KST. Please choose another vehicle or time.
                                       </div>
                                     )}
                                     <div className="card-footer">
@@ -1270,277 +1308,328 @@ export default function Booking({
                           onClick={showPrivacy}
                         >
                           Read our reservation & privacy notice{' '}
-                          <ArrowUpRight size={12} />
+                          <ArrowUpRight size={14} />
                         </button>
                       </div>
                     )}
                   </div>
-                  <div className="form-navigation">
-                    {step > 0 ? (
-                      <button
-                        type="button"
-                        className="text-link"
-                        disabled={sending}
-                        onClick={() => moveStep(step - 1)}
-                      >
-                        <ArrowLeft size={14} /> Back
-                      </button>
-                    ) : (
-                      <span>
-                        <LockKeyhole size={12} /> Your details stay private.
-                      </span>
-                    )}
-                    <span>STEP 0{step + 1} OF 03</span>
-                  </div>
                 </div>
-                <aside className="journey-summary">
-                  <div className="summary-heading">
-                    <span className="eyebrow">YOUR JOURNEY, AT A GLANCE</span>
-                    <span className="mini-star">✦</span>
-                  </div>
-                  {multiDay && dates.length > 1 && (
-                    <div className="showroom-day-bar">
-                      <div className="showroom-header-row">
-                        <div className="showroom-title-group">
-                          <span className="showroom-label">FLEET SHOWROOM</span>
-                          <div className="showroom-date-info">
-                            <strong>Day 0{activeDayIndex + 1}</strong>
-                            <span className="showroom-dot">·</span>
-                            <span>{displayDate(currentActiveDate)}</span>
-                            <span className="showroom-time">({getTime(currentActiveDate)} KST)</span>
+                {step >= 1 && (
+                  <aside className="journey-summary">
+                    <div className="summary-heading">
+                      <span className="eyebrow">YOUR JOURNEY, AT A GLANCE</span>
+                    </div>
+                    {step === 1 && multiDay && dates.length > 1 && (
+                      <div className="showroom-day-bar">
+                        <div className="showroom-header-row">
+                          <div className="showroom-title-group">
+                            <span className="showroom-label">FLEET SHOWROOM</span>
+                            <div className="showroom-date-info">
+                              <strong>Day 0{activeDayIndex + 1}</strong>
+                              <span className="showroom-dot">·</span>
+                              <span>{displayDate(currentActiveDate)}</span>
+                              <span className="showroom-time">({getTime(currentActiveDate)} KST)</span>
+                            </div>
+                          </div>
+                          <div className="showroom-nav-arrows">
+                            <button
+                              type="button"
+                              className="showroom-arrow-btn"
+                              disabled={activeDayIndex <= 0}
+                              onClick={() => {
+                                if (activeDayIndex > 0) {
+                                  setActiveDate(dates[activeDayIndex - 1])
+                                }
+                              }}
+                              aria-label="Previous day"
+                            >
+                              <ChevronLeft size={14} />
+                            </button>
+                            <span className="showroom-page-counter">
+                              {activeDayIndex + 1} / {dates.length}
+                            </span>
+                            <button
+                              type="button"
+                              className="showroom-arrow-btn"
+                              disabled={activeDayIndex >= dates.length - 1}
+                              onClick={() => {
+                                if (activeDayIndex < dates.length - 1) {
+                                  setActiveDate(dates[activeDayIndex + 1])
+                                }
+                              }}
+                              aria-label="Next day"
+                            >
+                              <ChevronRight size={14} />
+                            </button>
                           </div>
                         </div>
-                        <div className="showroom-nav-arrows">
-                          <button
-                            type="button"
-                            className="showroom-arrow-btn"
-                            disabled={activeDayIndex <= 0}
-                            onClick={() => {
-                              if (activeDayIndex > 0) {
-                                setActiveDate(dates[activeDayIndex - 1])
-                              }
-                            }}
-                            aria-label="Previous day"
-                          >
-                            <ChevronLeft size={14} />
-                          </button>
-                          <span className="showroom-page-counter">
-                            {activeDayIndex + 1} / {dates.length}
-                          </span>
-                          <button
-                            type="button"
-                            className="showroom-arrow-btn"
-                            disabled={activeDayIndex >= dates.length - 1}
-                            onClick={() => {
-                              if (activeDayIndex < dates.length - 1) {
-                                setActiveDate(dates[activeDayIndex + 1])
-                              }
-                            }}
-                            aria-label="Next day"
-                          >
-                            <ChevronRight size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="showroom-pills-row">
-                        {dates.length > 4 && (
-                          <button
-                            type="button"
-                            className="pills-scroll-btn left"
-                            onClick={() => scrollPills(-120)}
-                            aria-label="Scroll days left"
-                          >
-                            <ChevronLeft size={13} />
-                          </button>
-                        )}
-                        <div className="showroom-day-pills" ref={pillsContainerRef}>
-                          {dates.map((d, index) => (
+                        <div className="showroom-pills-row">
+                          {dates.length > 4 && (
                             <button
-                              key={d}
                               type="button"
-                              ref={currentActiveDate === d ? activePillRef : null}
-                              className={`showroom-day-pill ${currentActiveDate === d ? 'active' : ''}`}
-                              onClick={() => setActiveDate(d)}
+                              className="pills-scroll-btn left"
+                              onClick={() => scrollPills(-120)}
+                              aria-label="Scroll days left"
                             >
-                              Day 0{index + 1}
+                              <ChevronLeft size={14} />
                             </button>
-                          ))}
+                          )}
+                          <div className="showroom-day-pills" ref={pillsContainerRef}>
+                            {dates.map((d, index) => (
+                              <button
+                                key={d}
+                                type="button"
+                                ref={currentActiveDate === d ? activePillRef : null}
+                                className={`showroom-day-pill ${currentActiveDate === d ? 'active' : ''}`}
+                                onClick={() => setActiveDate(d)}
+                              >
+                                Day 0{index + 1}
+                              </button>
+                            ))}
+                          </div>
+                          {dates.length > 4 && (
+                            <button
+                              type="button"
+                              className="pills-scroll-btn right"
+                              onClick={() => scrollPills(120)}
+                              aria-label="Scroll days right"
+                            >
+                              <ChevronRight size={14} />
+                            </button>
+                          )}
                         </div>
-                        {dates.length > 4 && (
-                          <button
-                            type="button"
-                            className="pills-scroll-btn right"
-                            onClick={() => scrollPills(120)}
-                            aria-label="Scroll days right"
-                          >
-                            <ChevronRight size={13} />
-                          </button>
-                        )}
                       </div>
-                    </div>
-                  )}
-                  <div className="booking-glass-fleet-label"><span>Select your vehicle</span><small>Click or swipe to explore the collection</small></div>
-                  <VehicleCarousel
-                    value={activeVehicle}
-                    onChange={changeVehicle}
-                    availability={availability[currentActiveDate] || {}}
-                  />
-                  <div className="summary-lines">
-                    <div>
-                      <span>
-                        <CalendarDays size={13} /> {displayDate(dates[0] || tomorrow())}
-                      </span>
-                      <span>{getTime(dates[0] || tomorrow())} KST</span>
-                    </div>
-                    {dates.length > 1 && (
+                    )}
+                    {step === 1 && (
+                      <>
+                        <div className="booking-glass-fleet-label">
+                          <span>Select your vehicle</span>
+                          <small>Click or swipe to explore</small>
+                        </div>
+                        <VehicleCarousel
+                          value={activeVehicle}
+                          onChange={changeVehicle}
+                          availability={availability[currentActiveDate] || {}}
+                        />
+                      </>
+                    )}
+                    {step === 2 && (
+                      <div className="summary-route-recap">
+                        <div>
+                          <span>Route</span>
+                          <strong>{pickup || '—'} → {destination || '—'}</strong>
+                        </div>
+                        <div>
+                          <span>Vehicle</span>
+                          <strong>
+                            {catalog.vehicles.find((v) => v.id === activeVehicle)?.name}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                    <div className="summary-lines">
                       <div>
                         <span>
-                          {multiDayMode === 'range'
-                            ? `Through ${displayDate(dates[dates.length - 1])}`
-                            : `${dates.length} scheduled dates`}
+                          <CalendarDays size={14} /> {displayDate(dates[0] || tomorrow())}
                         </span>
-                        <span>{dates.length} days</span>
+                        <span>{getTime(dates[0] || tomorrow())} KST</span>
                       </div>
-                    )}
-                    {dates.length > 1 && (
-                      <div className="summary-daily-vehicles">
-                        {journeys.map((day, index) => {
-                          const v = catalog.vehicles.find(
-                            (veh) => veh.id === day.vehicle,
-                          )!
-                          const dayTotal =
-                            currentService.price + v.surcharge + extras
-                          return (
-                            <div key={day.date}>
-                              <span>
-                                Day 0{index + 1} · {displayDate(day.date)} ({day.time})
-                              </span>
-                              <span>
-                                {v.name} · {v.quoteRequired ? 'Quote' : money(dayTotal)}
-                              </span>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                    <div>
-                      <span>
-                        <Car size={13} /> {currentService.name} ({currentService.duration}h)
-                        {dates.length > 1 ? ` × ${dates.length} days` : ''}
-                      </span>
-                      <span>
-                        {quoteRequired
-                          ? 'Quote on request'
-                          : money(currentService.price * dates.length)}
-                      </span>
-                    </div>
-                    {vehicleSurcharges > 0 && (
-                      <div>
-                        <span>Vehicle upgrades</span>
-                        <span>{money(vehicleSurcharges)}</span>
-                      </div>
-                    )}
-                    {catalog.options
-                      .filter((o) => options.includes(o.id))
-                      .map((o) => (
-                        <div key={o.id}>
+                      {dates.length > 1 && (
+                        <div>
                           <span>
-                            {o.name}
-                            {dates.length > 1 ? ` × ${dates.length}` : ''}
+                            {multiDayMode === 'range'
+                              ? `Through ${displayDate(dates[dates.length - 1])}`
+                              : `${dates.length} scheduled dates`}
                           </span>
-                          <span>{money(o.price * dates.length)}</span>
+                          <span>{dates.length} days</span>
                         </div>
-                      ))}
-                  </div>
-                  <div className="summary-total">
-                    <div>
-                      <span>Estimated total</span>
-                      <small className="tax-notice">
-                        KRW · TAX excluded · approx. {moneyUsd(total, usdRate)} USD
-                      </small>
+                      )}
+                      {dates.length > 1 && (
+                        <div className="summary-daily-vehicles">
+                          {journeys.map((day, index) => {
+                            const v = catalog.vehicles.find(
+                              (veh) => veh.id === day.vehicle,
+                            )!
+                            const dayTotal =
+                              currentService.price + v.surcharge + extras
+                            return (
+                              <div key={day.date}>
+                                <span>
+                                  Day 0{index + 1} · {displayDate(day.date)} ({day.time})
+                                </span>
+                                <span>
+                                  {v.name} · {v.quoteRequired ? 'Quote' : money(dayTotal)}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                      <div>
+                        <span>
+                          <Car size={14} /> {currentService.name} ({currentService.duration}h)
+                          {dates.length > 1 ? ` × ${dates.length} days` : ''}
+                        </span>
+                        <span>
+                          {quoteRequired
+                            ? 'Quote on request'
+                            : money(currentService.price * dates.length)}
+                        </span>
+                      </div>
+                      {vehicleSurcharges > 0 && (
+                        <div>
+                          <span>Vehicle upgrades</span>
+                          <span>{money(vehicleSurcharges)}</span>
+                        </div>
+                      )}
+                      {catalog.options
+                        .filter((o) => options.includes(o.id))
+                        .map((o) => (
+                          <div key={o.id}>
+                            <span>
+                              {o.name}
+                              {dates.length > 1 ? ` × ${dates.length}` : ''}
+                            </span>
+                            <span>{money(o.price * dates.length)}</span>
+                          </div>
+                        ))}
                     </div>
-                    <strong className={quoteRequired ? 'quote-on-request' : ''}>
-                      {quoteRequired ? 'Quote on request' : money(total)}
-                    </strong>
-                  </div>
-                  {quoteRequired && (
-                    <p className="quote-note">
-                      Sprinter pricing requires a separate quote. TAX is not included.
+                    <div className="summary-total">
+                      <div>
+                        <span>Estimated total</span>
+                        <small className="tax-notice">
+                          KRW · TAX excluded · approx. {moneyUsd(total, usdRate)} USD
+                        </small>
+                      </div>
+                      <strong className={quoteRequired ? 'quote-on-request' : ''}>
+                        {quoteRequired ? 'Quote on request' : money(total)}
+                      </strong>
+                    </div>
+                    {quoteRequired && (
+                      <p className="quote-note">
+                        Sprinter pricing requires a separate quote. TAX is not included.
+                      </p>
+                    )}
+                    <p className="availability-note" aria-live="polite">
+                      {checking ? (
+                        <>
+                          <LoaderCircle size={14} className="spin" /> Checking your{' '}
+                          {dates.length > 1 ? 'dates…' : 'date…'}
+                        </>
+                      ) : unavailableDay ? (
+                        <>
+                          <X size={14} />{' '}
+                          {dates.length > 1
+                            ? `Vehicle unavailable on ${displayDate(unavailableDay.date)}`
+                            : 'Choose another vehicle or time'}
+                        </>
+                      ) : allAvailable ? (
+                        <>
+                          <Check size={14} />{' '}
+                          {dates.length > 1
+                            ? 'All daily slots open for a request'
+                            : 'Time slot open for a request'}
+                        </>
+                      ) : (
+                        <>
+                          <Clock3 size={14} /> Availability check required
+                        </>
+                      )}
                     </p>
-                  )}
-                  <p className="availability-note" aria-live="polite">
-                    {checking ? (
-                      <>
-                        <LoaderCircle size={12} className="spin" /> Checking your
-                        {dates.length > 1 ? 'dates…' : 'date…'}
-                      </>
-                    ) : unavailableDay ? (
-                      <>
-                        <X size={12} />{' '}
-                        {dates.length > 1
-                          ? `Vehicle unavailable on ${displayDate(unavailableDay.date)}`
-                          : 'Choose another vehicle or time'}
-                      </>
-                    ) : allAvailable ? (
-                      <>
-                        <Check size={12} />{' '}
-                        {dates.length > 1
-                          ? 'All daily slots open for a request'
-                          : 'Time slot open for a request'}
-                      </>
-                    ) : (
-                      <>
-                        <Clock3 size={12} /> Availability check required
-                      </>
+                    {error && (
+                      <div className="form-error" role="alert">
+                        {error}
+                        <button
+                          type="button"
+                          onClick={() => setAvailabilityVersion((v) => v + 1)}
+                          aria-label="Recheck availability"
+                        >
+                          Retry
+                        </button>
+                      </div>
                     )}
-                  </p>
-                  {error && (
-                    <div className="form-error" role="alert">
-                      {error}
-                      <button
-                        type="button"
-                        onClick={() => setAvailabilityVersion((v) => v + 1)}
-                        aria-label="Recheck availability"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  )}
-                  <button
-                    type="submit"
-                    className="button gold-button booking-submit"
-                    data-liquid-glass="control"
-                    onPointerMove={trackGlassPointer}
-                    onPointerLeave={resetGlassPointer}
-                    disabled={
-                      sending ||
-                      (step > 0 && checking) ||
-                      (step === 2 && !allAvailable)
-                    }
-                  >
-                    {sending ? (
-                      <>
-                        Saving your request{' '}
-                        <LoaderCircle size={16} className="spin" />
-                      </>
-                    ) : step === 2 ? (
-                      <>
-                        Request your journey <ArrowUpRight size={17} />
-                      </>
-                    ) : (
-                      <>
-                        Continue your journey <ArrowRight size={17} />
-                      </>
-                    )}
-                  </button>
-                  <p className="no-payment">
-                    No upfront payment required · Subject to confirmation
-                  </p>
-                </aside>
+                    <p className="privacy-aside-note">
+                      <LockKeyhole size={14} aria-hidden="true" /> Your details stay private.
+                    </p>
+                  </aside>
+                )}
               </form>
             ) : null}
           </div>
         </div>
+        {glassOpen && !result && (
+          <div className="booking-outer-actions">
+            {error && step === 0 && (
+              <div className="form-error booking-outer-error" role="alert">
+                {error}
+                <button
+                  type="button"
+                  onClick={() => setAvailabilityVersion((v) => v + 1)}
+                  aria-label="Recheck availability"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            <div className="booking-outer-buttons">
+              {step > 0 && (
+                <button
+                  type="button"
+                  className="booking-back-btn"
+                  disabled={sending}
+                  onClick={() => moveStep(step - 1)}
+                >
+                  <ArrowLeft size={16} aria-hidden="true" /> Back
+                </button>
+              )}
+              <button
+                type="submit"
+                form="booking-request-form"
+                className={`booking-cta-pill ${step === 2 ? 'booking-submit' : ''}`}
+                data-liquid-glass="control"
+                onPointerMove={trackGlassPointer}
+                onPointerLeave={resetGlassPointer}
+                disabled={
+                  sending ||
+                  (step > 0 && checking) ||
+                  (step === 2 && !allAvailable)
+                }
+              >
+                <span className="booking-glass-beam-halo booking-cta-beam-halo" aria-hidden="true">
+                  <span className="booking-glass-beam-spinner" />
+                </span>
+                <span className="booking-glass-beam-ring booking-cta-beam-ring" aria-hidden="true">
+                  <span className="booking-glass-beam-spinner" />
+                </span>
+                <span className="booking-cta-pill-inner">
+                  {sending ? (
+                    <>
+                      Saving your request{' '}
+                      <LoaderCircle size={16} className="spin" />
+                    </>
+                  ) : step === 0 ? (
+                    <>
+                      Continue to Select Vehicle <ArrowRight size={17} />
+                    </>
+                  ) : step === 1 ? (
+                    <>
+                      Continue to Your Details <ArrowRight size={17} />
+                    </>
+                  ) : (
+                    <>
+                      Request your journey <ArrowUpRight size={17} />
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+            {step >= 1 && (
+              <p className="no-payment">
+                No upfront payment required · Subject to confirmation
+              </p>
+            )}
+          </div>
+        )}
       </div>
       <footer className="site-footer">
         <span>
