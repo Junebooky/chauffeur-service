@@ -26,6 +26,7 @@ interface SlideInfo {
   eyebrow: string
   description: string
   image: string
+  fgImage?: string
 }
 
 interface VehicleInfo {
@@ -45,6 +46,7 @@ interface VehicleInfo {
   }
   overviewSpecs: string[]
   bgImage: string
+  fgImage?: string
   slides: SlideInfo[]
 }
 
@@ -70,7 +72,8 @@ const FLEET_DATA: VehicleInfo[] = [
       'VIP Comfort',
       'Wi-Fi',
     ],
-    bgImage: '/media/car_info/g90_car_info.png',
+    bgImage: '/media/fleet/bg_fleet_vehicle.png',
+    fgImage: '/media/fleet/fleet_g90.png',
     slides: [
       {
         category: 'exterior',
@@ -79,7 +82,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Two-Line Headlamps & Diamond Crest Grille',
         description:
           'The iconic two-line lamp signature and athletic elegance establish an authoritative, dignified arrival for diplomats and executives.',
-        image: '/media/car_info/g90_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/fleet_g90.png',
       },
       {
         category: 'interior',
@@ -107,7 +111,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Engineering & Comfort Specifications',
         description:
           'Precision tuned multi-chamber air suspension delivering a magic carpet ride across the Seoul metropolitan area.',
-        image: '/media/car_info/g90_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/fleet_g90.png',
       },
     ],
   },
@@ -556,10 +561,22 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               <div className="fleet-slide-image-wrap">
                 <img
                   src={slide.image}
-                  alt={`${activeVehicle.name} ${slide.label}`}
+                  alt={slide.fgImage ? '' : `${activeVehicle.name} ${slide.label}`}
                   className="fleet-slide-img"
                   loading="eager"
                 />
+                {slide.fgImage && (
+                  <div className="fleet-vehicle-stage-layer is-ppt-slide">
+                    <div className="fleet-vehicle-floor-shadow" aria-hidden="true" />
+                    <img
+                      src={slide.fgImage}
+                      alt={`${activeVehicle.name} ${slide.label}`}
+                      className="fleet-vehicle-foreground"
+                      loading="eager"
+                      draggable={false}
+                    />
+                  </div>
+                )}
                 <div className="fleet-slide-vignette" />
               </div>
 
@@ -715,11 +732,23 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               >
                 <img
                   src={car.bgImage}
-                  alt={`${car.name} side profile`}
+                  alt={car.fgImage ? '' : `${car.name} side profile`}
                   className="fleet-slide-bg"
                   loading="eager"
                 />
                 <div className="fleet-slide-overlay" aria-hidden="true" />
+                {car.fgImage && (
+                  <div className="fleet-vehicle-stage-layer">
+                    <div className="fleet-vehicle-floor-shadow" aria-hidden="true" />
+                    <img
+                      src={car.fgImage}
+                      alt={`${car.name} showroom view`}
+                      className="fleet-vehicle-foreground"
+                      loading="eager"
+                      draggable={false}
+                    />
+                  </div>
+                )}
 
                 <div className="fleet-slide-content fleet-vehicle-content">
                   {/* Left Info Column */}

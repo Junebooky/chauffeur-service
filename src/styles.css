@@ -996,6 +996,59 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   object-position: center 56%;
 }
 
+.slide-g90 .fleet-slide-bg {
+  object-position: center 62%;
+}
+
+.fleet-vehicle-stage-layer {
+  position: absolute;
+  left: 52%;
+  bottom: clamp(134px, 16.8vh, 182px);
+  width: clamp(500px, 55vw, 860px);
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.fleet-vehicle-stage-layer.is-ppt-slide {
+  left: 50%;
+  bottom: clamp(110px, 14vh, 170px);
+  width: clamp(540px, 60vw, 940px);
+  z-index: 2;
+}
+
+.fleet-vehicle-floor-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 4.5%;
+  width: 92%;
+  height: 20%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse 52% 48% at 50% 50%,
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(6, 5, 4, 0.62) 48%,
+      transparent 78%);
+  filter: blur(8px);
+}
+
+.fleet-vehicle-foreground {
+  position: relative;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  filter:
+    brightness(0.96)
+    contrast(1.04)
+    drop-shadow(0 18px 28px rgba(0, 0, 0, 0.82));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .fleet-slide-overlay {
   position: absolute;
   inset: 0;
@@ -1007,6 +1060,17 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
       rgba(8, 9, 12, 0.95) 100%);
   pointer-events: none;
   z-index: 2;
+}
+
+.slide-g90 .fleet-slide-overlay {
+  background:
+    radial-gradient(ellipse 68% 48% at 50% 62%, transparent 40%, rgba(6, 7, 10, 0.45) 100%),
+    linear-gradient(180deg,
+      rgba(6, 7, 10, 0.5) 0%,
+      transparent 24%,
+      transparent 68%,
+      rgba(6, 7, 10, 0.72) 92%,
+      rgba(6, 7, 10, 0.92) 100%);
 }
 
 .fleet-slide-content {
@@ -1989,6 +2053,17 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     height: auto;
     min-height: 100dvh;
     overflow-y: auto;
+  }
+
+  .fleet-vehicle-stage-layer {
+    left: 50%;
+    bottom: clamp(150px, 21vh, 210px);
+    width: min(92vw, 540px);
+  }
+
+  .fleet-vehicle-stage-layer.is-ppt-slide {
+    bottom: clamp(140px, 19vh, 200px);
+    width: min(94vw, 580px);
   }
 
   .fleet-bottom-dock {
