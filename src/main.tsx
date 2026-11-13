@@ -4,6 +4,7 @@ import App from './App'
 const GlassLab = React.lazy(() => import('./GlassLab'))
 import './styles.css'
 import './tailwind.css'
+import './reservation-refined.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
