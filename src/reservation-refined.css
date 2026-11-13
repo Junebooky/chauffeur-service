@@ -1,0 +1,591 @@
+/*
+ * CHAUFFEUR / Reservation — Quiet Luxury
+ * All visual overrides are deliberately scoped to #reservation.
+ * Hero, Fleet, Services and business logic are untouched.
+ *
+ * Principles: believable architectural translucency, readable type,
+ * one neutral accent, consistent inputs, no coloured status chrome.
+ */
+#reservation.booking-screen {
+  --r-ink: rgba(249, 249, 249, .94);
+  --r-soft: rgba(238, 239, 241, .70);
+  --r-muted: rgba(228, 229, 231, .49);
+  --r-hairline: rgba(255, 255, 255, .145);
+  --r-hairline-strong: rgba(255, 255, 255, .31);
+  --r-field: rgba(255, 255, 255, .045);
+  --r-field-hover: rgba(255, 255, 255, .085);
+  --r-active: rgba(255, 255, 255, .145);
+  --r-radius: 10px;
+  font-family: var(--sans);
+  color: var(--r-ink);
+}
+#reservation .booking-backdrop-overlay {
+  background: linear-gradient(90deg, rgba(5, 6, 8, .39), rgba(7, 7, 8, .11) 57%, rgba(6, 7, 8, .17)),
+    linear-gradient(180deg, rgba(4, 5, 7, .39), rgba(5, 5, 6, .07) 42%, rgba(5, 5, 6, .48));
+}
+#reservation .booking-heading h2,
+#reservation.booking-glass-open .booking-heading h2 {
+  font-family: var(--sans);
+  font-size: clamp(36px, 4.25vw, 66px);
+  font-weight: 300;
+  letter-spacing: -.052em;
+  line-height: 1.08;
+  color: var(--r-ink);
+}
+#reservation .booking-heading h2 em { color: rgba(241, 242, 245, .74); }
+#reservation .booking-heading > p {
+  color: var(--r-soft);
+  font-size: clamp(11px, .92vw, 13px);
+  line-height: 1.65;
+  font-weight: 350;
+}
+#reservation .section-topline .eyebrow,
+#reservation .section-topline .section-numeral {
+  color: var(--r-muted);
+  font-weight: 450;
+  letter-spacing: .18em;
+}
+#reservation .booking-glass-stage::before { opacity: 0 !important; }
+#reservation .booking-glass-stage.is-idle .booking-glass-surface {
+  background: rgba(17, 18, 20, .16) !important;
+  border: 1px solid rgba(251, 252, 255, .43) !important;
+  border-radius: 999px;
+  backdrop-filter: blur(6px) saturate(103%) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(103%) !important;
+  box-shadow: inset 0 1px rgba(255, 255, 255, .14), 0 12px 38px rgba(0, 0, 0, .17) !important;
+}
+#reservation .booking-glass-stage.is-idle .booking-glass-surface::before { opacity: .15 !important; }
+#reservation .booking-glass-stage.is-idle .booking-glass-surface::after { opacity: .02 !important; }
+#reservation .booking-glass-stage.is-idle .booking-optical-lens { opacity: .12; }
+#reservation .booking-glass-stage.is-idle .booking-glass-beam-halo { opacity: .10; }
+#reservation .booking-glass-stage.is-idle .booking-glass-beam-ring { opacity: .28; }
+#reservation .booking-glass-trigger {
+  color: var(--r-ink);
+  font-weight: 400;
+  letter-spacing: -.015em;
+}
+#reservation .booking-glass-prompt { font-size: clamp(15px, 1.3vw, 18px); font-weight: 400; }
+#reservation .booking-glass-subtitle { color: var(--r-soft); font-size: 12px; }
+#reservation .booking-glass-stage.is-idle .booking-glass-trigger:hover {
+  background: rgba(255, 255, 255, .055);
+}
+
+/* Single cohesive translucent shell for the entire expanded journey. */
+#reservation .booking-glass-stage.is-expanded .booking-glass-surface {
+  background: linear-gradient(125deg, rgba(17, 18, 20, .54), rgba(16, 17, 19, .47) 55%, rgba(22, 19, 17, .49)) !important;
+  border: 1px solid rgba(255, 255, 255, .26) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .29), inset 0 1px 0 rgba(255, 255, 255, .14) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(105%) !important;
+  backdrop-filter: blur(14px) saturate(105%) !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-glass-surface::before {
+  background: linear-gradient(125deg, rgba(255, 255, 255, .19), transparent 33%, rgba(255, 255, 255, .08) 82%, rgba(255, 250, 239, .13)) !important;
+  opacity: .4 !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-glass-surface::after { opacity: 0 !important; }
+#reservation .booking-glass-stage.is-expanded .booking-panel {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.60fr) minmax(325px, 1fr) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#reservation .booking-main { background: transparent !important; border-right: 0 !important; }
+#reservation .booking-steps {
+  min-height: 62px !important;
+  padding: 0 34px !important;
+  gap: clamp(14px, 2.8vw, 40px) !important;
+  background: transparent !important;
+  border-bottom: 1px solid var(--r-hairline) !important;
+}
+#reservation .booking-steps > button {
+  min-height: 60px;
+  padding: 0 !important;
+  gap: 10px !important;
+  color: var(--r-muted) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  letter-spacing: -.005em;
+  transition: color .16s ease;
+}
+#reservation .booking-steps > button.active { color: var(--r-ink) !important; font-weight: 450 !important; }
+#reservation .booking-steps > button.complete { color: var(--r-soft) !important; }
+#reservation .booking-steps > button.active::after {
+  background: rgba(255, 255, 255, .73) !important;
+  height: 1px !important;
+  box-shadow: none !important;
+}
+#reservation .booking-steps > button > span:first-child {
+  width: 23px !important;
+  height: 23px !important;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .26) !important;
+  background: transparent !important;
+  color: var(--r-soft) !important;
+  font-size: 10px !important;
+}
+#reservation .booking-steps > button.active > span:first-child,
+#reservation .booking-steps > button.complete > span:first-child {
+  background: rgba(255, 255, 255, .12) !important;
+  border-color: rgba(255, 255, 255, .64) !important;
+  color: #fff !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-glass-close {
+  top: 18px !important;
+  right: 17px !important;
+  width: 32px !important;
+  height: 32px !important;
+  color: var(--r-soft) !important;
+  border: 1px solid transparent !important;
+  border-radius: 50% !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-glass-close:hover {
+  background: rgba(255, 255, 255, .08) !important;
+  color: white !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-fields {
+  padding: clamp(22px, 2.5vw, 36px) clamp(22px, 2.4vw, 36px) 20px !important;
+  justify-content: flex-start !important;
+  scrollbar-color: rgba(255, 255, 255, .20) transparent;
+}
+#reservation .booking-glass-stage.is-expanded .journey-fields {
+  grid-template-columns: minmax(0, .97fr) minmax(0, 1.08fr) !important;
+  column-gap: clamp(20px, 2.4vw, 38px) !important;
+  row-gap: 18px !important;
+}
+#reservation .form-navigation {
+  padding: 14px 34px !important;
+  border-top: 1px solid var(--r-hairline) !important;
+  min-height: 48px;
+}
+#reservation .form-navigation > span,
+#reservation .form-navigation .text-link { color: var(--r-soft) !important; font-size: 11px !important; }
+#reservation .form-navigation > span:last-child { color: var(--r-muted) !important; font-size: 10px !important; letter-spacing: .14em; }
+
+/* The same matte/translucent language for every interactive surface. */
+#reservation .booking-glass-stage.is-expanded .field > span,
+#reservation .booking-glass-stage.is-expanded .address-field > label,
+#reservation .field-label,
+#reservation .contact-methods legend {
+  color: var(--r-soft) !important;
+  font-size: 12px !important;
+  font-weight: 450 !important;
+  letter-spacing: .005em !important;
+  text-transform: none !important;
+}
+#reservation .field, #reservation .address-field { gap: 8px; }
+#reservation .booking-glass-stage.is-expanded .field input,
+#reservation .booking-glass-stage.is-expanded .field select,
+#reservation .booking-glass-stage.is-expanded .address-control input,
+#reservation .daily-time-item select,
+#reservation .daily-journey-card .card-control-field select {
+  width: 100%;
+  height: 44px !important;
+  min-height: 44px;
+  padding: 0 14px !important;
+  background: var(--r-field) !important;
+  border: 1px solid var(--r-hairline) !important;
+  color: var(--r-ink) !important;
+  border-radius: var(--r-radius) !important;
+  box-shadow: none !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  color-scheme: dark;
+  transition: border-color .18s ease, background-color .18s ease;
+}
+#reservation select option { color: #f2f2f2; background: #1c1d20; }
+#reservation .field input::placeholder, #reservation .address-control input::placeholder {
+  color: var(--r-muted) !important;
+  opacity: 1;
+}
+#reservation .field input:hover, #reservation .field select:hover, #reservation .address-control input:hover {
+  background: var(--r-field-hover) !important;
+  border-color: var(--r-hairline-strong) !important;
+}
+#reservation :is(input, select, textarea, button, .fleet-selector):focus-visible {
+  outline: 2px solid rgba(246, 247, 250, .78) !important;
+  outline-offset: 3px;
+}
+#reservation .field input:focus, #reservation .field select:focus, #reservation .address-control input:focus {
+  border-color: rgba(255, 255, 255, .66) !important;
+}
+#reservation .route-fields :is(.field, .address-field) { margin-bottom: 18px !important; }
+#reservation .address-help,
+#reservation .field-note,
+#reservation .multi-day-note,
+#reservation .messenger-help,
+#reservation .contact-intro {
+  color: var(--r-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.55;
+}
+#reservation .route-fields > .field-note,
+#reservation .address-help:not(.resolved) { display: flex !important; }
+#reservation .address-help svg, #reservation .field-note svg { color: var(--r-muted) !important; }
+
+/* Airy calendar, no bright bubbles or coloured highlights. */
+#reservation .booking-glass-stage.is-expanded .calendar-heading {
+  color: var(--r-ink) !important;
+  font-size: 14px !important;
+  font-weight: 450 !important;
+  letter-spacing: -.015em;
+  margin-bottom: 18px !important;
+}
+#reservation .booking-glass-stage.is-expanded .calendar-heading button {
+  width: 30px !important;
+  height: 30px !important;
+  border: 1px solid var(--r-hairline) !important;
+  background: rgba(255, 255, 255, .035) !important;
+  color: var(--r-soft) !important;
+  border-radius: 50% !important;
+}
+#reservation .calendar-grid { gap: 5px 3px !important; }
+#reservation .booking-glass-stage.is-expanded .calendar-grid > .calendar-day-name {
+  color: var(--r-muted) !important;
+  height: 28px !important;
+  font-size: 10.5px !important;
+  font-weight: 450 !important;
+}
+#reservation .booking-glass-stage.is-expanded .calendar-grid > button {
+  width: min(100%, 36px) !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  border-radius: 50% !important;
+  font-size: 12px !important;
+  color: var(--r-soft) !important;
+  transition: background-color .16s ease, border-color .16s ease;
+}
+#reservation .calendar-grid > button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .10) !important;
+}
+#reservation .booking-glass-stage.is-expanded .calendar-grid > button:is(.selected, .range-start, .range-end) {
+  background: var(--r-active) !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(255, 255, 255, .74) !important;
+  box-shadow: none !important;
+}
+#reservation .booking-glass-stage.is-expanded .calendar-grid > button.in-range {
+  background: rgba(255, 255, 255, .075) !important;
+  border-radius: 8px !important;
+  color: var(--r-ink) !important;
+}
+#reservation .booking-glass-stage.is-expanded .calendar-grid > button:disabled {
+  color: rgba(255, 255, 255, .26) !important;
+  opacity: .7 !important;
+}
+#reservation .booking-glass-stage.is-expanded .calendar-note {
+  display: flex !important;
+  color: var(--r-muted) !important;
+  font-size: 10.5px !important;
+}
+#reservation .multi-day-control { color: var(--r-soft) !important; }
+#reservation .booking-glass-stage.is-expanded .multi-day-toggle { color: var(--r-soft) !important; }
+#reservation input[type='checkbox'], #reservation input[type='radio'] { accent-color: #c9cbd0; }
+#reservation .multi-day-mode-toggle { gap: 9px; }
+#reservation .mode-btn,
+#reservation .showroom-day-pill,
+#reservation .pills-scroll-btn,
+#reservation .showroom-arrow-btn,
+#reservation .apply-all-btn,
+#reservation .selected-dates-summary,
+#reservation .daily-time-item,
+#reservation .day-badge {
+  background: rgba(255, 255, 255, .035) !important;
+  border: 1px solid var(--r-hairline) !important;
+  color: var(--r-soft) !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+#reservation .mode-btn.active,
+#reservation .showroom-day-pill.active,
+#reservation .active-day-card {
+  background: rgba(255, 255, 255, .125) !important;
+  border-color: rgba(255, 255, 255, .62) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+#reservation .selected-dates-summary strong,
+#reservation .day-indicator strong,
+#reservation .day-price strong,
+#reservation .showroom-date-info strong,
+#reservation .active-hint,
+#reservation .selected-dates-summary button { color: var(--r-ink) !important; }
+#reservation .mode-btn:hover,
+#reservation .apply-all-btn:hover,
+#reservation .showroom-day-pill:hover,
+#reservation .showroom-arrow-btn:hover:not(:disabled) {
+  background: var(--r-field-hover) !important;
+  border-color: var(--r-hairline-strong) !important;
+}
+#reservation .daily-schedule-cards, #reservation .daily-times-grid {
+  scrollbar-color: rgba(255,255,255,.20) transparent;
+}
+#reservation .daily-journey-card {
+  background: rgba(255,255,255,.035) !important;
+  border: 1px solid var(--r-hairline) !important;
+  border-radius: 12px !important;
+}
+#reservation .daily-journey-card .badge {
+  color: var(--r-ink) !important;
+  background: rgba(255,255,255,.1) !important;
+}
+#reservation .daily-journey-card :is(.card-control-field span, .day-price span) { color: var(--r-muted) !important; }
+
+/* Second and third steps — no leftover olive/gold or blue controls. */
+#reservation .field-section-title { color: var(--r-ink) !important; font-size: 16px !important; font-weight: 400 !important; letter-spacing: -.02em; }
+#reservation .extras-title span { color: var(--r-muted) !important; }
+#reservation .extra-option,
+#reservation .contact-method-grid > label {
+  background: rgba(255, 255, 255, .035) !important;
+  border: 1px solid var(--r-hairline) !important;
+  border-radius: 11px !important;
+  box-shadow: none !important;
+  color: var(--r-soft) !important;
+  transition: background .18s ease, border-color .18s ease;
+}
+#reservation .extra-option:hover, #reservation .contact-method-grid > label:hover {
+  background: rgba(255,255,255,.085) !important;
+  border-color: var(--r-hairline-strong) !important;
+}
+#reservation .extra-option[aria-checked='true'],
+#reservation .contact-method-grid > label.selected {
+  background: rgba(255,255,255,.12) !important;
+  border-color: rgba(255,255,255,.48) !important;
+}
+#reservation :is(.extra-option small, .contact-intro, .extras-title span) { color: var(--r-muted) !important; }
+#reservation :is(.extra-price, .messenger-field > span, .consent, .privacy-inline) { color: var(--r-soft) !important; }
+#reservation .toggle { background: rgba(255,255,255,.14) !important; border: 1px solid var(--r-hairline) !important; }
+#reservation .toggle.on { background: rgba(255,255,255,.50) !important; }
+#reservation .contact-method-grid > label { min-height: 41px; }
+#reservation .consent { line-height: 1.55; }
+
+/* Quiet showroom: give the vehicle room, remove the artificial glow. */
+#reservation .booking-glass-stage.is-expanded .journey-summary {
+  padding: 22px clamp(22px, 2.3vw, 34px) 20px !important;
+  background: rgba(5, 6, 8, .16) !important;
+  border-left: 1px solid var(--r-hairline) !important;
+  scrollbar-color: rgba(255,255,255,.17) transparent;
+}
+#reservation .summary-heading { margin-bottom: 12px !important; }
+#reservation .summary-heading > .eyebrow,
+#reservation .showroom-label {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  letter-spacing: .16em !important;
+  color: var(--r-muted) !important;
+}
+#reservation .showroom-day-bar {
+  border: 1px solid var(--r-hairline) !important;
+  border-radius: 11px !important;
+  background: rgba(255,255,255,.025) !important;
+  padding: 12px 14px;
+}
+#reservation .showroom-date-info { color: var(--r-soft) !important; }
+#reservation .showroom-page-counter, #reservation .showroom-time { color: var(--r-muted) !important; }
+#reservation .booking-glass-stage.is-expanded .booking-glass-fleet-label {
+  gap: 12px !important;
+  margin: 8px 0 6px !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-glass-fleet-label > span {
+  font-size: 13px !important;
+  font-weight: 450 !important;
+  color: var(--r-ink) !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-glass-fleet-label > small {
+  font-size: 10px !important;
+  color: var(--r-muted) !important;
+}
+#reservation .booking-glass-stage.is-expanded .fleet-selector { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+#reservation .booking-glass-stage.is-expanded .fleet-stage {
+  height: clamp(124px, 15vh, 166px) !important;
+  background: radial-gradient(ellipse 48% 13% at 50% 86%, rgba(255,255,255,.075), transparent 80%) !important;
+  border: 0 !important;
+}
+#reservation .booking-glass-stage.is-expanded .fleet-orbit,
+#reservation .booking-glass-stage.is-expanded .fleet-lens-glow { display: none !important; }
+#reservation .booking-glass-stage.is-expanded .fleet-car:not(.fleet-center) { opacity: 0 !important; pointer-events: none !important; }
+#reservation .booking-glass-stage.is-expanded .fleet-car.fleet-center {
+  opacity: 1 !important;
+  transform: translateX(0) translateY(3%) scale(1.22) !important;
+}
+#reservation .booking-glass-stage.is-expanded .fleet-arrow {
+  width: 32px !important;
+  height: 32px !important;
+  background: rgba(255,255,255,.035) !important;
+  color: var(--r-soft) !important;
+  border: 1px solid var(--r-hairline) !important;
+  border-radius: 50% !important;
+}
+#reservation .booking-glass-stage.is-expanded .fleet-pagination > button {
+  width: 18px !important;
+  height: 3px !important;
+  min-height: 3px !important;
+  background: rgba(255,255,255,.27) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#reservation .booking-glass-stage.is-expanded .fleet-pagination > button.active {
+  width: 27px !important;
+  background: rgba(255,255,255,.87) !important;
+  box-shadow: none !important;
+}
+#reservation .booking-glass-stage.is-expanded .fleet-selected h4 {
+  font-family: var(--sans) !important;
+  font-size: clamp(19px,1.6vw,24px) !important;
+  font-weight: 360 !important;
+  letter-spacing: -.035em !important;
+}
+#reservation .booking-glass-stage.is-expanded .fleet-selected p { color: var(--r-muted) !important; font-size: 11px !important; }
+#reservation .booking-glass-stage.is-expanded .fleet-surcharge {
+  color: var(--r-soft) !important;
+  background: transparent !important;
+  border: 0 !important;
+  font-size: 12px !important;
+}
+#reservation .booking-glass-stage.is-expanded .summary-lines {
+  border-color: var(--r-hairline) !important;
+  gap: 10px !important;
+  padding: 14px 0 !important;
+}
+#reservation .booking-glass-stage.is-expanded .summary-lines > div {
+  color: var(--r-soft) !important;
+  font-size: 11.5px !important;
+  line-height: 1.5;
+}
+#reservation .booking-glass-stage.is-expanded .summary-lines > div > span:last-child { color: var(--r-ink) !important; }
+#reservation .booking-glass-stage.is-expanded .summary-total {
+  border-color: var(--r-hairline) !important;
+  padding: 16px 0 14px !important;
+}
+#reservation .booking-glass-stage.is-expanded .summary-total > div > span {
+  font-size: 12px !important;
+  font-weight: 450 !important;
+}
+#reservation .booking-glass-stage.is-expanded .summary-total strong {
+  font-family: var(--sans) !important;
+  font-size: clamp(26px,2.5vw,36px) !important;
+  font-weight: 350 !important;
+  letter-spacing: -.04em !important;
+  color: var(--r-ink) !important;
+}
+#reservation .booking-glass-stage.is-expanded .summary-total small,
+#reservation .no-payment { color: var(--r-muted) !important; font-size: 10px !important; }
+#reservation .booking-glass-stage.is-expanded .availability-note {
+  display: flex !important;
+  font-size: 10.5px !important;
+  min-height: 16px;
+  margin: 2px 0 12px !important;
+  color: var(--r-muted) !important;
+}
+#reservation .booking-glass-stage.is-expanded .booking-submit {
+  height: 50px !important;
+  min-height: 50px !important;
+  padding: 0 20px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,.39) !important;
+  background: rgba(255,255,255,.075) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.11) !important;
+  color: var(--r-ink) !important;
+  font-family: var(--sans) !important;
+  font-weight: 450 !important;
+  font-size: 12.5px !important;
+  letter-spacing: .012em !important;
+  -webkit-backdrop-filter: blur(7px) !important;
+  backdrop-filter: blur(7px) !important;
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+#reservation .booking-glass-stage.is-expanded .booking-submit:hover:not(:disabled) {
+  border-color: rgba(255,255,255,.68) !important;
+  background: rgba(255,255,255,.14) !important;
+  transform: translateY(-1px);
+}
+#reservation .booking-glass-stage.is-expanded .booking-submit:disabled { opacity: .48; }
+
+/* Request success is part of the same experience. */
+#reservation .booking-success { color: var(--r-ink) !important; }
+#reservation .booking-success h3 { color: var(--r-ink) !important; }
+#reservation .booking-success .pending-notice, #reservation .success-details { color: var(--r-soft) !important; }
+#reservation .booking-success .success-symbol { color: var(--r-ink) !important; }
+#reservation .booking-success .gold-button {
+  background: rgba(255,255,255,.10) !important;
+  border: 1px solid rgba(255,255,255,.33) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  color: var(--r-ink) !important;
+}
+
+/* Sensible short desktop, tablet and mobile fallbacks. */
+@media (max-width: 1100px) {
+  #reservation .booking-glass-stage.is-expanded .booking-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+  #reservation .booking-glass-stage.is-expanded .booking-main,
+  #reservation .booking-glass-stage.is-expanded .journey-summary {
+    flex-shrink: 0 !important;
+  }
+  #reservation .booking-glass-stage.is-expanded .journey-summary {
+    border-left: 0 !important;
+    border-top: 1px solid var(--r-hairline) !important;
+  }
+}
+@media (max-width: 700px) {
+  #reservation .booking-heading h2,
+  #reservation.booking-glass-open .booking-heading h2 { font-size: clamp(29px,7.7vw,42px); }
+  #reservation .booking-glass-stage.is-expanded .booking-glass-surface { border-radius: 15px !important; }
+  #reservation .booking-steps { min-height: 54px !important; padding: 0 18px !important; gap: 14px !important; }
+  #reservation .booking-steps > button { min-height: 53px; font-size: 10px !important; gap: 6px !important; }
+  #reservation .booking-steps > button > span:first-child { height: 19px !important; width: 19px !important; font-size: 9px !important; }
+  #reservation .booking-glass-stage.is-expanded .booking-fields { padding: 22px 18px !important; }
+  #reservation .booking-glass-stage.is-expanded .journey-fields { grid-template-columns: 1fr !important; gap: 20px !important; }
+  #reservation .booking-glass-stage.is-expanded .journey-fields > div:first-child { display: block !important; }
+  #reservation .booking-glass-stage.is-expanded .journey-fields :is(.calendar,.route-fields,.multi-day-control,.time-field) {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+  #reservation .booking-glass-stage.is-expanded .journey-fields .time-field {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  #reservation .booking-glass-stage.is-expanded .journey-fields .multi-day-control {
+    margin-top: 18px !important;
+    margin-bottom: 18px !important;
+  }
+  #reservation .booking-glass-stage.is-expanded .calendar-grid > button {
+    max-width: 40px !important;
+    width: min(100%, 40px) !important;
+    height: 40px !important;
+  }
+  #reservation .form-navigation { padding: 12px 18px !important; }
+  #reservation .booking-glass-stage.is-expanded .journey-summary { padding: 22px 18px !important; }
+  #reservation .booking-glass-stage.is-expanded .booking-glass-close { top: 13px !important; right: 9px !important; }
+  #reservation .summary-total { flex-wrap: wrap; }
+  #reservation .booking-glass-stage.is-expanded .summary-total strong { font-size: 30px !important; }
+  #reservation .booking-glass-fleet-label small { display: none; }
+  #reservation .booking-glass-prompt { font-size: 14px; }
+}
+@media (max-height: 750px) and (min-width: 1101px) {
+  #reservation .booking-glass-stage.is-expanded .booking-fields { justify-content: flex-start !important; }
+  #reservation .booking-glass-stage.is-expanded .fleet-stage { height: 104px !important; }
+  #reservation .booking-glass-stage.is-expanded .journey-summary { padding-top: 14px !important; padding-bottom: 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #reservation .booking-glass-stage, #reservation .booking-glass-surface,
+  #reservation .booking-glass-content, #reservation .booking-submit,
+  #reservation .booking-steps > button { animation: none !important; transition: none !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  #reservation .booking-glass-stage.is-expanded .booking-glass-surface { background: #191a1d !important; backdrop-filter: none !important; }
+  #reservation .booking-glass-stage.is-expanded .journey-summary { background: #141518 !important; }
+  #reservation .booking-glass-stage.is-expanded .field :is(input,select),
+  #reservation .booking-glass-stage.is-expanded .address-control input { background: #25262a !important; }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  #reservation .booking-glass-stage.is-expanded .booking-glass-surface { background: rgba(20,21,23,.97) !important; }
+}
