@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec npx concurrently -k -n api,web \
+  "PORT=3001 node --env-file-if-exists=.env --env-file-if-exists=.env.local server/index.mjs" \
+  "npx vite --host 0.0.0.0 --port $PORT"
