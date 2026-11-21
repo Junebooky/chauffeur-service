@@ -5,13 +5,10 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  ShieldCheck,
-  Sparkles,
-  Users,
-  Luggage,
 } from 'lucide-react'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import FleetInteriorGallery from './FleetInteriorGallery'
+import BorderBeam from './components/ui/BorderBeam'
 
 export interface FleetSectionProps {
   goTo: (index: number) => void
@@ -40,6 +37,10 @@ interface VehicleInfo {
   classBadge: string
   tagline: string
   description: string
+  /** Concise Specs-only copy, independent from the showroom description. */
+  shortDescription: string
+  /** Supply the verified year of the actual vehicle when known. */
+  modelYear?: string
   specs: {
     passengers: string
     luggage: string
@@ -60,6 +61,7 @@ const FLEET_DATA: VehicleInfo[] = [
     brand: 'Genesis',
     classBadge: 'FLAGSHIP LUXURY SEDAN',
     tagline: 'Quiet confidence. Exceptional comfort.',
+    shortDescription: 'Quiet comfort for every important arrival.',
     description:
       'A refined experience for distinguished guests. Supreme ride refinement and whisper-quiet poise designed for executive diplomacy and airport arrivals.',
     specs: {
@@ -120,6 +122,7 @@ const FLEET_DATA: VehicleInfo[] = [
     brand: 'Kia',
     classBadge: 'VIP HI-LIMOUSINE · HYBRID',
     tagline: 'More space. A more considered journey.',
+    shortDescription: 'More space. More comfort. Every mile.',
     description:
       'Raised roof architecture delivers exceptional headroom, privacy curtains, and serene traveling comfort for delegations and families.',
     specs: {
@@ -180,6 +183,7 @@ const FLEET_DATA: VehicleInfo[] = [
     brand: 'Hyundai',
     classBadge: 'EXECUTIVE LOUNGE · HYBRID',
     tagline: 'Room to travel comfortably.',
+    shortDescription: 'Room to travel with ease.',
     description:
       'Expansive panoramic cabin space and supreme accessibility. Outstanding comfort, generous luggage volume, and smooth hybrid poise.',
     specs: {
@@ -240,6 +244,7 @@ const FLEET_DATA: VehicleInfo[] = [
     brand: 'Mercedes-Benz',
     classBadge: 'VIP PROTOCOL HIGH-ROOF COACH',
     tagline: 'A private lounge on the move.',
+    shortDescription: 'A private lounge for every journey.',
     description:
       'Full stand-up cabin height with custom leather captain chairs and extended legroom. Built for prestigious delegations and roadshows.',
     specs: {
@@ -586,69 +591,37 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               {/* Specs Slide Custom Interactive Presentation */}
               {slide.category === 'specs' ? (
                 <div className="fleet-specs-slide-card">
-                  <div className="fleet-specs-badge">
-                    {activeVehicle.classBadge}
-                  </div>
-                  <h3 className="fleet-specs-vehicle-title">
-                    {activeVehicle.name}
-                  </h3>
-                  <p className="fleet-specs-summary">
-                    {activeVehicle.description}
-                  </p>
+                  <BorderBeam />
+                  <div className="fleet-specs-content">
+                    <div className="fleet-specs-badge">{activeVehicle.classBadge}</div>
+                    <h3 className="fleet-specs-vehicle-title">{activeVehicle.name}</h3>
+                    <p className="fleet-specs-summary">{activeVehicle.shortDescription}</p>
 
-                  <div className="fleet-specs-grid">
-                    <div className="fleet-spec-box">
-                      <Users size={18} className="fleet-spec-icon" />
-                      <div>
-                        <div className="fleet-spec-k">Seating Capacity</div>
-                        <div className="fleet-spec-v">
-                          {activeVehicle.specs.passengers}
+                    <dl className="fleet-specs-facts">
+                      {[
+                        { label: 'MODEL YEAR', value: activeVehicle.modelYear ?? 'To be confirmed' },
+                        { label: 'SEATING', value: activeVehicle.specs.passengers },
+                        { label: 'LUGGAGE', value: activeVehicle.specs.luggage },
+                      ].map((fact) => (
+                        <div className="fleet-specs-row" key={fact.label}>
+                          <dt className="fleet-spec-k">{fact.label}</dt>
+                          <dd className="fleet-spec-v">{fact.value}</dd>
                         </div>
-                      </div>
-                    </div>
+                      ))}
+                    </dl>
 
-                    <div className="fleet-spec-box">
-                      <Luggage size={18} className="fleet-spec-icon" />
-                      <div>
-                        <div className="fleet-spec-k">Luggage Capacity</div>
-                        <div className="fleet-spec-v">
-                          {activeVehicle.specs.luggage}
-                        </div>
-                      </div>
+                    <div className="fleet-specs-cta-row">
+                      <button
+                        type="button"
+                        className="fleet-reserve-btn"
+                        data-liquid-glass="control"
+                        onPointerMove={trackGlassPointer}
+                        onPointerLeave={resetGlassPointer}
+                        onClick={() => handleReserve(activeVehicle.catalogId)}
+                      >
+                        Reserve {activeVehicle.name} <ArrowUpRight size={15} />
+                      </button>
                     </div>
-
-                    <div className="fleet-spec-box">
-                      <Sparkles size={18} className="fleet-spec-icon" />
-                      <div>
-                        <div className="fleet-spec-k">Powertrain</div>
-                        <div className="fleet-spec-v">
-                          {activeVehicle.specs.powertrain}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="fleet-spec-box">
-                      <ShieldCheck size={18} className="fleet-spec-icon" />
-                      <div>
-                        <div className="fleet-spec-k">Chauffeur Standard</div>
-                        <div className="fleet-spec-v">
-                          {activeVehicle.specs.amenities}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="fleet-specs-cta-row">
-                    <button
-                      type="button"
-                      className="fleet-reserve-btn"
-                      data-liquid-glass="control"
-                      onPointerMove={trackGlassPointer}
-                      onPointerLeave={resetGlassPointer}
-                      onClick={() => handleReserve(activeVehicle.catalogId)}
-                    >
-                      Reserve {activeVehicle.name} <ArrowUpRight size={15} />
-                    </button>
                   </div>
                 </div>
               ) : (
@@ -882,12 +855,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               aria-pressed={isSelected}
               aria-label={`View ${car.name}`}
             >
-              <span className="fleet-card-beam-halo" aria-hidden="true">
-                <span className="fleet-card-beam-spinner" />
-              </span>
-              <span className="fleet-card-beam-ring" aria-hidden="true">
-                <span className="fleet-card-beam-spinner" />
-              </span>
+              <BorderBeam />
               <div className="fleet-card-inner">
                 <span
                   className={`fleet-card-brand-icon brand-${car.id}`}

@@ -54,7 +54,9 @@ test('interior gallery supports two images per car and safely handles missing up
 
 test('existing Fleet actions and Border Beam remain present', () => {
   assert.match(fleet, /onSelectVehicle\(catalogId\)/)
-  assert.match(fleet, /fleet-card-beam-halo/)
-  assert.match(fleet, /fleet-card-beam-ring/)
-  assert.match(fleet, /className="fleet-specs-grid"/)
+  const beam = source('src/components/ui/BorderBeam.tsx')
+  assert.match(beam, /fleet-card-beam-halo/)
+  assert.match(beam, /fleet-card-beam-ring/)
+  assert.equal(fleet.split('<BorderBeam />').length - 1, 2)
+  assert.match(fleet, /className="fleet-specs-facts"/)
 })
