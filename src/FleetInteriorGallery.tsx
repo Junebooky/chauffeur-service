@@ -51,14 +51,19 @@ export default function FleetInteriorGallery({
 
   return (
     <>
-      <img
-        key={photos[currentIndex]}
-        src={photos[currentIndex]}
-        alt={`${vehicleName} interior`}
-        className="fleet-slide-img"
-        loading="eager"
-        draggable={false}
-      />
+      {photos.map((src, index) => (
+        <img
+          key={src}
+          src={src}
+          alt={index === currentIndex ? `${vehicleName} interior` : ''}
+          aria-hidden={index !== currentIndex}
+          className={`fleet-slide-img absolute inset-0 transition-opacity duration-500 ease-in-out motion-reduce:transition-none ${
+            index === currentIndex ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+          loading="eager"
+          draggable={false}
+        />
+      ))}
 
       {active && photos.length > 1 && (
         <div
