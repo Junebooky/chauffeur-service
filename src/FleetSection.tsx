@@ -6,7 +6,6 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react'
-import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import FleetInteriorGallery from './FleetInteriorGallery'
 import BorderBeam from './components/ui/BorderBeam'
 import DisplayHeading from './components/ui/DisplayHeading'
@@ -670,13 +669,10 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     aria-label={`${car.name} viewpoints`}
                   >
                     {car.slides.map((s, sIdx) => (
-                      <button
+                      <ReservationButton
                         key={s.category}
-                        type="button"
                         className="fleet-right-tab-btn"
                         data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
                         onClick={() => {
                           setSelectedId(car.id)
                           handleOpenSlide(sIdx)
@@ -690,7 +686,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         >
                           →
                         </span>
-                      </button>
+                      </ReservationButton>
                     ))}
                   </div>
                 </div>

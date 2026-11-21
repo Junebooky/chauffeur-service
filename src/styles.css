@@ -1283,43 +1283,14 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   z-index: 20;
 }
 
-.fleet-right-tab-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 22px;
-  border-radius: 9999px;
-  background: rgba(18, 20, 26, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #e4e4eb;
-  font-size: 13.5px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  min-width: 146px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-.fleet-right-tab-btn:hover {
-  background: rgba(30, 33, 42, 0.96);
-  border-color: rgba(255, 255, 255, 0.65);
-  color: #ffffff;
-  transform: translateX(-5px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(220, 235, 255, 0.4);
-}
-
 .fleet-right-tab-label {
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .fleet-right-tab-arrow {
   font-size: 13px;
-  color: #9d9da6;
-  transition: transform 0.2s ease, color 0.2s ease;
+  color: rgba(242, 244, 247, 0.72);
+  transition: transform 0.25s ease, color 0.25s ease;
 }
 
 .fleet-right-tab-btn:hover .fleet-right-tab-arrow {
@@ -7279,7 +7250,6 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   border-color: rgba(238, 246, 255, .62);
 }
 
-.fleet-right-tab-btn,
 .fleet-card-action-icon,
 .fleet-slide-arrow {
   border-color: rgba(211, 230, 252, .43);
@@ -8919,6 +8889,74 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   opacity: 0.92;
 }
 
+.booking-cta-pill.fleet-right-tab-btn {
+  min-width: 152px;
+  height: 44px;
+  padding: 0 22px;
+  background:
+    radial-gradient(60% 110% at 50% 0%, rgba(255, 255, 255, 0.14) 0%, transparent 72%),
+    rgba(12, 14, 18, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(10px) saturate(135%);
+  backdrop-filter: blur(10px) saturate(135%);
+  font-size: 13.5px;
+  color: rgba(244, 245, 247, 0.92);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.booking-cta-pill.fleet-right-tab-btn::after {
+  opacity: 0.08;
+}
+
+.booking-cta-pill.fleet-right-tab-btn:hover,
+.booking-cta-pill.fleet-right-tab-btn:focus-visible {
+  transform: translateX(-5px);
+  border-color: rgba(255, 255, 255, 0.62);
+  background:
+    radial-gradient(60% 110% at 50% 0%, rgba(255, 255, 255, 0.22) 0%, transparent 72%),
+    rgba(22, 25, 32, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 10px 28px rgba(0, 0, 0, 0.42);
+  color: #ffffff;
+}
+
+.booking-cta-pill.fleet-right-tab-btn:hover::after,
+.booking-cta-pill.fleet-right-tab-btn:focus-visible::after {
+  opacity: 0.42;
+}
+
+.booking-cta-pill.fleet-right-tab-btn .booking-cta-pill-inner {
+  width: 100%;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.booking-cta-pill.fleet-right-tab-btn .booking-cta-beam-halo {
+  opacity: 0.18;
+  transition: opacity 0.28s ease;
+}
+
+.booking-cta-pill.fleet-right-tab-btn .booking-cta-beam-ring {
+  opacity: 0.42;
+  transition: opacity 0.28s ease;
+}
+
+.booking-cta-pill.fleet-right-tab-btn:is(:hover, :focus-visible) .booking-cta-beam-halo {
+  opacity: 0.55;
+}
+
+.booking-cta-pill.fleet-right-tab-btn:is(:hover, :focus-visible) .booking-cta-beam-ring {
+  opacity: 0.92;
+}
+
 .booking-outer-error {
   margin: 0;
   font-size: 13.5px;
@@ -9434,7 +9472,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     width: 100%;
   }
 
-  .booking-cta-pill,
+  .booking-cta-pill:not(.fleet-right-tab-btn),
   .booking-back-btn {
     width: 100%;
     justify-content: center;
