@@ -4,6 +4,13 @@
 @theme {
   --font-sans: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
   --font-serif: 'Playfair Display', Cormorant, Georgia, serif;
+
+  /* Shared achromatic tokens; each section owns its unique motion recipe. */
+  --color-chauffeur-black: #050505;
+  --color-chauffeur-panel: #111111;
+  --color-chauffeur-charcoal: #262626;
+  --color-chauffeur-white: #f5f5f5;
+  --color-chauffeur-muted: #a3a3a3;
   --animate-border-beam: border-beam-spin 5.2s linear infinite;
 
   @keyframes border-beam-spin {

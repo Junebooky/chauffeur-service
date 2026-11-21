@@ -22,7 +22,7 @@ import type { Place } from './AddressSearch'
 import GlassSelect from './GlassSelect'
 import VehicleCarousel from './VehicleCarousel'
 import { LiquidGlass } from 'simple-liquid-glass'
-import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
+import { BorderBeam, GlassButton, GlassSurface, SectionEyebrow } from './components/ui'
 import {
   DEFAULT_USD_RATE,
   moneyUsd,
@@ -581,9 +581,9 @@ export default function Booking({
         <div className="booking-backdrop-overlay" />
       </div>
       <div className="section-topline">
-        <span className="eyebrow">
+        <SectionEyebrow className="eyebrow">
           <span className="gold-line" /> YOUR NEXT CHAPTER
-        </span>
+        </SectionEyebrow>
         <span className="section-numeral">04 / RESERVATION</span>
       </div>
       <div className="section-heading booking-heading">
@@ -633,20 +633,11 @@ export default function Booking({
             })}
           </nav>
         )}
-        <div
-          className={`booking-glass-surface ${step === 0 && glassOpen && !result ? 'is-schedule-step' : ''}`}
-          data-liquid-glass="surface"
-          onPointerMove={trackGlassPointer}
-          onPointerLeave={resetGlassPointer}
-        >
+        <GlassSurface
+          className={`booking-glass-surface ${step === 0 && glassOpen && !result ? 'is-schedule-step' : ''}`}>
           {!glassOpen && !result && (
             <>
-              <span className="booking-glass-beam-halo" aria-hidden="true">
-                <span className="booking-glass-beam-spinner" />
-              </span>
-              <span className="booking-glass-beam-ring" aria-hidden="true">
-                <span className="booking-glass-beam-spinner" />
-              </span>
+              <BorderBeam variant="booking-surface" />
               <div className="booking-optical-lens" aria-hidden="true">
                 <LiquidGlass
                   className="booking-optical-engine"
@@ -670,12 +661,7 @@ export default function Booking({
           )}
           {(glassOpen || result) && (
             <>
-              <span className="booking-glass-beam-halo booking-card-beam-halo" aria-hidden="true">
-                <span className="booking-glass-beam-spinner" />
-              </span>
-              <span className="booking-glass-beam-ring booking-card-beam-ring" aria-hidden="true">
-                <span className="booking-glass-beam-spinner" />
-              </span>
+              <BorderBeam variant="booking-card" />
             </>
           )}
           {!glassOpen && !result && (
@@ -1556,7 +1542,7 @@ export default function Booking({
               </form>
             ) : null}
           </div>
-        </div>
+        </GlassSurface>
         {glassOpen && !result && (
           <div className="booking-outer-actions">
             {error && step === 0 && (
@@ -1573,34 +1559,24 @@ export default function Booking({
             )}
             <div className="booking-outer-buttons">
               {step > 0 && (
-                <button
-                  type="button"
-                  className="booking-back-btn"
+                <GlassButton appearance="bare" className="booking-back-btn"
                   disabled={sending}
                   onClick={() => moveStep(step - 1)}
                 >
                   <ArrowLeft size={16} aria-hidden="true" /> Back
-                </button>
+                </GlassButton>
               )}
-              <button
+              <GlassButton appearance="bare" trackLight
                 type="submit"
                 form="booking-request-form"
                 className={`booking-cta-pill ${step === 2 ? 'booking-submit' : ''}`}
-                data-liquid-glass="control"
-                onPointerMove={trackGlassPointer}
-                onPointerLeave={resetGlassPointer}
                 disabled={
                   sending ||
                   (step > 0 && checking) ||
                   (step === 2 && !allAvailable)
                 }
               >
-                <span className="booking-glass-beam-halo booking-cta-beam-halo" aria-hidden="true">
-                  <span className="booking-glass-beam-spinner" />
-                </span>
-                <span className="booking-glass-beam-ring booking-cta-beam-ring" aria-hidden="true">
-                  <span className="booking-glass-beam-spinner" />
-                </span>
+                <BorderBeam variant="booking-cta" />
                 <span className="booking-cta-pill-inner">
                   {sending ? (
                     <>
@@ -1621,7 +1597,7 @@ export default function Booking({
                     </>
                   )}
                 </span>
-              </button>
+              </GlassButton>
             </div>
             {step >= 1 && (
               <p className="no-payment">

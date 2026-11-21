@@ -10,7 +10,7 @@ import {
   Users,
   Luggage,
 } from 'lucide-react'
-import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
+import { BorderBeam, GlassButton, SectionEyebrow } from './components/ui'
 
 export interface FleetSectionProps {
   goTo: (index: number) => void
@@ -636,16 +636,11 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   </div>
 
                   <div className="fleet-specs-cta-row">
-                    <button
-                      type="button"
-                      className="fleet-reserve-btn"
-                      data-liquid-glass="control"
-                      onPointerMove={trackGlassPointer}
-                      onPointerLeave={resetGlassPointer}
+                    <GlassButton appearance="bare" trackLight className="fleet-reserve-btn"
                       onClick={() => handleReserve(activeVehicle.catalogId)}
                     >
                       Reserve {activeVehicle.name} <ArrowUpRight size={15} />
-                    </button>
+                    </GlassButton>
                   </div>
                 </div>
               ) : (
@@ -701,7 +696,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               <div className="fleet-overview-header">
                 <div className="fleet-eyebrow-wrap">
                   <span className="fleet-eyebrow-rule" aria-hidden="true" />
-                  <span className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</span>
+                  <SectionEyebrow className="fleet-eyebrow">PREMIUM CHAUFFEUR SERVICE</SectionEyebrow>
                   <span
                     className="fleet-eyebrow-rule is-right"
                     aria-hidden="true"
@@ -774,26 +769,16 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     </div>
 
                     <div className="fleet-detail-actions">
-                      <button
-                        type="button"
-                        className="fleet-reserve-btn"
-                        data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
+                      <GlassButton appearance="bare" trackLight className="fleet-reserve-btn"
                         onClick={() => handleReserve(car.catalogId)}
                       >
                         Reserve This Vehicle <ArrowUpRight size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        className="fleet-explore-link"
-                        data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
+                      </GlassButton>
+                      <GlassButton appearance="bare" trackLight className="fleet-explore-link"
                         onClick={() => goTo(2)}
                       >
                         Explore Services
-                      </button>
+                      </GlassButton>
                     </div>
                   </div>
 
@@ -803,13 +788,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     aria-label={`${car.name} viewpoints`}
                   >
                     {car.slides.map((s, sIdx) => (
-                      <button
-                        key={s.category}
-                        type="button"
-                        className="fleet-right-tab-btn"
-                        data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
+                      <GlassButton key={s.category} appearance="bare" trackLight className="fleet-right-tab-btn"
                         onClick={() => {
                           setSelectedId(car.id)
                           handleOpenSlide(sIdx)
@@ -823,7 +802,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         >
                           →
                         </span>
-                      </button>
+                      </GlassButton>
                     ))}
                   </div>
                 </div>
@@ -879,12 +858,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               aria-pressed={isSelected}
               aria-label={`View ${car.name}`}
             >
-              <span className="fleet-card-beam-halo" aria-hidden="true">
-                <span className="fleet-card-beam-spinner" />
-              </span>
-              <span className="fleet-card-beam-ring" aria-hidden="true">
-                <span className="fleet-card-beam-spinner" />
-              </span>
+              <BorderBeam variant="fleet-card" />
               <div className="fleet-card-inner">
                 <span
                   className={`fleet-card-brand-icon brand-${car.id}`}
