@@ -23,6 +23,8 @@ import GlassSelect from './GlassSelect'
 import VehicleCarousel from './VehicleCarousel'
 import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
+import DisplayHeading from './components/ui/DisplayHeading'
+import ReservationButton from './components/ui/ReservationButton'
 import {
   DEFAULT_USD_RATE,
   moneyUsd,
@@ -587,10 +589,10 @@ export default function Booking({
         <span className="section-numeral">04 / RESERVATION</span>
       </div>
       <div className="section-heading booking-heading">
-        <h2 id="booking-title">
+        <DisplayHeading as="h2" id="booking-title">
           Your journey.
           <br className="mobile-break" /> <em>Your way.</em>
-        </h2>
+        </DisplayHeading>
         <p>
           A few details. Endless possibilities.
           <br />
@@ -1582,46 +1584,35 @@ export default function Booking({
                   <ArrowLeft size={16} aria-hidden="true" /> Back
                 </button>
               )}
-              <button
+              <ReservationButton
                 type="submit"
                 form="booking-request-form"
-                className={`booking-cta-pill ${step === 2 ? 'booking-submit' : ''}`}
-                data-liquid-glass="control"
-                onPointerMove={trackGlassPointer}
-                onPointerLeave={resetGlassPointer}
+                className={step === 2 ? 'booking-submit' : ''}
                 disabled={
                   sending ||
                   (step > 0 && checking) ||
                   (step === 2 && !allAvailable)
                 }
               >
-                <span className="booking-glass-beam-halo booking-cta-beam-halo" aria-hidden="true">
-                  <span className="booking-glass-beam-spinner" />
-                </span>
-                <span className="booking-glass-beam-ring booking-cta-beam-ring" aria-hidden="true">
-                  <span className="booking-glass-beam-spinner" />
-                </span>
-                <span className="booking-cta-pill-inner">
-                  {sending ? (
-                    <>
-                      Saving your request{' '}
-                      <LoaderCircle size={16} className="spin" />
-                    </>
-                  ) : step === 0 ? (
-                    <>
-                      Continue to Select Vehicle <ArrowRight size={17} />
-                    </>
-                  ) : step === 1 ? (
-                    <>
-                      Continue to Your Details <ArrowRight size={17} />
-                    </>
-                  ) : (
-                    <>
-                      Request your journey <ArrowUpRight size={17} />
-                    </>
-                  )}
-                </span>
-              </button>
+                {sending ? (
+                  <>
+                    Saving your request{' '}
+                    <LoaderCircle size={16} className="spin" />
+                  </>
+                ) : step === 0 ? (
+                  <>
+                    Continue to Select Vehicle <ArrowRight size={17} />
+                  </>
+                ) : step === 1 ? (
+                  <>
+                    Continue to Your Details <ArrowRight size={17} />
+                  </>
+                ) : (
+                  <>
+                    Request your journey <ArrowUpRight size={17} />
+                  </>
+                )}
+              </ReservationButton>
             </div>
             {step >= 1 && (
               <p className="no-payment">

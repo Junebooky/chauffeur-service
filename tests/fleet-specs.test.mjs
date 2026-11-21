@@ -36,7 +36,7 @@ test('each vehicle has a Specs-only summary at least 50% shorter than its full c
 test('Specs title is light sans-serif and avoids silver text', () => {
   assert.match(
     css,
-    /\.fleet-specs-vehicle-title\s*\{[^}]*font-family:\s*var\(--sans\);[^}]*font-weight:\s*300;/,
+    /\.fleet-specs-vehicle-title\s*\{[^}]*font-family:\s*var\(--sans\);[^}]*font-weight:\s*100;/,
   )
   assert.match(
     css,
@@ -51,8 +51,11 @@ test('the exact Fleet Border Beam is reused on both the dock and Specs card', ()
   assert.match(beam, /className="fleet-card-beam-halo"/)
   assert.match(beam, /className="fleet-card-beam-ring"/)
   assert.match(beam, /className="fleet-card-beam-spinner"/)
-  assert.match(css, /rotateBeam 4\.4s linear infinite/)
+  assert.match(css, /rotateBeam 14s linear infinite/)
   assert.match(css, /\.fleet-specs-slide-card:hover > \.fleet-card-beam-halo/)
   assert.match(css, /\.fleet-specs-slide-card:hover > \.fleet-card-beam-ring/)
   assert.match(fleet, /onClick=\{\(\) => handleReserve\(activeVehicle\.catalogId\)\}/)
+  assert.match(fleet, /<ReservationButton/)
+  assert.match(fleet, /<DisplayHeading as="h3"/)
+  assert.match(css, /\.fleet-specs-cta-row \.booking-cta-pill/)
 })

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface FleetInteriorGalleryProps {
   vehicleName: string
@@ -9,9 +8,8 @@ interface FleetInteriorGalleryProps {
 }
 
 /**
- * Preflight the two optional per-vehicle images so incomplete asset uploads
- * never leave a broken image in the showroom. Once both assets exist, they
- * appear automatically without another code change.
+ * Two large, centered photo cards select the interior image directly.
+ * Assets are checked before display so partial uploads fall back gracefully.
  */
 export default function FleetInteriorGallery({
   vehicleName,
@@ -38,9 +36,7 @@ export default function FleetInteriorGallery({
 
     void Promise.all(checks).then((verified) => {
       if (cancelled) return
-      setAvailableImages(
-        verified.filter((src): src is string => src !== null),
-      )
+      setAvailableImages(verified.filter((src): src is string => src !== null))
       setPhotoIndex(0)
     })
 
@@ -51,16 +47,13 @@ export default function FleetInteriorGallery({
 
   const photos = availableImages.length > 0 ? availableImages : [fallbackImage]
   const currentIndex = Math.min(photoIndex, photos.length - 1)
-  const changePhoto = (direction: -1 | 1) => {
-    setPhotoIndex((index) => (index + direction + photos.length) % photos.length)
-  }
 
   return (
     <>
       <img
         key={photos[currentIndex]}
         src={photos[currentIndex]}
-        alt={`${vehicleName} interior view ${currentIndex + 1} of ${photos.length}`}
+        alt={`${vehicleName} interior`}
         className="fleet-slide-img"
         loading="eager"
         draggable={false}
@@ -69,66 +62,42 @@ export default function FleetInteriorGallery({
       {active && photos.length > 1 && (
         <div
           role="group"
-          aria-label={`${vehicleName} interior photos`}
+          aria-label={`${vehicleName} interior photo selection`}
           data-fleet-interior-controls
-          className="absolute bottom-[clamp(115px,16vh,180px)] right-[max(24px,5vw)] z-30 flex max-w-[calc(100%-48px)] items-center gap-2 rounded-2xl border border-white/20 bg-black/60 p-2 shadow-[0_16px_48px_rgba(0,0,0,0.45)] backdrop-blur-2xl sm:gap-3 sm:p-3"
+          className="absolute inset-x-0 bottom-[clamp(28px,6vh,78px)] z-30 flex items-center justify-center gap-3 px-5 sm:gap-5"
           onKeyDown={(event) => {
             if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
               event.preventDefault()
               event.stopPropagation()
-              changePhoto(event.key === 'ArrowLeft' ? -1 : 1)
+              const direction = event.key === 'ArrowLeft' ? -1 : 1
+              setPhotoIndex(
+                (index) => (index + direction + photos.length) % photos.length,
+              )
             }
           }}
         >
-          <button
-            type="button"
-            aria-label="Previous interior photo"
-            onClick={() => changePhoto(-1)}
-            className="grid size-9 shrink-0 place-items-center rounded-full border border-white/15 text-white/85 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            <ChevronLeft size={17} aria-hidden="true" />
-          </button>
-
-          <div className="flex items-center gap-2">
-            {photos.map((src, index) => (
-              <button
-                key={src}
-                type="button"
-                onClick={() => setPhotoIndex(index)}
-                aria-label={`Show ${vehicleName} interior photo ${index + 1}`}
-                aria-pressed={currentIndex === index}
-                className={`overflow-hidden rounded-md border p-[2px] transition-[border-color,opacity] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-                  currentIndex === index
-                    ? 'border-white/90 opacity-100'
-                    : 'border-white/20 opacity-65 hover:border-white/60 hover:opacity-100'
-                }`}
-              >
-                <img
-                  src={src}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-9 w-14 object-cover sm:h-11 sm:w-[70px]"
-                  draggable={false}
-                />
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            aria-label="Next interior photo"
-            onClick={() => changePhoto(1)}
-            className="grid size-9 shrink-0 place-items-center rounded-full border border-white/15 text-white/85 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            <ChevronRight size={17} aria-hidden="true" />
-          </button>
-          <span
-            aria-live="polite"
-            className="hidden min-w-10 text-center font-sans text-[11px] tabular-nums tracking-[0.12em] text-white/70 md:block"
-          >
-            {String(currentIndex + 1).padStart(2, '0')} /{' '}
-            {String(photos.length).padStart(2, '0')}
-          </span>
+          {photos.map((src, index) => (
+            <button
+              key={src}
+              type="button"
+              onClick={() => setPhotoIndex(index)}
+              aria-label={`Show ${vehicleName} interior photo ${index + 1}`}
+              aria-pressed={currentIndex === index}
+              className={`group relative aspect-[16/10] w-[min(40vw,260px)] overflow-hidden rounded-xl border bg-black/45 p-[5px] shadow-[0_16px_44px_rgba(0,0,0,0.55)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                currentIndex === index
+                  ? 'border-white/85 shadow-[0_20px_52px_rgba(0,0,0,0.64)]'
+                  : 'border-white/25 hover:border-white/60'
+              }`}
+            >
+              <img
+                src={src}
+                alt=""
+                aria-hidden="true"
+                className="h-full w-full rounded-[8px] object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                draggable={false}
+              />
+            </button>
+          ))}
         </div>
       )}
     </>

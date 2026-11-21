@@ -9,6 +9,8 @@ import {
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import FleetInteriorGallery from './FleetInteriorGallery'
 import BorderBeam from './components/ui/BorderBeam'
+import DisplayHeading from './components/ui/DisplayHeading'
+import ReservationButton from './components/ui/ReservationButton'
 
 export interface FleetSectionProps {
   goTo: (index: number) => void
@@ -20,9 +22,9 @@ type SlideCategory = 'exterior' | 'interior' | 'specs'
 interface SlideInfo {
   category: SlideCategory
   label: string
-  title: string
-  eyebrow: string
-  description: string
+  title?: string
+  eyebrow?: string
+  description?: string
   image: string
   fgImage?: string
   interiorImages?: readonly [string, string]
@@ -92,10 +94,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'EXECUTIVE SANCTUARY',
-        title: 'VIP Reclining Lounge with Ambient Starlight',
-        description:
-          'Supple quilted Nappa leather, motorized footrests, individual climate zones, and acoustic laminated privacy glass for total serenity.',
         image: '/media/car_info/g90_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/g90/interior-01.webp',
@@ -153,10 +151,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'VIP CAPTAIN CABIN',
-        title: 'Zero-Gravity Recliners & Starlight Mood Ceiling',
-        description:
-          'Premium captain chairs with power leg rests, ambient starlight headliner, and customized climate settings for peaceful transit.',
         image: '/media/car_info/carnival_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/carnival/interior-01.webp',
@@ -214,10 +208,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'PANORAMIC CABIN',
-        title: '9-Seat Executive Lounge & Sky View',
-        description:
-          'Unrivaled cabin volume with reconfigurable seating rows, dual sunroofs, and broad walk-through accessibility for larger parties.',
         image: '/media/car_info/staria_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/staria/interior-01.webp',
@@ -275,10 +265,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'CONFERENCE CABIN',
-        title: 'Full 1.9m Stand-Up Room & Custom Armchairs',
-        description:
-          'Walk inside without ducking. Hand-crafted wide leather captain recliners in a conference configuration for on-the-road briefings.',
         image: '/media/car_info/sprinter_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/sprinter/interior-01.webp',
@@ -525,24 +511,28 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
           </button>
         </div>
 
-        {/* Side Nav Circular Glass Arrows (Ref Image 2) */}
-        <button
-          type="button"
-          className="fleet-slide-arrow fleet-slide-prev"
-          onClick={handlePrevSlide}
-          aria-label="Previous slide"
-        >
-          <ChevronLeft size={28} />
-        </button>
+        {/* Interior switches photos through the centered cards, not side arrows. */}
+        {activeVehicle.slides[activeSlideIndex]?.category !== 'interior' && (
+          <>
+            <button
+              type="button"
+              className="fleet-slide-arrow fleet-slide-prev"
+              onClick={handlePrevSlide}
+              aria-label="Previous vehicle category"
+            >
+              <ChevronLeft size={28} />
+            </button>
 
-        <button
-          type="button"
-          className="fleet-slide-arrow fleet-slide-next"
-          onClick={handleNextSlide}
-          aria-label="Next slide"
-        >
-          <ChevronRight size={28} />
-        </button>
+            <button
+              type="button"
+              className="fleet-slide-arrow fleet-slide-next"
+              onClick={handleNextSlide}
+              aria-label="Next vehicle category"
+            >
+              <ChevronRight size={28} />
+            </button>
+          </>
+        )}
 
         {/* PPT Horizontal Slide Track */}
         <div
@@ -594,7 +584,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   <BorderBeam />
                   <div className="fleet-specs-content">
                     <div className="fleet-specs-badge">{activeVehicle.classBadge}</div>
-                    <h3 className="fleet-specs-vehicle-title">{activeVehicle.name}</h3>
+                    <DisplayHeading as="h3" className="fleet-specs-vehicle-title">{activeVehicle.name}</DisplayHeading>
                     <p className="fleet-specs-summary">{activeVehicle.shortDescription}</p>
 
                     <dl className="fleet-specs-facts">
@@ -611,21 +601,17 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     </dl>
 
                     <div className="fleet-specs-cta-row">
-                      <button
+                      <ReservationButton
                         type="button"
-                        className="fleet-reserve-btn"
-                        data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
                         onClick={() => handleReserve(activeVehicle.catalogId)}
                       >
                         Reserve {activeVehicle.name} <ArrowUpRight size={15} />
-                      </button>
+                      </ReservationButton>
                     </div>
                   </div>
                 </div>
-              ) : (
-                /* Editorial captions for Exterior / Interior */
+              ) : slide.category === 'exterior' ? (
+                /* Editorial caption is retained for Exterior only; Interior is image-only. */
                 <div className="fleet-slide-caption-bar">
                   <div className="fleet-slide-caption-content">
                     <span className="fleet-slide-caption-eyebrow">
@@ -637,7 +623,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     </p>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           ))}
         </div>
