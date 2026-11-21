@@ -1093,16 +1093,6 @@ export default function Booking({
                     )}
                     {step === 0 && dailyScheduleOpen && (
                       <section className="booking-daily-screen" aria-label="Daily Schedule">
-                        <div className="booking-daily-intro">
-                          <div>
-                            <span className="schedule-col-header">
-                              <CalendarDays size={16} aria-hidden="true" /> Daily Schedule
-                            </span>
-                            <p className="field-note">
-                              {dates.length} days · {displayDate(dates[0])} — {displayDate(dates[dates.length - 1])}
-                            </p>
-                          </div>
-                        </div>
                         <div className="day-mode-segmented booking-daily-choice" role="radiogroup" aria-label="Daily schedule mode">
                           <button
                             type="button"

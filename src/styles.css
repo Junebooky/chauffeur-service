@@ -9823,21 +9823,6 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   margin: 0 auto;
 }
 
-.booking-daily-intro {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.booking-daily-intro .schedule-col-header {
-  margin-bottom: 6px;
-}
-
-.booking-daily-intro .field-note {
-  margin: 0;
-}
-
 .booking-daily-choice {
   width: 100%;
 }
@@ -9924,11 +9909,6 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   .booking-daily-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 18px;
-  }
-
-  .booking-daily-intro {
-    flex-direction: column;
-    gap: 8px;
   }
 
   .booking-daily-day-list {
@@ -10180,4 +10160,30 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   letter-spacing: 0 !important;
   white-space: nowrap;
   color: rgba(165, 178, 197, 0.78) !important;
+}
+
+
+/* Booking Step 1: reserve the upper-right close control's 34px hit area.
+   The Service field now begins below it, without shrinking the field width.
+   An extra 70px of card height lets the other route inputs breathe. */
+@media (min-width: 961px) {
+  .booking-glass-stage.is-expanded .booking-glass-surface.is-schedule-step {
+    flex-basis: 610px;
+  }
+
+  .booking-glass-stage.is-expanded .booking-panel.is-schedule-only .schedule-route-col {
+    padding-top: 44px;
+  }
+}
+
+/* Daily Schedule has no redundant title/date block. The options are now the
+   first visible content, and the form panel retains a single scroll surface. */
+.booking-glass-stage.is-expanded .booking-panel.is-daily-schedule .booking-fields {
+  padding-block: 16px !important;
+}
+
+@media (max-width: 760px) {
+  .booking-glass-stage.is-expanded .booking-panel.is-daily-schedule .booking-fields {
+    padding-block: 14px !important;
+  }
 }
