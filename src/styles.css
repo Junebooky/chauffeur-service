@@ -1548,6 +1548,46 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   pointer-events: none;
 }
 
+.fleet-slide-item.slide-exterior .fleet-slide-img {
+  object-position: center 62%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fleet-slide-item.slide-exterior .fleet-vehicle-foreground {
+    opacity: 0;
+    transform: translateY(48px) scale(0.97);
+    will-change: opacity, transform;
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .fleet-slide-item.slide-exterior .fleet-vehicle-floor-shadow {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.84);
+    will-change: opacity, transform;
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .fleet-slide-item.slide-exterior.is-active-slide .fleet-vehicle-foreground {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
+      transform 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+  }
+
+  .fleet-slide-item.slide-exterior.is-active-slide .fleet-vehicle-floor-shadow {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    transition:
+      opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.16s,
+      transform 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.16s;
+  }
+}
+
 /* Specs: layered showroom car on the left, focused guest information on the right. */
 .fleet-slide-item.slide-specs {
   align-items: center;

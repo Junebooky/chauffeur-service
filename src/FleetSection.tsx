@@ -488,7 +488,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
           {activeVehicle.slides.map((slide, idx) => (
             <div
               key={slide.category}
-              className={`fleet-slide-item slide-${slide.category}`}
+              className={`fleet-slide-item slide-${slide.category} ${
+                isSlideDetailOpen && activeSlideIndex === idx ? 'is-active-slide' : ''
+              }`}
               aria-hidden={activeSlideIndex !== idx}
             >
               {/* Slide Background Image */}
