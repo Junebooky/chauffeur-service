@@ -39,7 +39,7 @@ test('the three-section Fleet preserves category tabs, but Interior shows only c
   const categories = [...fleet.matchAll(/category: '(exterior|interior|details|specs)'/g)]
     .map((m) => m[1])
   assert.deepEqual(categories, Array(4).fill(['exterior', 'interior', 'specs']).flat())
-  assert.match(fleet, /slide\.category === 'exterior' \?/)
+  assert.doesNotMatch(fleet, /fleet-slide-caption-bar|EXTERIOR ARCHITECTURE/)
   assert.match(fleet, /className="fleet-slide-arrow fleet-slide-prev"/)
   assert.match(fleet, /className="fleet-slide-arrow fleet-slide-next"/)
   assert.doesNotMatch(fleet, /\?\.category !== 'interior'/)
