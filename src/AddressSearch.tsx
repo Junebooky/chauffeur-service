@@ -223,7 +223,7 @@ export default function AddressSearch({
             // Commit that text before the immediate request can run.
             if (event.currentTarget.value !== value)
               onChange(event.currentTarget.value, null)
-          }
+          }}
           onChange={(e) => {
             requestVersion.current++
             setResolving(false)
