@@ -1192,13 +1192,16 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   min-height: 32px;
 }
 
-/* Local silver accents: keep the site's gold tokens unchanged elsewhere. */
 .fleet-topbar .eyebrow {
-  color: #B8C0CB;
+  color: rgba(244, 245, 247, 0.9);
+  font-weight: 400;
 }
 
-.fleet-topbar .gold-line {
-  background: linear-gradient(90deg, #8C96A6, #E5E8ED);
+.fleet-topbar .fleet-eyebrow-bar {
+  display: inline-block;
+  width: 36px;
+  height: 1px;
+  background: rgba(244, 245, 247, 0.65);
 }
 
 .fleet-back-btn {

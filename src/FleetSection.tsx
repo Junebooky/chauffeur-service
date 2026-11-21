@@ -716,7 +716,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             </button>
           ) : (
             <span className="eyebrow">
-              <span className="gold-line" /> EXCELLENCE, IN EVERY DETAIL
+              <span className="fleet-eyebrow-bar" aria-hidden="true" /> EXCELLENCE, IN EVERY DETAIL
             </span>
           )}
         </div>
