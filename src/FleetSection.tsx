@@ -100,7 +100,7 @@ const FLEET_DATA: VehicleInfo[] = [
           '/media/fleet/vehicles/g90/interior-02.webp',
         ],
       },
-{
+      {
         category: 'specs',
         label: 'Specs',
         eyebrow: 'EXECUTIVE SPECIFICATIONS',
@@ -160,7 +160,7 @@ const FLEET_DATA: VehicleInfo[] = [
           '/media/fleet/vehicles/carnival/interior-02.webp',
         ],
       },
-{
+      {
         category: 'specs',
         label: 'Specs',
         eyebrow: 'HYBRID SPECIFICATIONS',
@@ -220,7 +220,7 @@ const FLEET_DATA: VehicleInfo[] = [
           '/media/fleet/vehicles/staria/interior-02.webp',
         ],
       },
-{
+      {
         category: 'specs',
         label: 'Specs',
         eyebrow: 'CABIN SPECIFICATIONS',
@@ -280,7 +280,7 @@ const FLEET_DATA: VehicleInfo[] = [
           '/media/fleet/vehicles/sprinter/interior-02.webp',
         ],
       },
-{
+      {
         category: 'specs',
         label: 'Specs',
         eyebrow: 'COMMERCIAL SPECIFICATIONS',
@@ -423,7 +423,11 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
 
       if (isSlideDetailOpen) {
         // Interior photo controls have their own arrow-key navigation.
-        if (e.target instanceof Element && e.target.closest('[data-fleet-interior-controls]')) return
+        if (
+          (e.key === 'ArrowLeft' || e.key === 'ArrowRight') &&
+          e.target instanceof Element &&
+          e.target.closest('[data-fleet-interior-controls]')
+        ) return
         // PPT Slide Deck mode
         if (e.key === 'Escape') {
           setIsSlideDetailOpen(false)
