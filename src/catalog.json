@@ -78,7 +78,7 @@
     },
     {
       "id": "sprinter_319",
-      "name": "Mercedes Sprinter 319",
+      "name": "Mercedes Sprinter",
       "model": "VIP Protocol High-Roof Van · 6 Seats",
       "passengers": 6,
       "surcharge": 150000,
@@ -87,7 +87,7 @@
     },
     {
       "id": "sprinter_519",
-      "name": "Mercedes Sprinter 519",
+      "name": "Mercedes Sprinter Limousine",
       "model": "Flagship VIP Protocol Limousine · 9 Seats",
       "passengers": 9,
       "surcharge": 180000,
