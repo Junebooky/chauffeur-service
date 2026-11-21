@@ -28,13 +28,13 @@ function Brand({ onClick }: { onClick: () => void }) {
         className="brand-mark"
         src="/media/brand/chauffeur-mark.png"
         alt=""
-        width={64}
-        height={64}
+        width={38}
+        height={38}
         draggable={false}
       />
       <span className="brand-lockup">
         <span className="brand-wordmark">CHAUFFEUR</span>
-        <small className="brand-byline">BY J PRODUCTION</small>
+        <small className="brand-byline">Team of Premium Chauffeur Service</small>
       </span>
     </button>
   )

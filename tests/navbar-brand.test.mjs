@@ -22,13 +22,11 @@ test('Navbar uses the committed J mark as an actual image, not the old SVG', () 
   assert.match(app, /<Brand onClick=\{\(\) => nav\(0\)\} \/>/)
 })
 
-test('Brand wordmark and byline stay live text with intentional tracking', () => {
+test('Brand wordmark and byline stay live text with refined editorial styling', () => {
   assert.match(app, /className="brand-wordmark">CHAUFFEUR<\/span>/)
-  assert.match(app, /className="brand-byline">BY J PRODUCTION<\/small>/)
-  assert.match(css, /font-family: 'Chauffeur Manrope'/)
-  assert.match(css, /url\('\/fonts\/manrope\.ttf'\)/)
-  assert.match(css, /\.brand-wordmark\s*\{[^}]*font-weight:\s*300;[^}]*letter-spacing:\s*0\.3em;/)
-  assert.match(css, /\.brand-mark\s*\{[^}]*object-fit:\s*contain;/)
+  assert.match(app, /className="brand-byline">Team of Premium Chauffeur Service<\/small>/)
+  assert.match(css, /\.brand-wordmark\s*\{[^}]*font-family:\s*var\(--serif\);[^}]*font-weight:\s*400;[^}]*letter-spacing:\s*0\.22em;/)
+  assert.match(css, /\.brand-mark\s*\{[^}]*width:\s*38px;[^}]*object-fit:\s*contain;/)
   assert.doesNotMatch(css, /\.brand>span|\.brand small/)
 })
 
