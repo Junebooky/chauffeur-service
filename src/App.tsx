@@ -202,7 +202,6 @@ export default function App() {
         <FleetSection goTo={nav} onSelectVehicle={setVehicle} />
         <PricingSection
           onSelectService={setService}
-          onRequestCustom={() => setModal('contact')}
           goTo={nav}
           usdRate={usdRate}
         />

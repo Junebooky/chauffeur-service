@@ -3,6 +3,12 @@ import { ChevronLeft, ChevronRight, Search, Users } from 'lucide-react'
 import catalog from './catalog.json'
 import { money } from './utils'
 
+// Keep historical vehicle IDs available to stored reservations, but show only
+// the current four-model collection to new guests.
+const visibleVehicles = catalog.vehicles.filter(
+  (vehicle) => !('bookable' in vehicle && vehicle.bookable === false),
+)
+
 export default function VehicleCarousel({
   value,
   onChange,
@@ -12,15 +18,15 @@ export default function VehicleCarousel({
   onChange: (value: string) => void
   availability: Record<string, boolean>
 }) {
-  const active = catalog.vehicles.findIndex((v) => v.id === value)
-  const current = catalog.vehicles[active] || catalog.vehicles[0]
+  const active = Math.max(0, visibleVehicles.findIndex((v) => v.id === value))
+  const current = visibleVehicles[active] || visibleVehicles[0]
   const touch = useRef({ x: 0, y: 0 })
   const suppressed = useRef(0)
   const [showSpecs, setShowSpecs] = useState(false)
 
   // Pre-load and pre-decode all 4 vehicle textures into GPU cache
   useEffect(() => {
-    catalog.vehicles.forEach((v) => {
+    visibleVehicles.forEach((v) => {
       const img = new Image()
       img.src = v.image
       if ('decode' in img) {
@@ -29,13 +35,13 @@ export default function VehicleCarousel({
     })
   }, [])
 
-  const n = catalog.vehicles.length
+  const n = visibleVehicles.length
   const change = (direction: number) => {
     const nextIndex = (active + direction + n) % n
-    onChange(catalog.vehicles[nextIndex].id)
+    onChange(visibleVehicles[nextIndex].id)
   }
 
-  // Calculate convex mirror fisheye position for 5 vehicles
+  // Calculate convex mirror fisheye position for the four public vehicles
   const getCarStyle = (index: number) => {
     let diff = index - active
     if (diff > n / 2) diff -= n
@@ -104,8 +110,8 @@ export default function VehicleCarousel({
         if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
           e.preventDefault()
           e.stopPropagation()
-          if (e.key === 'Home') onChange(catalog.vehicles[0].id)
-          else if (e.key === 'End') onChange(catalog.vehicles.at(-1)!.id)
+          if (e.key === 'Home') onChange(visibleVehicles[0].id)
+          else if (e.key === 'End') onChange(visibleVehicles.at(-1)!.id)
           else change(e.key === 'ArrowRight' ? 1 : -1)
         }
       }}
@@ -142,7 +148,7 @@ export default function VehicleCarousel({
         <div className="fleet-orbit" aria-hidden="true" />
         <div className="fleet-lens-glow" aria-hidden="true" />
 
-        {catalog.vehicles.map((v, i) => {
+        {visibleVehicles.map((v, i) => {
           const style = getCarStyle(i)
           const isSelected = value === v.id
           return (
@@ -188,7 +194,7 @@ export default function VehicleCarousel({
       </div>
 
       <div className="fleet-pagination" aria-label="Select a vehicle">
-        {catalog.vehicles.map((v, i) => (
+        {visibleVehicles.map((v, i) => (
           <button
             key={v.id}
             type="button"
@@ -225,7 +231,7 @@ export default function VehicleCarousel({
 
       {showSpecs && (
         <div className="fleet-specs-grid">
-          {catalog.vehicles.map((v) => (
+          {visibleVehicles.map((v) => (
             <button
               type="button"
               key={v.id}

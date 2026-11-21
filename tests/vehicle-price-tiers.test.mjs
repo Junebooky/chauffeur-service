@@ -14,10 +14,25 @@ test('Mercedes Sprinter 319 and Genesis G90 use the same premium surcharge', () 
   assert.equal(vehicle('sprinter_319').surcharge, vehicle('g90').surcharge)
 })
 
-test('Carnival and Staria stay in the same base-price tier; Sprinter 519 is separate', () => {
+test('the customer sees one official Mercedes-Benz Sprinter, with legacy variant retained only internally', () => {
   assert.equal(vehicle('carnival_limousine').surcharge, 0)
   assert.equal(vehicle('staria').surcharge, 0)
+  assert.equal(vehicle('sprinter_319').name, 'Mercedes-Benz Sprinter')
+  assert.equal(vehicle('sprinter_519').name, 'Mercedes-Benz Sprinter')
+  assert.equal(vehicle('sprinter_319').surcharge, vehicle('g90').surcharge)
   assert.equal(vehicle('sprinter_519').surcharge, 180000)
+  assert.equal(vehicle('sprinter_519').bookable, false)
+
+  const publicVehicles = catalog.vehicles.filter((v) => v.bookable !== false)
+  assert.equal(publicVehicles.length, 4)
+  assert.equal(publicVehicles.filter((v) => v.name === 'Mercedes-Benz Sprinter').length, 1)
+
+  const carousel = readFileSync(join(root, 'src/VehicleCarousel.tsx'), 'utf8')
+  const fleet = readFileSync(join(root, 'src/FleetSection.tsx'), 'utf8')
+  assert.match(carousel, /const visibleVehicles = catalog\.vehicles\.filter/)
+  assert.match(carousel, /bookable === false/)
+  assert.match(carousel, /const n = visibleVehicles\.length/)
+  assert.match(fleet, /name: 'Mercedes-Benz Sprinter'/)
 })
 
 test('both price groups remain consistent across the currently configured services', () => {

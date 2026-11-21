@@ -34,7 +34,7 @@ test('two visible vehicle-tier prices come directly from the reservation catalog
   assert.equal(vehicle('carnival_limousine').surcharge, vehicle('staria').surcharge)
   assert.equal(vehicle('g90').surcharge, vehicle('sprinter_319').surcharge)
   assert.match(pricing, /Carnival · Staria/)
-  assert.match(pricing, /Genesis G90 · Sprinter/)
+  assert.match(pricing, /Genesis G90 · Mercedes-Benz Sprinter/)
   assert.match(pricing, /PRICE_TIERS\.map/)
   assert.match(pricing, /service\.price \+ vehicle\.surcharge/)
   assert.match(pricing, /KRW · TAX excluded/)
@@ -50,14 +50,21 @@ test('two visible vehicle-tier prices come directly from the reservation catalog
   }
 })
 
-test('Custom does not silently route to fixed-price Full Day booking', () => {
+test('all three pricing-card links actually navigate to Booking, including Custom', () => {
   assert.match(pricing, /id: 'custom',\s*serviceId: null,/)
-  assert.match(pricing, /onRequestCustom\(\)/)
-  assert.match(app, /onRequestCustom=\{\(\) => setModal\('contact'\)\}/)
-  assert.match(pricing, /Tailored Quote/)
-  assert.match(pricing, /Explore custom options/)
-  assert.match(pricing, /onSelectService\(plan\.serviceId\)/)
+  assert.match(pricing, /const navigateToReservation = \(serviceId: 'airport' \| 'day' \| null\)/)
+  assert.match(pricing, /if \(serviceId !== null\) onSelectService\(serviceId\)/)
   assert.match(pricing, /goTo\(3\)/)
+  assert.equal((pricing.match(/onClick=\{\(\) => navigateToReservation\(plan\.serviceId\)\}/g) || []).length, 2)
+  assert.match(pricing, /pointer-events-auto relative z-10 mt-auto/)
+  assert.doesNotMatch(pricing, /pointer-events-none relative z-10 mt-auto/)
+  assert.doesNotMatch(pricing, /after:absolute after:inset-0/)
+  assert.match(pricing, /Plan your journey/)
+  assert.match(pricing, /Plan a custom journey/)
+  assert.match(pricing, /Tailored Quote/)
+  assert.doesNotMatch(pricing, /onRequestCustom/)
+  // Booking still directs the Custom choice to the Concierge inquiry.
+  assert.match(app, /onRequestCustom=\{\(\) => setModal\('contact'\)\}/)
 })
 
 test('the existing photographic hover and Border Beam design is retained', () => {

@@ -3,7 +3,6 @@ import { money } from './utils'
 
 type PricingSectionProps = {
   onSelectService: (serviceId: string) => void
-  onRequestCustom: () => void
   goTo: (index: number) => void
   usdRate?: number
 }
@@ -21,7 +20,7 @@ const PRICE_TIERS = [
   },
   {
     id: 'premium',
-    label: 'Genesis G90 · Sprinter',
+    label: 'Genesis G90 · Mercedes-Benz Sprinter',
     category: 'PREMIUM FLEET',
     representativeVehicleId: 'g90',
   },
@@ -77,9 +76,14 @@ const BEAM_MASK_STYLE = {
 
 export default function PricingSection({
   onSelectService,
-  onRequestCustom,
   goTo,
 }: PricingSectionProps) {
+  const navigateToReservation = (serviceId: 'airport' | 'day' | null) => {
+    // Custom isn't a fixed-rate plan; choose Custom from Booking to inquire.
+    if (serviceId !== null) onSelectService(serviceId)
+    goTo(3)
+  }
+
   return (
     <section
       id="services"
@@ -175,17 +179,8 @@ export default function PricingSection({
                   <h3 className="!m-0 !font-sans !font-thin">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (plan.serviceId === null) {
-                          // The Custom quote flow isn't in Booking yet. Do not
-                          // silently start a fixed-price Full Day reservation.
-                          onRequestCustom()
-                        } else {
-                          onSelectService(plan.serviceId)
-                          goTo(3)
-                        }
-                      }}
-                      className="text-left !font-sans !text-[clamp(22px,2vw,31px)] !font-thin !leading-[1.18] !tracking-[-0.012em] !text-[#f4f5f7] focus-visible:outline-none after:absolute after:inset-0"
+                      onClick={() => navigateToReservation(plan.serviceId)}
+                      className="text-left !font-sans !text-[clamp(22px,2vw,31px)] !font-thin !leading-[1.18] !tracking-[-0.012em] !text-[#f4f5f7] focus-visible:outline-offset-4 focus-visible:outline-white/80"
                     >
                       {plan.lines.map((line) => (
                         <span key={line} className="block">
@@ -197,7 +192,7 @@ export default function PricingSection({
                 </header>
 
                 {/* Hover/focus drawer; on touch devices both rates stay visible. */}
-                <div className="pointer-events-none relative z-10 mt-auto translate-y-full bg-[linear-gradient(180deg,rgba(5,6,8,0)_0%,rgba(5,6,8,0.87)_25%,rgba(5,6,8,0.97)_100%)] px-6 pt-10 pb-6 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 sm:px-8 sm:pb-7 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
+                <div className="pointer-events-auto relative z-10 mt-auto translate-y-full bg-[linear-gradient(180deg,rgba(5,6,8,0)_0%,rgba(5,6,8,0.87)_25%,rgba(5,6,8,0.97)_100%)] px-6 pt-10 pb-6 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 sm:px-8 sm:pb-7 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
                   <div className="border-t border-white/20 pt-4">
                     <span className="block !font-sans text-[10px] !font-normal tracking-[0.2em] text-white/75 uppercase">
                       {plan.eyebrow}
@@ -244,9 +239,15 @@ export default function PricingSection({
                         </p>
                       </>
                     )}
-                    <span className="mt-3 block !font-sans text-[11px] !font-light text-white/90">
-                      {plan.serviceId === null ? 'Explore custom options' : 'Plan your journey'} →
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigateToReservation(plan.serviceId)}
+                      aria-label={plan.serviceId === null ? 'Plan a custom journey' : `Plan your ${plan.lines.join(' ').toLowerCase()} journey`}
+                      className="relative z-40 mt-3 inline-flex cursor-pointer items-center gap-1.5 !font-sans text-[11px] !font-light text-white/90 transition-colors hover:text-white hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    >
+                      {plan.serviceId === null ? 'Plan a custom journey' : 'Plan your journey'}
+                      <span aria-hidden="true">→</span>
+                    </button>
                   </div>
                 </div>
               </div>

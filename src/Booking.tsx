@@ -1588,7 +1588,7 @@ export default function Booking({
                     </div>
                     {quoteRequired && (
                       <p className="quote-note">
-                        Sprinter pricing requires a separate quote. TAX is not included.
+                        This journey needs a tailored quote. TAX is not included.
                       </p>
                     )}
                     <p className="availability-note" aria-live="polite">

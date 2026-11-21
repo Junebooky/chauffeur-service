@@ -182,7 +182,7 @@ const FLEET_DATA: VehicleInfo[] = [
   {
     id: 'sprinter319',
     catalogId: 'sprinter_319',
-    name: 'Mercedes Sprinter',
+    name: 'Mercedes-Benz Sprinter',
     subName: 'VIP Protocol',
     brand: 'Mercedes-Benz',
     classBadge: 'VIP PROTOCOL HIGH-ROOF COACH',
@@ -299,7 +299,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
   // 1: Genesis G90
   // 2: Kia Carnival Hi Limousine
   // 3: Hyundai Staria
-  // 4: Mercedes Sprinter
+  // 4: Mercedes-Benz Sprinter
   const getStageIndex = (id: VehicleInfo['id'] | null): number => {
     if (!id) return 0
     const idx = FLEET_DATA.findIndex((car) => car.id === id)
@@ -569,7 +569,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
           Slide 1: Genesis G90 (side profile + details + right view tabs)
           Slide 2: Kia Carnival Hi Limousine
           Slide 3: Hyundai Staria Lounge Limousine
-          Slide 4: Mercedes Sprinter
+          Slide 4: Mercedes-Benz Sprinter
           ========================================================================= */}
       <div
         className={`fleet-carousel-viewport ${isSlideDetailOpen ? 'is-hidden' : ''
