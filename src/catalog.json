@@ -81,7 +81,7 @@
       "name": "Mercedes Sprinter",
       "model": "VIP Protocol High-Roof Van · 6 Seats",
       "passengers": 6,
-      "surcharge": 150000,
+      "surcharge": 100000,
       "image": "/media/fleet/vehicles/sprinter/exterior.png",
       "quoteRequired": false
     },
