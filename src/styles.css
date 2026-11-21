@@ -9793,3 +9793,147 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     letter-spacing: 0.02em;
   }
 }
+
+/* Booking / Multiple Days: a focused Schedule sub-screen.
+   Only layout is scoped here; Liquid Glass, inputs and shared control styles
+   remain unchanged. The booking panel is the single scroll container. */
+.booking-glass-stage.is-expanded .booking-glass-surface.is-daily-schedule-step {
+  width: min(1140px, 100%) !important;
+  flex-basis: 630px;
+}
+
+.booking-glass-stage.is-expanded .booking-panel.is-daily-schedule {
+  grid-template-columns: minmax(0, 1fr) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.booking-daily-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+.booking-daily-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.booking-daily-intro .schedule-col-header {
+  margin-bottom: 6px;
+}
+
+.booking-daily-intro .field-note {
+  margin: 0;
+}
+
+.booking-daily-choice {
+  width: 100%;
+}
+
+.booking-daily-same,
+.booking-daily-editor {
+  min-width: 0;
+}
+
+.booking-daily-days,
+.booking-daily-day-list {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-height: 0;
+  overflow: visible;
+}
+
+.booking-daily-same > .field-note {
+  margin: 0 0 14px;
+}
+
+.booking-daily-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(0, 1.35fr);
+  align-items: start;
+  gap: clamp(20px, 3vw, 42px);
+}
+
+.booking-daily-day-list .daily-journey-card {
+  width: 100%;
+  min-width: 0;
+}
+
+.booking-daily-day-list .card-top {
+  gap: 12px;
+}
+
+.booking-daily-day-list .field-note {
+  display: block;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+
+.booking-daily-editor {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.booking-daily-editor .daily-times-header {
+  margin-bottom: 0;
+  gap: 12px;
+}
+
+.booking-daily-copy {
+  padding-top: 4px;
+}
+
+.booking-daily-next-note {
+  margin: 12px 0 0;
+}
+
+/* Vehicle assignment uses the same single booking-panel scroll, not a
+   second mini-scrollable column of day cards. */
+.booking-screen .daily-schedule-configuration .daily-schedule-cards {
+  max-height: none;
+  overflow: visible;
+}
+
+.booking-screen .daily-schedule-configuration .daily-journey-card {
+  min-width: 0;
+}
+
+.booking-screen .daily-schedule-configuration .active-hint small {
+  display: block;
+  margin-top: 5px;
+  line-height: 1.45;
+  opacity: 0.78;
+}
+
+@media (max-width: 760px) {
+  .booking-daily-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .booking-daily-intro {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .booking-daily-day-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  }
+
+  .booking-daily-screen {
+    gap: 15px;
+  }
+
+  .booking-glass-stage.is-expanded .booking-panel.is-daily-schedule .booking-fields {
+    padding: 18px !important;
+  }
+}

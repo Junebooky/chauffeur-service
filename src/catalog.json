@@ -51,7 +51,7 @@
   "vehicles": [
     {
       "id": "staria",
-      "name": "Staria Lounge Limousine Hybrid",
+      "name": "Staria Limousine",
       "model": "Executive Lounge Cabin · 9 Seats · Hybrid",
       "passengers": 9,
       "surcharge": 0,
@@ -60,7 +60,7 @@
     },
     {
       "id": "carnival_limousine",
-      "name": "Carnival Hi-Limousine Hybrid",
+      "name": "Carnival Hi-Limousine",
       "model": "Luxury High-Roof Limousine · 6 Seats · Hybrid",
       "passengers": 6,
       "surcharge": 0,

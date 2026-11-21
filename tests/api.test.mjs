@@ -253,7 +253,7 @@ test('prices every daily vehicle and extra, retries safely, and reserves only th
     assert.deepEqual(
       result.data.journeys.map((day) => [day.date, day.vehicle, day.total]),
       [
-        ['2026-11-10', 'Staria Lounge Limousine Hybrid', 410000],
+        ['2026-11-10', 'Staria Limousine', 410000],
         ['2026-11-11', 'Genesis G90', 510000],
       ],
     )

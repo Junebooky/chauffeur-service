@@ -97,7 +97,7 @@ const FLEET_DATA: VehicleInfo[] = [
     id: 'carnival',
     catalogId: 'carnival_limousine',
     name: 'Carnival',
-    subName: 'Hi Limousine',
+    subName: 'Hi-Limousine',
     brand: 'Kia',
     classBadge: 'VIP HI-LIMOUSINE · HYBRID',
     tagline: 'More space. A more considered journey.',
@@ -140,7 +140,7 @@ const FLEET_DATA: VehicleInfo[] = [
     id: 'staria',
     catalogId: 'staria',
     name: 'Staria',
-    subName: 'Lounge Limousine',
+    subName: 'Limousine',
     brand: 'Hyundai',
     classBadge: 'EXECUTIVE LOUNGE · HYBRID',
     tagline: 'Room to travel comfortably.',
@@ -309,6 +309,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
 
   const activeVehicle =
     FLEET_DATA.find((v) => v.id === selectedId) || FLEET_DATA[0]
+  const activeVehicleFullName = [activeVehicle.name, activeVehicle.subName].filter(Boolean).join(' ')
 
   const handleCardClick = (id: VehicleInfo['id']) => {
     setSelectedId(id)
@@ -497,7 +498,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                 {slide.category === 'interior' && slide.interiorImages ? (
                   <FleetInteriorGallery
                     key={activeVehicle.id}
-                    vehicleName={activeVehicle.name}
+                    vehicleName={activeVehicleFullName}
                     images={slide.interiorImages}
                     fallbackImage={slide.image}
                     active={isSlideDetailOpen && activeSlideIndex === idx}
@@ -531,7 +532,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   <BorderBeam duration="14s" />
                   <div className="fleet-specs-content">
                     <div className="fleet-specs-badge">{activeVehicle.classBadge}</div>
-                    <DisplayHeading as="h3" className="fleet-specs-vehicle-title">{activeVehicle.name}</DisplayHeading>
+                    <DisplayHeading as="h3" className="fleet-specs-vehicle-title">{activeVehicleFullName}</DisplayHeading>
                     <p className="fleet-specs-summary">{activeVehicle.shortDescription}</p>
 
                     <dl className="fleet-specs-facts">
@@ -552,7 +553,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         type="button"
                         onClick={() => handleReserve(activeVehicle.catalogId)}
                       >
-                        Reserve {activeVehicle.name} <ArrowUpRight size={15} />
+                        Reserve {activeVehicleFullName} <ArrowUpRight size={15} />
                       </ReservationButton>
                     </div>
                   </div>
