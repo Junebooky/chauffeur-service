@@ -14,7 +14,7 @@ const service = (id) => catalog.services.find((s) => s.id === id)
 test('Pricing Plans presents only the three requested services with their existing artwork', () => {
   const block = pricing.slice(
     pricing.indexOf('const PRICING_PLANS = ['),
-    pricing.indexOf('] as const', pricing.indexOf('const PRICING_PLANS = [')),
+    pricing.indexOf('const BEAM_GRADIENT', pricing.indexOf('const PRICING_PLANS = [')),
   )
   const ids = [...block.matchAll(/    id: '([^']+)'/g)].map((match) => match[1])
   assert.deepEqual(ids, ['pickup', 'schedule', 'custom'])
