@@ -51,18 +51,29 @@ type Result = {
     vehicle: string
     service: string
     total: number | null
+    pickup: string
+    destination: string
   }[]
   date: string
   time: string
   vehicle: string
   service: string
 }
+type DayRoute = {
+  pickup: string
+  destination: string
+  pickupPlace: Place | null
+  destinationPlace: Place | null
+  flight: string
+}
+
 type Props = {
   service: string
   setService: (value: string) => void
   vehicle: string
   setVehicle: (value: string) => void
   showPrivacy: () => void
+  onRequestCustom: () => void
   usdRate?: number
 }
 
@@ -228,7 +239,7 @@ function Calendar({
         })}
       </div>
       <p className="calendar-note">
-        <Clock3 size={12} /> All times are Seoul time (KST).
+        <Clock3 size={12} /> Korea time (KST, UTC+9).
       </p>
     </div>
   )
@@ -240,6 +251,7 @@ export default function Booking({
   vehicle,
   setVehicle,
   showPrivacy,
+  onRequestCustom,
   usdRate: initialUsdRate = DEFAULT_USD_RATE,
 }: Props) {
   const [usdRate, setUsdRate] = useState<number>(initialUsdRate)
@@ -250,9 +262,11 @@ export default function Booking({
   const [dates, setDates] = useState<string[]>(() => [tomorrow()])
   const [timesByDate, setTimesByDate] = useState<Record<string, string>>({})
   const [defaultTime, setDefaultTime] = useState('10:00')
-  const [vehiclesByDate, setVehiclesByDate] = useState<Record<string, string>>(
-    {},
-  )
+  const [vehiclesByDate, setVehiclesByDate] = useState<Record<string, string>>({})
+  const [vehicleMode, setVehicleMode] = useState<'same' | 'daily'>('same')
+  const [routesByDate, setRoutesByDate] = useState<Record<string, DayRoute>>({})
+  const [editingDate, setEditingDate] = useState<string | null>(null)
+  const [confirmCopySchedule, setConfirmCopySchedule] = useState(false)
   const [activeDate, setActiveDate] = useState('')
   const [pickup, setPickup] = useState('')
   const [destination, setDestination] = useState('')
@@ -315,12 +329,10 @@ export default function Booking({
     setDefaultTime(t)
   }
 
-  const getVehicle = (d: string) => vehiclesByDate[d] || vehicle
+  const getVehicle = (d: string) =>
+    !multiDay || vehicleMode === 'same' ? vehicle : (vehiclesByDate[d] || vehicle)
   const setVehicleForDate = (d: string, vId: string) => {
     setVehiclesByDate((prev) => ({ ...prev, [d]: vId }))
-    if (d === dates[0]) {
-      setVehicle(vId)
-    }
   }
   const applyVehicleToAll = (vId: string) => {
     const updated: Record<string, string> = {}
@@ -333,7 +345,38 @@ export default function Booking({
 
   const activeVehicle = getVehicle(currentActiveDate)
   const changeVehicle = (vId: string) => {
-    setVehicleForDate(currentActiveDate, vId)
+    if (!multiDay || vehicleMode === 'same') {
+      applyVehicleToAll(vId)
+    } else {
+      setVehicleForDate(currentActiveDate, vId)
+    }
+  }
+
+  // Shared route defaults; dates use these until the guest edits a specific day.
+  const defaultRoute: DayRoute = {
+    pickup, pickupPlace, destination, destinationPlace, flight,
+  }
+  const getRoute = (day: string): DayRoute =>
+    multiDay ? (routesByDate[day] ?? defaultRoute) : defaultRoute
+  const setRouteForDate = (day: string, patch: Partial<DayRoute>) => {
+    setRoutesByDate((previous) => ({
+      ...previous,
+      [day]: { ...(previous[day] ?? defaultRoute), ...patch },
+    }))
+  }
+  const customizeDate = (day: string) => {
+    // Opening a day does not freeze the defaults. Only changed fields create
+    // an override, so untouched dates always inherit the latest shared route.
+    setEditingDate((previous) => previous === day ? null : day)
+  }
+  const applyScheduleToAll = () => {
+    const first = dates[0]
+    const route = { ...getRoute(first) }
+    const time = getTime(first)
+    setRoutesByDate(Object.fromEntries(dates.slice(1).map((d) => [d, { ...route }])))
+    applyTimeToAll(time)
+    setConfirmCopySchedule(false)
+    setEditingDate(null)
   }
 
   const handleModeChange = (newMode: 'range' | 'discrete') => {
@@ -349,6 +392,7 @@ export default function Booking({
     date: day,
     time: getTime(day),
     vehicle: getVehicle(day),
+    ...getRoute(day),
   }))
 
   const extras = catalog.options
@@ -380,6 +424,21 @@ export default function Booking({
 
   const datesKey = dates.join(',')
   const timesKey = dates.map((d) => getTime(d)).join(',')
+
+  // Removing a date also removes its unsent per-day overrides.
+  useEffect(() => {
+    const present = new Set(datesKey.split(','))
+    const prune = <T,>(previous: Record<string, T>): Record<string, T> => {
+      const remaining = Object.entries(previous).filter(([date]) => present.has(date))
+      return remaining.length === Object.keys(previous).length
+        ? previous
+        : Object.fromEntries(remaining)
+    }
+    setRoutesByDate(prune)
+    setTimesByDate(prune)
+    setVehiclesByDate(prune)
+    setEditingDate((previous) => previous && !present.has(previous) ? null : previous)
+  }, [datesKey])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -449,6 +508,21 @@ export default function Booking({
 
   const moveStep = (target: number) => {
     if (target > step && !form.current?.reportValidity()) return
+    if (target > step && step === 0) {
+      if (multiDay && dates.length < 2) {
+        setError('Choose at least two dates, then continue.')
+        return
+      }
+      const invalid = journeys.find((day) =>
+        !day.pickupPlace || !day.destinationPlace ||
+        day.pickupPlace.id === day.destinationPlace.id
+      )
+      if (invalid) {
+        setError(`Confirm different pick-up and destination places for ${displayDate(invalid.date)}.`)
+        setEditingDate(invalid.date !== dates[0] ? invalid.date : null)
+        return
+      }
+    }
     if (target > step && step === 1 && !allAvailable) {
       setError(
         unavailableDay
@@ -549,7 +623,7 @@ export default function Booking({
           `DTSTART:${stamp(start)}`,
           `DTEND:${stamp(end)}`,
           `SUMMARY:${escape(`Chauffeur request ${result.reference} — ${day.vehicle} — pending confirmation`)}`,
-          `LOCATION:${escape(pickup)}`,
+          `LOCATION:${escape(day.pickup || pickup)}`,
           'DESCRIPTION:Reservation request only. This journey has not been confirmed. All prices exclude TAX.',
           'STATUS:TENTATIVE',
           'END:VEVENT',
@@ -725,6 +799,7 @@ export default function Booking({
                   {result.journeys.map((day) => (
                     <span key={day.date}>
                       {displayDate(day.date)} · {day.time} KST · {day.vehicle}
+                      <small> · {day.pickup} → {day.destination}</small>
                     </span>
                   ))}
                   <span>
@@ -818,6 +893,10 @@ export default function Booking({
                                 const first = dates[0] || tomorrow()
                                 setDates([first])
                                 setActiveDate(first)
+                                setEditingDate(null)
+                                setRoutesByDate({})
+                                setTimesByDate({})
+                                setVehicleMode('same')
                               }}
                             >
                               Single Day
@@ -829,13 +908,7 @@ export default function Booking({
                               className={`day-mode-pill ${multiDay ? 'active' : ''}`}
                               onClick={() => {
                                 setMultiDay(true)
-                                if (dates.length <= 1) {
-                                  const first = dates[0] || tomorrow()
-                                  const nextDay = addDays(first, 1)
-                                  if (nextDay <= addDays(seoulDate(), 365)) {
-                                    setDates([first, nextDay])
-                                  }
-                                }
+                                // Guests explicitly select all dates in the calendar.
                               }}
                             >
                               Multiple Days
@@ -890,43 +963,101 @@ export default function Booking({
                                   </button>
                                 )}
                               </div>
-                              {dates.length > 1 && (
+                              {dates.length > 1 ? (
                                 <div className="daily-times-section">
                                   <div className="daily-times-header">
-                                    <span className="field-label">
-                                      <Clock3 size={14} /> Daily Pick-up Times
-                                    </span>
-                                    <button
-                                      type="button"
-                                      className="apply-all-btn"
-                                      onClick={() =>
-                                        applyTimeToAll(getTime(dates[0]))
-                                      }
-                                    >
-                                      Apply Day 1 to all
+                                    <span className="field-label"><CalendarDays size={14} /> Your Daily Schedule</span>
+                                    <button type="button" className="apply-all-btn" onClick={() => setConfirmCopySchedule(true)}>
+                                      Copy Day 1 to all
                                     </button>
                                   </div>
+                                  {confirmCopySchedule && (
+                                    <div className="selected-dates-summary" role="group" aria-label="Confirm schedule copy">
+                                      <span>Replace the other days' routes and times with Day 1?</span>
+                                      <button type="button" onClick={applyScheduleToAll}>Confirm</button>
+                                      <button type="button" onClick={() => setConfirmCopySchedule(false)}>Cancel</button>
+                                    </div>
+                                  )}
+                                  <p className="field-note">
+                                    All dates use the default route and time unless you customize them.
+                                    Select a date to change its pick-up, destination or time.
+                                  </p>
                                   <div className="daily-times-grid" data-native-scroll>
-                                    {dates.map((d, index) => (
-                                      <div key={d} className="daily-time-item">
-                                        <div className="daily-time-info">
-                                          <span className="day-badge">Day 0{index + 1}</span>
-                                          <span className="day-date">{displayDate(d)}</span>
+                                    {dates.map((d, index) => {
+                                      const route = getRoute(d)
+                                      const customized = Boolean(routesByDate[d]) || getTime(d) !== defaultTime
+                                      const isOpen = editingDate === d
+                                      return (
+                                        <div key={d} className={`daily-journey-card ${isOpen ? 'active-day-card' : ''}`}>
+                                          <button type="button" className="card-top w-full text-left" aria-expanded={isOpen} onClick={() => customizeDate(d)}>
+                                            <span className="day-indicator">
+                                              <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
+                                              <strong>{displayDate(d)}</strong>
+                                            </span>
+                                            <span className="active-hint">{customized ? 'Customized' : 'Default plan'} · {isOpen ? 'Close' : 'Edit'}</span>
+                                          </button>
+                                          <p className="field-note">
+                                            {getTime(d)} · {route.pickup || 'Choose pick-up'} → {route.destination || 'Choose destination'}
+                                          </p>
+                                          {isOpen && (
+                                            <div className="grid gap-3 p-3">
+                                              <AddressSearch
+                                                name={`pickup-${d}`}
+                                                label={`Pick-up for Day ${index + 1}`}
+                                                placeholder="Enter pick-up location"
+                                                value={route.pickup}
+                                                place={route.pickupPlace}
+                                                rightIcon="nav"
+                                                onChange={(value, place) => setRouteForDate(d, { pickup: value, pickupPlace: place })}
+                                              />
+                                              <AddressSearch
+                                                name={`destination-${d}`}
+                                                label={`Destination for Day ${index + 1}`}
+                                                placeholder="Enter destination"
+                                                value={route.destination}
+                                                place={route.destinationPlace}
+                                                rightIcon="nav"
+                                                onChange={(value, place) => setRouteForDate(d, { destination: value, destinationPlace: place })}
+                                              />
+                                              {service === 'airport' && (
+                                                <label className="field">
+                                                  <span>Flight number <small>optional</small></span>
+                                                  <input name={`flight-${d}`} maxLength={30} value={route.flight}
+                                                    onChange={(event) => setRouteForDate(d, { flight: event.target.value })}
+                                                    placeholder="e.g. KE 902" />
+                                                </label>
+                                              )}
+                                              <div className="field">
+                                                <span>Pick-up Time</span>
+                                                <GlassSelect compact
+                                                  ariaLabel={`Pick-up time for Day ${index + 1}`}
+                                                  value={getTime(d)}
+                                                  onChange={(time) => setTimeForDate(d, time)}
+                                                  options={timeOptions.map((time) => ({ value: time, label: time }))}
+                                                />
+                                              </div>
+                                              <button type="button" className="apply-all-btn" onClick={() => {
+                                                setRoutesByDate((previous) => {
+                                                  const next = { ...previous }
+                                                  delete next[d]
+                                                  return next
+                                                })
+                                                setTimesByDate((previous) => {
+                                                  const next = { ...previous }
+                                                  delete next[d]
+                                                  return next
+                                                })
+                                                setEditingDate(null)
+                                              }}>Use default route & time</button>
+                                            </div>
+                                          )}
                                         </div>
-                                        <GlassSelect
-                                          compact
-                                          ariaLabel={`Pick-up time for Day ${index + 1}`}
-                                          value={getTime(d)}
-                                          onChange={(t) => setTimeForDate(d, t)}
-                                          options={timeOptions.map((t) => ({
-                                            value: t,
-                                            label: `${t} KST`,
-                                          }))}
-                                        />
-                                      </div>
-                                    ))}
+                                      )
+                                    })}
                                   </div>
                                 </div>
+                              ) : (
+                                <p className="field-note">Select at least two dates in the calendar to continue.</p>
                               )}
                             </div>
                           )}
@@ -941,12 +1072,16 @@ export default function Booking({
                               ariaLabel="Service"
                               name="service"
                               value={service}
-                              onChange={setService}
-                              options={catalog.services.map((s) => ({
-                                value: s.id,
-                                label: s.name,
-                                meta: s.unit,
-                              }))}
+                              onChange={(next) => {
+                                if (next === 'custom') onRequestCustom()
+                                else setService(next)
+                              }}
+                              options={[
+                                ...catalog.services.filter((s) => s.id === 'airport' || s.id === 'day').map((s) => ({
+                                  value: s.id, label: s.name, meta: s.unit,
+                                })),
+                                { value: 'custom', label: 'Custom', meta: 'Tailored quote' },
+                              ]}
                             />
                           </div>
                           <AddressSearch
@@ -997,20 +1132,17 @@ export default function Booking({
                                 multiDay ? 'Default Pick-up Time' : 'Pick-up Time'
                               }
                               name="pickup-time"
-                              value={getTime(dates[0] || tomorrow())}
+                              value={multiDay ? defaultTime : getTime(dates[0] || tomorrow())}
                               onChange={(t) => {
-                                if (multiDay) {
-                                  applyTimeToAll(t)
-                                } else {
-                                  setDefaultTime(t)
-                                  setTimeForDate(dates[0] || tomorrow(), t)
-                                }
+                                setDefaultTime(t)
+                                if (!multiDay) setTimeForDate(dates[0] || tomorrow(), t)
                               }}
                               options={timeOptions.map((t) => ({
                                 value: t,
-                                label: `${t} KST`,
+                                label: t,
                               }))}
                             />
+                            <small className="field-note">Korea time (KST, UTC+9). All daily times use this time zone.</small>
                           </div>
                         </div>
                       </div>
@@ -1022,104 +1154,54 @@ export default function Booking({
                           <div className="daily-schedule-configuration">
                             <div className="daily-schedule-header">
                               <div>
-                                <strong>Daily Fleet & Schedule</strong>
-                                <small>Configure custom vehicle and time for each day</small>
+                                <strong>How would you like to travel?</strong>
+                                <small>Choose once for the whole trip, or set a vehicle for each day.</small>
                               </div>
-                              <button
-                                type="button"
-                                className="apply-all-btn"
-                                onClick={() =>
+                            </div>
+                            <div className="day-mode-segmented" role="radiogroup" aria-label="Vehicle assignment">
+                              <button type="button" role="radio" aria-checked={vehicleMode === 'same'}
+                                className={`day-mode-pill ${vehicleMode === 'same' ? 'active' : ''}`}
+                                onClick={() => {
                                   applyVehicleToAll(getVehicle(currentActiveDate))
-                                }
-                              >
-                                Apply current vehicle to all days
+                                  setVehicleMode('same')
+                                }}>
+                                Same vehicle for all days
+                              </button>
+                              <button type="button" role="radio" aria-checked={vehicleMode === 'daily'}
+                                className={`day-mode-pill ${vehicleMode === 'daily' ? 'active' : ''}`}
+                                onClick={() => setVehicleMode('daily')}>
+                                Choose per day
                               </button>
                             </div>
-                            <div
-                              className="daily-schedule-cards"
-                              role="group"
-                              aria-label="Daily fleet selections"
-                            >
-                              {dates.map((d, index) => {
-                                const currentVehicleId = getVehicle(d)
-                                const vInfo = catalog.vehicles.find(
-                                  (v) => v.id === currentVehicleId,
-                                )!
-                                const dayTime = getTime(d)
-                                const isAvail = availability[d]?.[currentVehicleId]
-                                const daySubtotal =
-                                  currentService.price + vInfo.surcharge + extras
-                                const isActive = currentActiveDate === d
-
-                                return (
-                                  <div
-                                    key={d}
-                                    className={`daily-journey-card ${isActive ? 'active-day-card' : ''}`}
-                                    onClick={() => setActiveDate(d)}
-                                  >
-                                    <div className="card-top">
-                                      <div className="day-indicator">
-                                        <span className="badge">Day 0{index + 1}</span>
-                                        <strong>{displayDate(d)}</strong>
-                                      </div>
-                                      <div className="day-price">
-                                        <span>Day subtotal</span>
-                                        <strong>
-                                          {vInfo.quoteRequired
-                                            ? 'Quote on request'
-                                            : money(daySubtotal)}
-                                        </strong>
-                                      </div>
-                                    </div>
-                                    <div className="card-controls">
-                                      <div className="card-control-field">
-                                        <span>
-                                          <Clock3 size={14} /> Pick-up Time
+                            {vehicleMode === 'same' ? (
+                              <p className="field-note">Select a vehicle in the existing showroom. Your choice applies to every day.</p>
+                            ) : (
+                              <div className="daily-schedule-cards" role="group" aria-label="Choose a day to assign a vehicle">
+                                {dates.map((d, index) => {
+                                  const selected = getVehicle(d)
+                                  const car = catalog.vehicles.find((item) => item.id === selected)!
+                                  const isActive = currentActiveDate === d
+                                  const isAvail = availability[d]?.[selected]
+                                  return (
+                                    <button key={d} type="button"
+                                      className={`daily-journey-card w-full text-left ${isActive ? 'active-day-card' : ''}`}
+                                      aria-pressed={isActive}
+                                      onClick={() => setActiveDate(d)}>
+                                      <span className="card-top">
+                                        <span className="day-indicator">
+                                          <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
+                                          <strong>{displayDate(d)}</strong>
                                         </span>
-                                        <GlassSelect
-                                          compact
-                                          ariaLabel={`Pick-up time for Day ${index + 1}`}
-                                          value={dayTime}
-                                          onChange={(t) => setTimeForDate(d, t)}
-                                          options={timeOptions.map((t) => ({
-                                            value: t,
-                                            label: `${t} KST`,
-                                          }))}
-                                        />
-                                      </div>
-                                      <div className="card-control-field">
-                                        <span>
-                                          <Car size={14} /> Assigned Vehicle
-                                        </span>
-                                        <GlassSelect
-                                          compact
-                                          ariaLabel={`Vehicle for Day ${index + 1}`}
-                                          value={currentVehicleId}
-                                          onChange={(vId) => setVehicleForDate(d, vId)}
-                                          options={catalog.vehicles.map((v) => ({
-                                            value: v.id,
-                                            label: v.name,
-                                            meta: v.surcharge > 0 ? `+${money(v.surcharge)}` : 'Included',
-                                          }))}
-                                        />
-                                      </div>
-                                    </div>
-                                    {isAvail === false && (
-                                      <div className="card-availability-warning">
-                                        <X size={14} /> Unavailable on {displayDate(d)} at {dayTime} KST. Please choose another vehicle or time.
-                                      </div>
-                                    )}
-                                    <div className="card-footer">
-                                      <span className="active-hint">
-                                        {isActive
-                                          ? '✦ Active in Showroom'
-                                          : 'Click to preview in Showroom'}
+                                        <span className="day-price"><strong>{money(currentService.price + car.surcharge + extras)}</strong></span>
                                       </span>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
+                                      <span className="card-footer"><span className="active-hint">
+                                        {getTime(d)} · {car.name} {isAvail === false ? '· Unavailable' : ''}
+                                      </span></span>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
                           </div>
                         )}
                         <p className="field-section-title extras-title">
@@ -1417,16 +1499,13 @@ export default function Booking({
                     )}
                     {step === 2 && (
                       <div className="summary-route-recap">
-                        <div>
-                          <span>Route</span>
-                          <strong>{pickup || '—'} → {destination || '—'}</strong>
-                        </div>
-                        <div>
-                          <span>Vehicle</span>
-                          <strong>
-                            {catalog.vehicles.find((v) => v.id === activeVehicle)?.name}
-                          </strong>
-                        </div>
+                        {journeys.map((day, index) => (
+                          <div key={day.date}>
+                            <span>Day {String(index + 1).padStart(2, '0')} · {displayDate(day.date)} · {day.time} KST</span>
+                            <strong>{day.pickup || '—'} → {day.destination || '—'}</strong>
+                            <small>{catalog.vehicles.find((item) => item.id === day.vehicle)?.name}</small>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="summary-lines">
@@ -1457,7 +1536,7 @@ export default function Booking({
                             return (
                               <div key={day.date}>
                                 <span>
-                                  Day 0{index + 1} · {displayDate(day.date)} ({day.time})
+                                  Day {String(index + 1).padStart(2, '0')} · {displayDate(day.date)} ({day.time})
                                 </span>
                                 <span>
                                   {v.name} · {v.quoteRequired ? 'Quote' : money(dayTotal)}

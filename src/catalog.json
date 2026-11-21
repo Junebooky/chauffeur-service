@@ -4,7 +4,7 @@
   "services": [
     {
       "id": "airport",
-      "name": "Airport transfer",
+      "name": "Pick-up Service",
       "eyebrow": "Incheon & Gimpo Airport Protocol",
       "price": 200000,
       "unit": "3 hours",
@@ -19,7 +19,7 @@
     },
     {
       "id": "hourly",
-      "name": "By the hour",
+      "name": "By the hour (legacy)",
       "eyebrow": "Flexible Hourly Charter",
       "price": 280000,
       "unit": "4 hours",
@@ -34,7 +34,7 @@
     },
     {
       "id": "day",
-      "name": "Full day",
+      "name": "Schedule Service",
       "eyebrow": "Full-Day VIP Protocol",
       "price": 430000,
       "unit": "9 hours",

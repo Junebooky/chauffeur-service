@@ -86,7 +86,7 @@ export default function App() {
   const { scrollRef, active, reducedMotion, goTo } = useJourneyScroll()
   const [mobileMenu, setMobileMenu] = useState(false)
   const [modal, setModal] = useState<'contact' | 'privacy' | null>(null)
-  const [service, setService] = useState('hourly')
+  const [service, setService] = useState('airport')
   const [vehicle, setVehicle] = useState('staria')
   const [usdRate, setUsdRate] = useState<number>(DEFAULT_USD_RATE)
   const nav = (index: number) => {
@@ -213,6 +213,7 @@ export default function App() {
           setVehicle={setVehicle}
           usdRate={usdRate}
           showPrivacy={() => setModal('privacy')}
+          onRequestCustom={() => setModal('contact')}
         />
       </main>
       <aside className="section-rail" aria-label="Page sections">

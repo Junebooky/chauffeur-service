@@ -136,6 +136,8 @@ export function createApp({
         time: day.time || d.time,
         service: catalog.services.find((s) => s.id === d.service).name,
         vehicle: catalog.vehicles.find((v) => v.id === day.vehicle).name,
+        pickup: day.pickup || d.pickup,
+        destination: day.destination || d.destination,
         total: day.total,
       })),
     }
@@ -249,6 +251,34 @@ export function createApp({
         throw new Error(
           'Please choose a destination different from your pickup location.',
         )
+      // Each date can override the shared route; verify all locations using
+      // the original selected-place tokens before persisting the reservation.
+      const dailyRoutes = submittedDays.map((inputDay) => {
+        for (const [field, max] of [['pickup', 250], ['destination', 250]]) {
+          if (inputDay[field] !== undefined &&
+            (typeof inputDay[field] !== 'string' ||
+              !inputDay[field].trim() || inputDay[field].length > max))
+            throw new Error(`Please enter a valid daily ${field}.`)
+        }
+        const dayPickup = places.selected(
+          Object.hasOwn(inputDay, 'pickupPlace') ? inputDay.pickupPlace : b.pickupPlace,
+        )
+        const dayDestination = places.selected(
+          Object.hasOwn(inputDay, 'destinationPlace') ? inputDay.destinationPlace : b.destinationPlace,
+        )
+        if (dayPickup.id === dayDestination.id)
+          throw new Error('Each day needs a different pick-up and destination.')
+        const dayFlight = inputDay.flight === undefined ? b.flight : inputDay.flight
+        if (dayFlight && (typeof dayFlight !== 'string' || dayFlight.length > 30))
+          throw new Error('Please enter a valid daily flight number.')
+        return {
+          pickup: dayPickup.address,
+          destination: dayDestination.address,
+          pickupPlace: dayPickup,
+          destinationPlace: dayDestination,
+          flight: (dayFlight || '').trim(),
+        }
+      })
       for (const [field, label, max] of [
         ['name', 'name', 100],
         ['email', 'email address', 180],
@@ -333,10 +363,11 @@ export function createApp({
         ].map((k) => [k, b[k].trim()]),
       )
       details.options = b.options
-      details.journeys = days.map((day) => ({
+      details.journeys = days.map((day, index) => ({
         date: day.date,
         time: day.time,
         vehicle: day.vehicle.id,
+        ...dailyRoutes[index],
         total: day.vehicle.quoteRequired
           ? null
           : service.price + day.vehicle.surcharge + extras,
