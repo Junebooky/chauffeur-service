@@ -49,7 +49,12 @@
     "address": "405 Hangang-daero, Yongsan-gu, Seoul, South Korea",
     "latitude": 37.5547,
     "longitude": 126.9706,
-    "aliases": ["서울역", "首尔站", "ソウル駅", "Seoul railway station"]
+    "aliases": [
+      "서울역",
+      "首尔站",
+      "ソウル駅",
+      "Seoul railway station"
+    ]
   },
   {
     "id": "curated:four-seasons",
@@ -97,6 +102,11 @@
     "address": "513 Yeongdong-daero, Gangnam-gu, Seoul, South Korea",
     "latitude": 37.5117,
     "longitude": 127.0594,
-    "aliases": ["코엑스", "三成洞会展中心", "コエックス", "COEX Seoul"]
+    "aliases": [
+      "코엑스",
+      "三成洞会展中心",
+      "コエックス",
+      "COEX Seoul"
+    ]
   }
 ]
