@@ -78,7 +78,7 @@ export default function PricingSection({
     <section
       id="services"
       aria-labelledby="services-title"
-      className="relative flex h-dvh w-full snap-start snap-always flex-col justify-between overflow-clip bg-[#050608] px-[clamp(28px,4.5vw,84px)] pt-[clamp(78px,9.6vh,126px)] pb-[clamp(66px,12.8vh,148px)] antialiased select-none"
+      className="relative flex h-dvh w-full snap-start snap-always flex-col justify-between overflow-clip bg-[#050608] px-[clamp(28px,4.5vw,84px)] pt-[calc(var(--header)+24px)] pb-[clamp(54px,10.4vh,120px)] antialiased select-none"
     >
       {/* Full-bleed architectural lighting background */}
       <img
