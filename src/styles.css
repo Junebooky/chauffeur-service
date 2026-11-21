@@ -9937,3 +9937,211 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     padding: 18px !important;
   }
 }
+
+
+/* Your Details: keep the existing Liquid Glass control system, with a soft
+   frosted field finish and a small neutral validity check instead of a
+   background-color change when autofill or validation fills an input. */
+.booking-glass-stage.is-expanded .contact-fields .contact-input-wrap {
+  position: relative;
+  width: 100%;
+  display: block;
+}
+
+.booking-glass-stage.is-expanded .contact-fields .contact-input-wrap > input {
+  width: 100%;
+  padding-right: 44px !important;
+  background: rgba(12, 14, 19, 0.37) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+
+.booking-glass-stage.is-expanded .contact-fields .contact-input-wrap > input:is(:focus, :hover) {
+  border-color: rgba(255, 255, 255, 0.34) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 13px rgba(255, 255, 255, 0.055) !important;
+}
+
+/* Browsers can inject an opaque autofill highlight; suppress it while
+   preserving the subtle background transparency and readable text. */
+.booking-glass-stage.is-expanded .contact-fields .contact-input-wrap > input:-webkit-autofill,
+.booking-glass-stage.is-expanded .contact-fields .contact-input-wrap > input:-webkit-autofill:hover,
+.booking-glass-stage.is-expanded .contact-fields .contact-input-wrap > input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f4f5f7 !important;
+  caret-color: #f4f5f7;
+  -webkit-box-shadow: 0 0 0 1000px rgba(12, 14, 19, 0.24) inset !important;
+  box-shadow: 0 0 0 1000px rgba(12, 14, 19, 0.24) inset !important;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.booking-glass-stage.is-expanded .contact-fields .contact-input-valid {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(238, 242, 248, 0.82);
+}
+
+.booking-glass-stage.is-expanded .contact-fields .messenger-preference {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.booking-glass-stage.is-expanded .contact-fields .messenger-use-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  max-width: 100%;
+  color: rgba(235, 239, 245, 0.87);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.booking-glass-stage.is-expanded .contact-fields .messenger-use-phone input {
+  width: 15px;
+  height: 15px;
+  accent-color: #d2d8e0;
+  flex: none;
+}
+
+.booking-glass-stage.is-expanded .contact-fields .messenger-field {
+  margin-top: 2px;
+  margin-bottom: 0 !important;
+}
+
+.booking-glass-stage.is-expanded .contact-fields .messenger-preference > .messenger-help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* Narrow summary: show a short vehicle label and a full-width route without
+   squeezing date, route and model into the same horizontal row. */
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-route-recap {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  margin: 4px 0 22px !important;
+  padding: 0 13px;
+  border-radius: 11px;
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-item {
+  display: grid;
+  gap: 7px;
+  padding: 13px 0;
+  min-width: 0;
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-item + .summary-journey-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 7px 12px;
+  min-width: 0;
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-date {
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(225, 231, 239, 0.78);
+  white-space: nowrap;
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-vehicle {
+  flex-shrink: 0;
+  color: #f4f5f7;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-route {
+  margin: 0;
+  min-width: 0;
+  color: rgba(244, 245, 247, 0.91);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-route > span {
+  color: rgba(217, 225, 237, 0.65);
+}
+
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-lines {
+  margin-top: 0 !important;
+  padding: 16px 0 10px !important;
+  gap: 12px !important;
+}
+
+/* The CTA is shared by Booking and Fleet Specs. The material becomes
+   translucent, while the original Border Beam and pointer response remain. */
+.booking-cta-pill:not(.fleet-right-tab-btn) {
+  background:
+    radial-gradient(72% 120% at 50% 0%, rgba(255, 255, 255, 0.13), transparent 78%),
+    rgba(17, 20, 27, 0.23);
+  -webkit-backdrop-filter: blur(14px) saturate(132%);
+  backdrop-filter: blur(14px) saturate(132%);
+  border-color: rgba(255, 255, 255, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.09),
+    0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.booking-cta-pill:not(.fleet-right-tab-btn):hover:not(:disabled) {
+  background:
+    radial-gradient(72% 120% at 50% 0%, rgba(255, 255, 255, 0.20), transparent 78%),
+    rgba(28, 31, 39, 0.31);
+}
+
+.booking-cta-pill.booking-back-btn {
+  min-width: 0;
+  width: auto;
+  height: 50px;
+  padding: 0 20px;
+  background-color: rgba(17, 20, 27, 0.16);
+}
+
+.booking-outer-buttons.is-details-actions {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.42fr) minmax(0, 1.6fr);
+  align-items: stretch;
+  gap: 12px;
+  width: min(680px, 100%);
+  flex-wrap: nowrap;
+}
+
+.booking-outer-buttons.is-details-actions .booking-back-btn,
+.booking-outer-buttons.is-details-actions .booking-cta-pill.booking-submit {
+  width: 100%;
+  min-width: 0;
+  height: 50px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 500px) {
+  .booking-outer-buttons.is-details-actions {
+    grid-template-columns: minmax(92px, 0.38fr) minmax(0, 1.5fr);
+    gap: 9px;
+  }
+
+  .booking-outer-buttons.is-details-actions .booking-back-btn {
+    padding: 0 11px;
+  }
+
+  .booking-outer-buttons.is-details-actions .booking-cta-pill.booking-submit {
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+}

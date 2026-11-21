@@ -417,7 +417,7 @@ test('stores contact preferences privately, using the supplied phone for WhatsAp
           ...valid,
           date: `2026-11-${10 + index}`,
           contactMethod,
-          messengerContact: index > 2 ? ' traveller-id ' : '',
+          messengerContact: index === 3 ? valid.phone : index > 3 ? ' traveller-id ' : '',
         })
         assert.equal(result.status, 201)
         assert.equal(result.data.contactMethod, undefined)
@@ -436,7 +436,8 @@ test('stores contact preferences privately, using the supplied phone for WhatsAp
         methods,
       )
       assert.equal(details[2].messengerContact, valid.phone)
-      assert.equal(details[3].messengerContact, 'traveller-id')
+      assert.equal(details[3].messengerContact, valid.phone)
+      assert.equal(details[4].messengerContact, 'traveller-id')
     } finally {
       db.close()
     }
@@ -445,7 +446,7 @@ test('stores contact preferences privately, using the supplied phone for WhatsAp
   }
 })
 
-test('rejects invalid messenger preferences and missing messenger IDs', async () => {
+test('rejects invalid messenger preferences and missing messenger IDs or phone numbers', async () => {
   for (const patch of [
     { contactMethod: 'invented' },
     { contactMethod: null },

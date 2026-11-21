@@ -325,7 +325,7 @@ export function createApp({
         ['line', 'kakao', 'wechat'].includes(contactMethod) &&
         !messengerContact
       )
-        throw new Error('Please enter your messenger ID.')
+        throw new Error('Please enter your messenger ID or a reachable phone number.')
       if (
         contactMethod === 'whatsapp' &&
         (!/^\+?[\d\s().-]{7,40}$/.test(messengerContact) ||

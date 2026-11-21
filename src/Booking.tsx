@@ -281,6 +281,7 @@ export default function Booking({
   const [phone, setPhone] = useState('')
   const [contactMethod, setContactMethod] = useState('email')
   const [messengerContact, setMessengerContact] = useState('')
+  const [usePhoneForMessenger, setUsePhoneForMessenger] = useState(false)
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
   const [availability, setAvailability] = useState<
@@ -299,6 +300,27 @@ export default function Booking({
   const pillsContainerRef = useRef<HTMLDivElement>(null)
   const activePillRef = useRef<HTMLButtonElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
+  // One field works for international names and keeps the existing API stable.
+  const nameReady = name.trim().length >= 2
+  const emailReady = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  const phoneReady = /^\+?[\d\s().-]{7,40}$/.test(phone.trim()) &&
+    phone.replace(/\D/g, '').length >= 7
+  const usesMessengerPhone = ['line', 'kakao', 'wechat'].includes(contactMethod) && usePhoneForMessenger
+  const submittedMessengerContact = usesMessengerPhone ? phone.trim() : messengerContact.trim()
+  const contactApp = catalog.contactMethods.find((method) => method.id === contactMethod)?.name ?? 'Messenger'
+
+  const shortVehicleName = (vehicleId: string) => {
+    switch (vehicleId) {
+      case 'staria': return 'Staria'
+      case 'carnival_limousine': return 'Carnival'
+      case 'g90': return 'Genesis G90'
+      case 'sprinter_319':
+      case 'sprinter_519': return 'Sprinter'
+      default: return catalog.vehicles.find((item) => item.id === vehicleId)?.name ?? 'Vehicle'
+    }
+  }
+  const compactDate = (value: string) =>
+    new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
   const scrollPills = (delta: number) => {
     pillsContainerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
@@ -583,7 +605,7 @@ export default function Booking({
           email,
           phone,
           contactMethod,
-          messengerContact,
+          messengerContact: submittedMessengerContact,
           consent,
         }),
       })
@@ -851,6 +873,7 @@ export default function Booking({
                       setPhone('')
                       setContactMethod('email')
                       setMessengerContact('')
+                      setUsePhoneForMessenger(false)
                       setConsent(false)
                       idempotency.current = crypto.randomUUID()
                       setAvailabilityVersion((v) => v + 1)
@@ -1356,43 +1379,52 @@ export default function Booking({
                       <div className="contact-fields">
                         <label className="field">
                           <span>Full name</span>
-                          <input
-                            name="name"
-                            autoComplete="name"
-                            required
-                            maxLength={100}
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Your full name"
-                          />
+                          <div className="contact-input-wrap">
+                            <input
+                              name="name"
+                              autoComplete="name"
+                              required
+                              maxLength={100}
+                              value={name}
+                              onChange={(event) => setName(event.target.value)}
+                              placeholder="Your full name"
+                            />
+                            {nameReady && <Check size={16} className="contact-input-valid" aria-hidden="true" />}
+                          </div>
                         </label>
                         <div className="contact-field-row">
                           <label className="field">
                             <span>Email address</span>
-                            <input
-                              name="email"
-                              type="email"
-                              autoComplete="email"
-                              required
-                              maxLength={180}
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              placeholder="you@example.com"
-                            />
+                            <div className="contact-input-wrap">
+                              <input
+                                name="email"
+                                type="email"
+                                autoComplete="email"
+                                required
+                                maxLength={180}
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                                placeholder="you@example.com"
+                              />
+                              {emailReady && <Check size={16} className="contact-input-valid" aria-hidden="true" />}
+                            </div>
                           </label>
                           <label className="field">
                             <span>Phone number</span>
-                            <input
-                              name="phone"
-                              type="tel"
-                              autoComplete="tel"
-                              required
-                              pattern="\+?[0-9 \(\)\.\-]{7,40}"
-                              maxLength={40}
-                              value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
-                              placeholder="+82 10 1234 5678"
-                            />
+                            <div className="contact-input-wrap">
+                              <input
+                                name="phone"
+                                type="tel"
+                                autoComplete="tel"
+                                required
+                                pattern="\+?[0-9 \(\)\.\-]{7,40}"
+                                maxLength={40}
+                                value={phone}
+                                onChange={(event) => setPhone(event.target.value)}
+                                placeholder="+82 10 1234 5678"
+                              />
+                              {phoneReady && <Check size={16} className="contact-input-valid" aria-hidden="true" />}
+                            </div>
                           </label>
                         </div>
                         <fieldset className="contact-methods">
@@ -1413,6 +1445,7 @@ export default function Booking({
                                   onChange={() => {
                                     setContactMethod(method.id)
                                     setMessengerContact('')
+                                    setUsePhoneForMessenger(false)
                                   }}
                                 />
                                 <span>{method.name}</span>
@@ -1420,50 +1453,61 @@ export default function Booking({
                             ))}
                           </div>
                           {!['email', 'phone'].includes(contactMethod) && (
-                            <label className="field messenger-field">
-                              <span>
-                                {contactMethod === 'whatsapp'
-                                  ? 'WhatsApp number'
-                                  : `${catalog.contactMethods.find((method) => method.id === contactMethod)!.name} ID`}
-                                {contactMethod === 'whatsapp' && (
-                                  <small>optional</small>
-                                )}
-                              </span>
-                              <input
-                                name="messenger-contact"
-                                aria-label={
-                                  contactMethod === 'whatsapp'
-                                    ? 'WhatsApp number'
-                                    : `${catalog.contactMethods.find((method) => method.id === contactMethod)!.name} ID`
-                                }
-                                type={contactMethod === 'whatsapp' ? 'tel' : 'text'}
-                                autoComplete={
-                                  contactMethod === 'whatsapp' ? 'tel' : 'off'
-                                }
-                                required={contactMethod !== 'whatsapp'}
-                                maxLength={contactMethod === 'whatsapp' ? 40 : 80}
-                                pattern={
-                                  contactMethod === 'whatsapp'
-                                    ? '\\+?[0-9 \\(\\)\\.\\-]{7,40}'
-                                    : '.*\\S.*'
-                                }
-                                value={messengerContact}
-                                onChange={(event) =>
-                                  setMessengerContact(event.target.value)
-                                }
-                                placeholder={
-                                  contactMethod === 'whatsapp'
-                                    ? phone || '+82 10 1234 5678'
-                                    : 'Your messenger ID'
-                                }
-                                aria-describedby="messenger-help"
-                              />
-                              <small id="messenger-help" className="messenger-help">
-                                {contactMethod === 'whatsapp'
-                                  ? 'Leave blank to use the phone number above.'
-                                  : 'Enter an ID we can use to find you on this app.'}
-                              </small>
-                            </label>
+                            <div className="messenger-preference">
+                              {['line', 'kakao', 'wechat'].includes(contactMethod) && (
+                                <label className="messenger-use-phone">
+                                  <input
+                                    type="checkbox"
+                                    name="use-phone-for-messenger"
+                                    checked={usePhoneForMessenger}
+                                    onChange={(event) => setUsePhoneForMessenger(event.target.checked)}
+                                  />
+                                  <span>Use the phone number above for {contactApp}</span>
+                                </label>
+                              )}
+                              {usesMessengerPhone ? (
+                                <p className="messenger-help" role="status">
+                                  {phone || 'Your phone number'} will be used for {contactApp}.
+                                  Make sure people can contact you on that app using this number.
+                                </p>
+                              ) : (
+                                <label className="field messenger-field">
+                                  <span>
+                                    {contactMethod === 'whatsapp'
+                                      ? 'WhatsApp number'
+                                      : `${contactApp} ID or phone number`}
+                                    {contactMethod === 'whatsapp' && <small>optional</small>}
+                                  </span>
+                                  <div className="contact-input-wrap">
+                                    <input
+                                      name="messenger-contact"
+                                      aria-label={contactMethod === 'whatsapp'
+                                        ? 'WhatsApp number'
+                                        : `${contactApp} ID or phone number`}
+                                      type={contactMethod === 'whatsapp' ? 'tel' : 'text'}
+                                      autoComplete={contactMethod === 'whatsapp' ? 'tel' : 'off'}
+                                      required={contactMethod !== 'whatsapp'}
+                                      maxLength={contactMethod === 'whatsapp' ? 40 : 80}
+                                      pattern={contactMethod === 'whatsapp'
+                                        ? '\\+?[0-9 \\(\\)\\.\\-]{7,40}' : '.*\\S.*'}
+                                      value={messengerContact}
+                                      onChange={(event) => setMessengerContact(event.target.value)}
+                                      placeholder={contactMethod === 'whatsapp'
+                                        ? phone || '+82 10 1234 5678'
+                                        : 'Messenger ID or linked phone number'}
+                                      aria-describedby="messenger-help"
+                                    />
+                                    {messengerContact.trim().length > 1 &&
+                                      <Check size={16} className="contact-input-valid" aria-hidden="true" />}
+                                  </div>
+                                  <small id="messenger-help" className="messenger-help">
+                                    {contactMethod === 'whatsapp'
+                                      ? 'Leave blank to use your phone number above.'
+                                      : 'Use an ID or a phone number that others can reach on this app.'}
+                                  </small>
+                                </label>
+                              )}
+                            </div>
                           )}
                         </fieldset>
                         <label className="consent">
@@ -1493,7 +1537,7 @@ export default function Booking({
                   </div>
                 </div>
                 {step >= 1 && (
-                  <aside className="journey-summary">
+                  <aside className={`journey-summary ${step === 2 ? 'is-details-summary' : ''}`}>
                     {step === 1 && multiDay && dates.length > 1 && (
                       <div className="showroom-day-bar">
                         <div className="showroom-header-row">
@@ -1583,24 +1627,37 @@ export default function Booking({
                       />
                     )}
                     {step === 2 && (
-                      <div className="summary-route-recap">
-                        {journeys.map((day, index) => (
-                          <div key={day.date}>
-                            <span>Day {String(index + 1).padStart(2, '0')} · {displayDate(day.date)} · {day.time} KST</span>
-                            <strong>{day.pickup || '—'} → {day.destination || '—'}</strong>
-                            <small>{catalog.vehicles.find((item) => item.id === day.vehicle)?.name}</small>
-                          </div>
-                        ))}
+                      <div className="summary-route-recap" aria-label="Your daily itinerary">
+                        {journeys.map((day, index) => {
+                          const vehicleName = catalog.vehicles.find((item) => item.id === day.vehicle)?.name ?? 'Vehicle'
+                          return (
+                            <div key={day.date} className="summary-journey-item">
+                              <div className="summary-journey-header">
+                                <span className="summary-journey-date">
+                                  Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time} KST
+                                </span>
+                                <span className="summary-journey-vehicle" title={vehicleName}>
+                                  {shortVehicleName(day.vehicle)}
+                                </span>
+                              </div>
+                              <p className="summary-journey-route" title={`${day.pickup} → ${day.destination}`}>
+                                {day.pickup || '—'} <span aria-hidden="true">→</span> {day.destination || '—'}
+                              </p>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                     <div className="summary-lines">
-                      <div>
-                        <span>
-                          <CalendarDays size={14} /> {displayDate(dates[0] || tomorrow())}
-                        </span>
-                        <span>{getTime(dates[0] || tomorrow())} KST</span>
-                      </div>
-                      {dates.length > 1 && (
+                      {step !== 2 && (
+                        <div>
+                          <span>
+                            <CalendarDays size={14} /> {displayDate(dates[0] || tomorrow())}
+                          </span>
+                          <span>{getTime(dates[0] || tomorrow())} KST</span>
+                        </div>
+                      )}
+                      {step !== 2 && dates.length > 1 && (
                         <div>
                           <span>
                             {multiDayMode === 'range'
@@ -1610,7 +1667,7 @@ export default function Booking({
                           <span>{dates.length} days</span>
                         </div>
                       )}
-                      {dates.length > 1 && (
+                      {step === 1 && dates.length > 1 && (
                         <div className="summary-daily-vehicles">
                           {journeys.map((day, index) => {
                             const v = catalog.vehicles.find(
@@ -1633,7 +1690,7 @@ export default function Booking({
                       )}
                       <div>
                         <span>
-                          <Car size={14} /> {currentService.name} ({currentService.duration}h)
+                          {step !== 2 && <Car size={14} />} {currentService.name} ({currentService.duration}h)
                           {dates.length > 1 ? ` × ${dates.length} days` : ''}
                         </span>
                         <span>
@@ -1734,9 +1791,9 @@ export default function Booking({
                 </button>
               </div>
             )}
-            <div className="booking-outer-buttons">
+            <div className={`booking-outer-buttons ${step === 2 ? 'is-details-actions' : ''}`}>
               {(step > 0 || (step === 0 && dailyScheduleOpen)) && (
-                <button
+                <ReservationButton
                   type="button"
                   className="booking-back-btn"
                   disabled={sending}
@@ -1750,7 +1807,7 @@ export default function Booking({
                   }}
                 >
                   <ArrowLeft size={16} aria-hidden="true" /> Back
-                </button>
+                </ReservationButton>
               )}
               <ReservationButton
                 type="submit"
