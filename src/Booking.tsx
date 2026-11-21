@@ -238,9 +238,6 @@ function Calendar({
           )
         })}
       </div>
-      <p className="calendar-note">
-        <Clock3 size={12} /> Korea time (KST, UTC+9).
-      </p>
     </div>
   )
 }
@@ -1062,14 +1059,12 @@ export default function Booking({
                             }}
                           />
                           <div className="field time-field">
-                            <span>
-                              <Clock3 size={15} aria-hidden="true" />{' '}
-                              {multiDay ? 'Default Pick-up Time' : 'Pick-up Time'}
+                            <span className="booking-time-label">
+                              <span className="booking-time-heading"><Clock3 size={15} aria-hidden="true" /> Pick-up Time</span>
+                              <small className="booking-timezone">Korea time (KST, UTC+9)</small>
                             </span>
                             <GlassTimeInput
-                              ariaLabel={
-                                multiDay ? 'Default Pick-up Time' : 'Pick-up Time'
-                              }
+                              ariaLabel="Pick-up Time"
                               name="pickup-time"
                               value={multiDay ? defaultTime : getTime(dates[0] || tomorrow())}
                               onChange={(t) => {
@@ -1078,7 +1073,6 @@ export default function Booking({
                               }}
                               options={timeOptions}
                             />
-                            <small className="field-note">Korea time (KST, UTC+9)</small>
                           </div>
                           {service === 'airport' && (
                             <label className="field">
@@ -1108,7 +1102,6 @@ export default function Booking({
                               {dates.length} days · {displayDate(dates[0])} — {displayDate(dates[dates.length - 1])}
                             </p>
                           </div>
-                          <span className="field-note">Korea time (KST, UTC+9)</span>
                         </div>
                         <div className="day-mode-segmented booking-daily-choice" role="radiogroup" aria-label="Daily schedule mode">
                           <button
@@ -1138,7 +1131,7 @@ export default function Booking({
                         {dailyScheduleMode === 'same' ? (
                           <div className="booking-daily-same">
                             <p className="field-note">
-                              Your default pick-up, destination and time apply to every day.
+                              Your pick-up, destination and time apply to every day.
                               You can go straight to vehicle selection.
                             </p>
                             <div className="booking-daily-days">
@@ -1149,7 +1142,7 @@ export default function Booking({
                                       <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
                                       <strong>{displayDate(day)}</strong>
                                     </span>
-                                    <span className="active-hint">Default</span>
+                                    <span className="active-hint">Shared</span>
                                   </div>
                                   <p className="field-note">
                                     {defaultTime} · {pickup || 'Pick-up not set'} → {destination || 'Destination not set'}
@@ -1179,7 +1172,7 @@ export default function Booking({
                                         <strong>{displayDate(day)}</strong>
                                       </span>
                                       <span className="active-hint">
-                                        {customized ? 'Customized' : 'Default'}
+                                        {customized ? 'Customized' : 'Shared'}
                                       </span>
                                     </span>
                                     <span className="field-note">
@@ -1210,7 +1203,7 @@ export default function Booking({
                                     })
                                   }}
                                 >
-                                  Use default
+                                  Use shared
                                 </button>
                               </div>
                               <AddressSearch
@@ -1236,7 +1229,10 @@ export default function Booking({
                                 })}
                               />
                               <div className="field time-field">
-                                <span><Clock3 size={15} aria-hidden="true" /> Pick-up Time</span>
+                                <span className="booking-time-label">
+                                  <span className="booking-time-heading"><Clock3 size={15} aria-hidden="true" /> Pick-up Time</span>
+                                  <small className="booking-timezone">Korea time (KST, UTC+9)</small>
+                                </span>
                                 <GlassTimeInput
                                   ariaLabel={`Pick-up time for ${displayDate(scheduleActiveDate)}`}
                                   value={getTime(scheduleActiveDate)}

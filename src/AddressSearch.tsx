@@ -36,6 +36,7 @@ export default function AddressSearch({
   const popup = useRef<HTMLDivElement>(null)
   const session = useRef(crypto.randomUUID())
   const requestVersion = useRef(0)
+  const justCompletedComposition = useRef(false)
   const [open, setOpen] = useState(false)
   const [composing, setComposing] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -66,6 +67,12 @@ export default function AddressSearch({
     setError('')
     setResults([])
     setHighlight(-1)
+    // Run the first search as soon as Korean IME composition completes.
+    // Keep a debounce for ordinary edits to limit paid Google requests.
+    const delay = justCompletedComposition.current
+      ? 0
+      : /\p{Script=Hangul}/u.test(value) ? 160 : 250
+    justCompletedComposition.current = false
     const timer = setTimeout(() => {
       fetch('/api/places/search', {
         method: 'POST',
@@ -97,7 +104,7 @@ export default function AddressSearch({
         .finally(() => {
           if (!controller.signal.aborted) setLoading(false)
         })
-    }, 250)
+    }, delay)
     return () => {
       clearTimeout(timer)
       controller.abort()
@@ -209,7 +216,14 @@ export default function AddressSearch({
           }}
           onBlur={() => setOpen(false)}
           onCompositionStart={() => setComposing(true)}
-          onCompositionEnd={() => setComposing(false)}
+          onCompositionEnd={(event) => {
+            justCompletedComposition.current = true
+            setComposing(false)
+            // Some browsers deliver the final input event after composition.
+            // Commit that text before the immediate request can run.
+            if (event.currentTarget.value !== value)
+              onChange(event.currentTarget.value, null)
+          }
           onChange={(e) => {
             requestVersion.current++
             setResolving(false)

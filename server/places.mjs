@@ -101,7 +101,9 @@ export function createPlaces({
         body: JSON.stringify({
           input: query.trim(),
           sessionToken,
-          languageCode: 'en',
+          // Prefer Korean names for Hangul queries while keeping English
+          // responses for other searches and English canonical place details.
+          languageCode: /\p{Script=Hangul}/u.test(query) ? 'ko' : 'en',
           includedRegionCodes: ['kr'],
           locationBias: {
             circle: {

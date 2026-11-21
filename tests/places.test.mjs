@@ -114,7 +114,7 @@ test('live Google requests preserve Unicode, restrict Korea and bind resolved se
       assert.equal(sent.input, '서울 호텔')
       assert.deepEqual(sent.includedRegionCodes, ['kr'])
       assert.equal(sent.sessionToken, sessionToken)
-      assert.equal(sent.languageCode, 'en')
+      assert.equal(sent.languageCode, 'ko')
       const response = await post('/resolve', {
         id: predictions.body.results[0].id,
       })
@@ -167,3 +167,26 @@ test('rejects a resolved location outside the service country', () =>
       assert.equal((await post('/resolve', { id: 'hotel' })).status, 400)
     },
   ))
+
+
+test('Google Autocomplete uses English for Latin queries and Korean for Hangul queries', () => {
+  const submitted = []
+  const fetcher = async (_url, options) => {
+    submitted.push(JSON.parse(options.body))
+    return { ok: true, json: async () => ({ suggestions: [] }) }
+  }
+  return service(
+    { apiKey: 'test-only-key', fetcher },
+    async ({ post }) => {
+      assert.equal((await post('/search', { query: 'Incheon Airport' })).status, 200)
+      assert.equal((await post('/search', { query: '인천공항' })).status, 200)
+      assert.equal((await post('/search', { query: 'Incheon 인천' })).status, 200)
+    },
+  ).then(() => {
+    assert.deepEqual(submitted.map((item) => item.languageCode), ['en', 'ko', 'ko'])
+    assert.deepEqual(submitted.map((item) => item.includedRegionCodes), [['kr'], ['kr'], ['kr']])
+    assert.deepEqual(submitted.map((item) => item.input), [
+      'Incheon Airport', '인천공항', 'Incheon 인천',
+    ])
+  })
+})

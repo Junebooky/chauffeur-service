@@ -8346,7 +8346,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   gap: 9px;
   font-size: 15px;
   font-weight: 400;
-  color: #f4f5f7;
+  color: rgba(182, 193, 209, 0.84);
   margin-bottom: 16px;
 }
 
@@ -8492,7 +8492,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 .booking-glass-stage.is-expanded .address-field>label {
   font-size: 14px !important;
   font-weight: 400 !important;
-  color: rgba(235, 239, 245, 0.92) !important;
+  color: rgba(182, 193, 209, 0.84) !important;
   letter-spacing: 0 !important;
   display: flex;
   align-items: center;
@@ -10144,4 +10144,34 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     padding: 0 12px;
     font-size: 12.5px;
   }
+}
+
+
+/* Keep the time zone inline with its input heading; the selection itself
+   stays visually prominent. Used in both base Schedule and Daily Schedule. */
+.booking-glass-stage.is-expanded .field > span.booking-time-label {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 9px;
+}
+
+.booking-glass-stage.is-expanded .booking-time-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  color: rgba(182, 193, 209, 0.84);
+}
+
+.booking-glass-stage.is-expanded .field > span.booking-time-label > small.booking-timezone {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: clamp(10px, 0.9vw, 12px) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap;
+  color: rgba(165, 178, 197, 0.78) !important;
 }
