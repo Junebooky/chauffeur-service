@@ -75,7 +75,7 @@ test('new reservation UI offers two priced services plus Custom without By the H
 })
 
 test('Multiple Days keeps the existing Glass controls and allows route and vehicle exceptions', () => {
-  assert.match(bookingSource, /Your Daily Schedule/)
+  assert.match(bookingSource, /aria-label="Daily Schedule"/)
   assert.match(bookingSource, /Continue to Daily Schedule/)
   assert.match(bookingSource, /Same schedule for all days/)
   assert.match(bookingSource, /Customize individual days/)
