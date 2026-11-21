@@ -55,6 +55,7 @@ test('the three-section Fleet preserves category tabs, but Interior shows only c
 test('Fleet dock and Specs keep a common Border Beam, now over three times slower', () => {
   const fleet = load('src/FleetSection.tsx')
   const css = load('src/styles.css')
-  assert.equal(fleet.split('<BorderBeam />').length - 1, 2)
-  assert.match(css, /rotateBeam 14s linear infinite/)
+  assert.match(fleet, /<BorderBeam duration="4\.4s" \/>/)
+  assert.match(fleet, /<BorderBeam duration="14s" \/>/)
+  assert.match(css, /rotateBeam var\(--fleet-border-beam-duration\) linear infinite/)
 })

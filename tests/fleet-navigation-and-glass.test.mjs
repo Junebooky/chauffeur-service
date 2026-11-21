@@ -32,11 +32,11 @@ test('both category arrows stay visible in Interior; the photo cards have no own
 
 test('each Interior thumbnail reuses the shared animated Fleet Border Beam', () => {
   assert.match(gallery, /import BorderBeam from '\.\/components\/ui\/BorderBeam'/)
-  assert.match(gallery, /photos\.map\(\(src, index\) => \([\s\S]*?<BorderBeam \/>/)
+  assert.match(gallery, /photos\.map\(\(src, index\) => \([\s\S]*?<BorderBeam duration="14s" \/>/)
   assert.match(gallery, /fleet-interior-photo-card relative isolate/)
   assert.match(css, /\.fleet-interior-photo-card > \.fleet-card-beam-ring\s*\{[^}]*opacity:\s*0\.64;/)
   assert.match(css, /\.fleet-interior-photo-card:is\(:hover, :focus-visible, \[aria-pressed="true"\]\) > \.fleet-card-beam-ring/)
-  assert.match(css, /rotateBeam 14s linear infinite/)
+  assert.match(css, /rotateBeam var\(--fleet-border-beam-duration\) linear infinite/)
 })
 
 test('Specs Glass card reveals the showroom backdrop instead of an opaque black panel', () => {

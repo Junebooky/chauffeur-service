@@ -25,14 +25,16 @@ test('reservation submit requires confirmed availability state', () => {
   assert.doesNotMatch(booking, /Available for instant request/)
 })
 
-test('fleet details stay concise with silver accents and single-row desktop specs', () => {
+test('vehicle showroom has only lightweight typography and useful viewpoint controls', () => {
   const fleet = readFileSync(join(root, 'src/FleetSection.tsx'), 'utf8')
   const styles = readFileSync(join(root, 'src/styles.css'), 'utf8')
-  assert.doesNotMatch(fleet, /<p className="fleet-detail-desc">/)
-  assert.match(fleet, /className="fleet-specs-pills"/)
-  assert.match(styles, /\.fleet-specs-pills\s*\{[^}]*flex-wrap:\s*nowrap;/)
-  assert.match(styles, /@media \(max-width: 960px\) \{[\s\S]*?\.fleet-specs-pills\s*\{[^}]*flex-wrap:\s*wrap;/)
-  assert.match(styles, /\.fleet-detail-badge\s*\{[^}]*color:\s*#B8C0CB;/)
+  assert.match(fleet, /<DisplayHeading as="h2" className="fleet-detail-title"/)
+  assert.match(fleet, /className="fleet-right-view-tabs"/)
+  assert.match(styles, /\.fleet-detail-title\s*\{[^}]*font-family:\s*var\(--sans\);[^}]*font-weight:\s*100;/)
+  assert.match(styles, /\.fleet-detail-badge\s*\{[^}]*color:\s*rgba\(255, 255, 255, 0\.76\);/)
+  assert.doesNotMatch(fleet, /overviewSpecs|fleet-specs-pills|fleet-detail-actions/)
+  assert.doesNotMatch(fleet, /Reserve This Vehicle|Explore Services/)
+  assert.doesNotMatch(fleet, /fleet-slide-caption-bar|EXTERIOR ARCHITECTURE/)
 })
 
 test('reservation starts as a single Liquid Glass invitation and expands into the existing request flow', () => {

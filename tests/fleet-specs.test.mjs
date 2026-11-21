@@ -47,11 +47,13 @@ test('Specs title is light sans-serif and avoids silver text', () => {
 })
 
 test('the exact Fleet Border Beam is reused on both the dock and Specs card', () => {
-  assert.equal(fleet.split('<BorderBeam />').length - 1, 2)
+  assert.match(fleet, /<BorderBeam duration="4\.4s" \/>/)
+  assert.match(fleet, /<BorderBeam duration="14s" \/>/)
   assert.match(beam, /className="fleet-card-beam-halo"/)
   assert.match(beam, /className="fleet-card-beam-ring"/)
   assert.match(beam, /className="fleet-card-beam-spinner"/)
-  assert.match(css, /rotateBeam 14s linear infinite/)
+  assert.match(css, /rotateBeam var\(--fleet-border-beam-duration\) linear infinite/)
+  assert.match(beam, /--fleet-border-beam-duration/)
   assert.match(css, /\.fleet-specs-slide-card:hover > \.fleet-card-beam-halo/)
   assert.match(css, /\.fleet-specs-slide-card:hover > \.fleet-card-beam-ring/)
   assert.match(fleet, /onClick=\{\(\) => handleReserve\(activeVehicle\.catalogId\)\}/)

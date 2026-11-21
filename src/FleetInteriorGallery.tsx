@@ -90,7 +90,7 @@ export default function FleetInteriorGallery({
                   : 'border-white/25 hover:border-white/60'
               }`}
             >
-              <BorderBeam />
+              <BorderBeam duration="14s" />
               <img
                 src={src}
                 alt=""

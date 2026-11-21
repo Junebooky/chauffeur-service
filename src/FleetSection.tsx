@@ -22,9 +22,6 @@ type SlideCategory = 'exterior' | 'interior' | 'specs'
 interface SlideInfo {
   category: SlideCategory
   label: string
-  title?: string
-  eyebrow?: string
-  description?: string
   image: string
   fgImage?: string
   interiorImages?: readonly [string, string]
@@ -49,7 +46,6 @@ interface VehicleInfo {
     powertrain: string
     amenities: string
   }
-  overviewSpecs: string[]
   bgImage: string
   fgImage?: string
   slides: SlideInfo[]
@@ -72,22 +68,12 @@ const FLEET_DATA: VehicleInfo[] = [
       powertrain: '3.5L V6 Twin-Turbo AWD',
       amenities: 'Chilled Mineral Water · High-Speed Wi-Fi · Soft-Close Doors',
     },
-    overviewSpecs: [
-      'Up to 3 Guests',
-      '3.5L Twin-Turbo',
-      'VIP Comfort',
-      'Wi-Fi',
-    ],
     bgImage: '/media/fleet/bg_fleet_vehicle.png',
     fgImage: '/media/fleet/vehicles/g90/exterior.png',
     slides: [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'EXTERIOR ARCHITECTURE',
-        title: 'Two-Line Headlamps & Diamond Crest Grille',
-        description:
-          'The iconic two-line lamp signature and athletic elegance establish an authoritative, dignified arrival for diplomats and executives.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/g90/exterior.png',
       },
@@ -103,10 +89,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'EXECUTIVE SPECIFICATIONS',
-        title: 'Engineering & Comfort Specifications',
-        description:
-          'Precision tuned multi-chamber air suspension delivering a magic carpet ride across the Seoul metropolitan area.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/g90/exterior.png',
       },
@@ -129,22 +111,12 @@ const FLEET_DATA: VehicleInfo[] = [
       powertrain: '1.6L Turbo Hybrid System',
       amenities: '21.5" Smart Display · Air Purifier · Privacy Blinds',
     },
-    overviewSpecs: [
-      '6 Guests',
-      'Hybrid',
-      'Raised Roof',
-      'VIP Captain Seats',
-    ],
     bgImage: '/media/fleet/bg_fleet_vehicle.png',
     fgImage: '/media/fleet/vehicles/carnival/exterior.png',
     slides: [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'AERODYNAMIC STATURE',
-        title: 'Signature Raised Roof & Star-Map LED',
-        description:
-          'Bespoke high-roof contour with integrated third brake lamp and star-map headlights, creating a prestigious executive presence.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/carnival/exterior.png',
       },
@@ -160,10 +132,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'HYBRID SPECIFICATIONS',
-        title: 'Spacious Dimensions & Efficient Hybrid Power',
-        description:
-          'Ultra-smooth electric-assisted acceleration with expansive cabin walk-through floor for effortless boarding.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/carnival/exterior.png',
       },
@@ -186,22 +154,12 @@ const FLEET_DATA: VehicleInfo[] = [
       powertrain: '1.6L Turbo Hybrid System',
       amenities: 'Dual Panoramic Sunroof · Smart Power Doors · Wi-Fi',
     },
-    overviewSpecs: [
-      '9 Guests',
-      'Hybrid',
-      'Lounge Seating',
-      'Panoramic Windows',
-    ],
     bgImage: '/media/fleet/bg_fleet_vehicle.png',
     fgImage: '/media/fleet/vehicles/staria/exterior.png',
     slides: [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'HORIZON ARCHITECTURE',
-        title: 'Full-Width Horizon Lamp & Low Beltline',
-        description:
-          'Spaceship-inspired silhouette featuring continuous horizontal daytime running lights and massive tinted panoramic windows.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/staria/exterior.png',
       },
@@ -217,10 +175,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'CABIN SPECIFICATIONS',
-        title: 'Maximum Luggage Capacity & High Efficiency',
-        description:
-          'Class-leading luggage flexibility accommodating up to 9 passengers and 8 large suitcases without compromise.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/staria/exterior.png',
       },
@@ -243,22 +197,12 @@ const FLEET_DATA: VehicleInfo[] = [
       powertrain: '3.0L V6 Turbo Diesel',
       amenities: '1.9m Standing Room · Conference Table · 220V Outlets',
     },
-    overviewSpecs: [
-      '6 Guests',
-      'Stand-Up Cabin',
-      'VIP Conference',
-      'Extra Luggage',
-    ],
     bgImage: '/media/fleet/bg_fleet_vehicle.png',
     fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
     slides: [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'STATELY PROPORTIONS',
-        title: 'High-Roof Presence & Mercedes Chrome Line',
-        description:
-          'Stately high-roof architecture with extended wheelbase and privacy glass, making a powerful impression at embassies and summits.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
       },
@@ -274,10 +218,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'COMMERCIAL SPECIFICATIONS',
-        title: 'V6 Turbo Power & Unmatched Cargo Volume',
-        description:
-          'Smooth V6 diesel torque with dedicated partition cargo space holding 12+ large check-in bags for international delegations.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
       },
@@ -587,7 +527,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               {/* Specs Slide Custom Interactive Presentation */}
               {slide.category === 'specs' ? (
                 <div className="fleet-specs-slide-card">
-                  <BorderBeam />
+                  <BorderBeam duration="14s" />
                   <div className="fleet-specs-content">
                     <div className="fleet-specs-badge">{activeVehicle.classBadge}</div>
                     <DisplayHeading as="h3" className="fleet-specs-vehicle-title">{activeVehicle.name}</DisplayHeading>
@@ -614,19 +554,6 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         Reserve {activeVehicle.name} <ArrowUpRight size={15} />
                       </ReservationButton>
                     </div>
-                  </div>
-                </div>
-              ) : slide.category === 'exterior' ? (
-                /* Editorial caption is retained for Exterior only; Interior is image-only. */
-                <div className="fleet-slide-caption-bar">
-                  <div className="fleet-slide-caption-content">
-                    <span className="fleet-slide-caption-eyebrow">
-                      {slide.eyebrow}
-                    </span>
-                    <h3 className="fleet-slide-caption-title">{slide.title}</h3>
-                    <p className="fleet-slide-caption-desc">
-                      {slide.description}
-                    </p>
                   </div>
                 </div>
               ) : null}
@@ -722,7 +649,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   {/* Left Info Column */}
                   <div className="fleet-detail-info" aria-live="polite">
                     <div className="fleet-detail-badge">{car.classBadge}</div>
-                    <h2 className="fleet-detail-title">
+                    <DisplayHeading as="h2" className="fleet-detail-title">
                       {car.name}
                       {car.subName && (
                         <span className="fleet-detail-title-sub">
@@ -730,39 +657,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                           {car.subName}
                         </span>
                       )}
-                    </h2>
+                    </DisplayHeading>
                     <p className="fleet-vehicle-tagline">{car.tagline}</p>
 
-                    <div className="fleet-specs-pills">
-                      {car.overviewSpecs.map((spec) => (
-                        <span key={spec} className="fleet-spec-pill">
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="fleet-detail-actions">
-                      <button
-                        type="button"
-                        className="fleet-reserve-btn"
-                        data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
-                        onClick={() => handleReserve(car.catalogId)}
-                      >
-                        Reserve This Vehicle <ArrowUpRight size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        className="fleet-explore-link"
-                        data-liquid-glass="control"
-                        onPointerMove={trackGlassPointer}
-                        onPointerLeave={resetGlassPointer}
-                        onClick={() => goTo(2)}
-                      >
-                        Explore Services
-                      </button>
-                    </div>
                   </div>
 
                   {/* Right-Side View Switch Buttons (Exterior, Interior, Specs) */}
@@ -847,7 +744,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               aria-pressed={isSelected}
               aria-label={`View ${car.name}`}
             >
-              <BorderBeam />
+              <BorderBeam duration="4.4s" />
               <div className="fleet-card-inner">
                 <span
                   className={`fleet-card-brand-icon brand-${car.id}`}
