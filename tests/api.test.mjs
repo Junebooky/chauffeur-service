@@ -71,7 +71,7 @@ test('saves a pending request and independently calculates the price', () =>
     })
     assert.equal(result.status, 201)
     assert.equal(result.data.status, 'pending')
-    assert.equal(result.data.total, 450000)
+    assert.equal(result.data.total, 400000)
     assert.match(result.data.reference, /^CH-[0-9A-F]{8}$/)
     assert.equal(result.data.currency, 'KRW')
     assert.equal(result.data.taxIncluded, false)
@@ -381,10 +381,10 @@ test('supports non-consecutive dates with custom times and vehicles, calculating
     assert.equal(day2Staria.available, true)
   }))
 
-test('uses the latest Sprinter rate card and excludes TAX for mixed daily journeys', () =>
+test('uses G90-matched Sprinter 319 pricing and excludes TAX for mixed daily journeys', () =>
   withServer(async ({ post }) => {
     for (const [vehicle, total] of [
-      ['sprinter_319', 430000],
+      ['sprinter_319', 380000],
       ['sprinter_519', 460000],
     ]) {
       const result = await post({ ...valid, vehicle, total: 1 })
@@ -400,9 +400,9 @@ test('uses the latest Sprinter rate card and excludes TAX for mixed daily journe
       ],
     })
     assert.equal(mixed.status, 201)
-    assert.equal(mixed.data.total, 710000)
+    assert.equal(mixed.data.total, 660000)
     assert.equal(mixed.data.journeys[0].total, 280000)
-    assert.equal(mixed.data.journeys[1].total, 430000)
+    assert.equal(mixed.data.journeys[1].total, 380000)
   }))
 
 test('stores contact preferences privately, using the supplied phone for WhatsApp when no override is entered', async () => {
