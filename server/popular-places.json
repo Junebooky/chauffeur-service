@@ -44,16 +44,38 @@
     ]
   },
   {
-    "id": "curated:seoul-station",
-    "name": "Seoul Station",
-    "address": "405 Hangang-daero, Yongsan-gu, Seoul, South Korea",
-    "latitude": 37.5547,
-    "longitude": 126.9706,
+    "id": "curated:josun-palace",
+    "name": "Josun Palace, Seoul Gangnam",
+    "address": "231 Teheran-ro, Gangnam-gu, Seoul, South Korea",
+    "latitude": 37.50338,
+    "longitude": 127.0416,
     "aliases": [
-      "서울역",
-      "首尔站",
-      "ソウル駅",
-      "Seoul railway station"
+      "Josun Palace",
+      "Josun Palace Seoul Gangnam",
+      "Josun Palace a Luxury Collection Hotel",
+      "Chosun Palace",
+      "조선 팰리스",
+      "조선팰리스",
+      "조선팰리스 강남",
+      "朝鲜皇宫酒店"
+    ]
+  },
+  {
+    "id": "curated:le-meridien-myeongdong",
+    "name": "Le Méridien Seoul, Myeongdong",
+    "address": "38 Myeongdong 8na-gil, Jung-gu, Seoul, South Korea",
+    "latitude": 37.56156,
+    "longitude": 126.98273,
+    "aliases": [
+      "Le Meridien Seoul Myeongdong",
+      "Le Meridien Myeongdong",
+      "Le Méridien Myeongdong",
+      "르메르디앙 호텔 명동",
+      "르메르디앙",
+      "르 메르디앙 서울 명동",
+      "르메리디앙",
+      "르 메리디앙 서울 명동",
+      "首尔明洞艾美酒店"
     ]
   },
   {
@@ -107,6 +129,22 @@
       "三成洞会展中心",
       "コエックス",
       "COEX Seoul"
+    ]
+  },
+  {
+    "id": "curated:hyehwa-station",
+    "name": "Hyehwa Station (Line 4)",
+    "address": "B120 Daehak-ro, Jongno-gu, Seoul, South Korea",
+    "latitude": 37.58234,
+    "longitude": 127.00184,
+    "aliases": [
+      "혜화역",
+      "혜화",
+      "Hyehwa",
+      "Hyehwa Station",
+      "Hyehwa Subway Station",
+      "혜화역 4호선",
+      "惠化站"
     ]
   }
 ]

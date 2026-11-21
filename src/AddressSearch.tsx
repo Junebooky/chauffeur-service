@@ -37,8 +37,8 @@ export default function AddressSearch({
   const session = useRef(crypto.randomUUID())
   const requestVersion = useRef(0)
   const justCompletedComposition = useRef(false)
+  const composing = useRef(false)
   const [open, setOpen] = useState(false)
-  const [composing, setComposing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [resolving, setResolving] = useState(false)
   const [results, setResults] = useState<Suggestion[]>([])
@@ -61,17 +61,20 @@ export default function AddressSearch({
     )
   }, [value, place])
   useEffect(() => {
-    if (!open || place || composing) return
+    // Important: do not block search while a Korean IME composition is active.
+    // Some browsers keep composition open until a click/blur; blocking it
+    // causes an apparent 'search only after clicking again' delay.
+    if (!open || place) return
     const controller = new AbortController()
     setLoading(true)
     setError('')
     setResults([])
     setHighlight(-1)
-    // Run the first search as soon as Korean IME composition completes.
-    // Keep a debounce for ordinary edits to limit paid Google requests.
+    // Live suggestions appear during ongoing Korean composition, not only
+    // after it ends. Debounce keeps paid Google requests bounded.
     const delay = justCompletedComposition.current
       ? 0
-      : /\p{Script=Hangul}/u.test(value) ? 160 : 250
+      : /\p{Script=Hangul}/u.test(value) ? 130 : 250
     justCompletedComposition.current = false
     const timer = setTimeout(() => {
       fetch('/api/places/search', {
@@ -109,7 +112,7 @@ export default function AddressSearch({
       clearTimeout(timer)
       controller.abort()
     }
-  }, [value, open, place, composing])
+  }, [value, open, place])
   useEffect(() => {
     if (!open) return
     const reposition = () => {
@@ -153,6 +156,16 @@ export default function AddressSearch({
         .getElementById(`${id}-option-${highlight}`)
         ?.scrollIntoView({ block: 'nearest' })
   }, [highlight, open, id])
+
+  const updateQuery = (next: string) => {
+    if (next === value && !place) return
+    // Typing invalidates any in-flight selection. The request effect aborts
+    // stale lookups so old results cannot replace newer Korean input.
+    requestVersion.current++
+    setResolving(false)
+    onChange(next, null)
+    setOpen(true)
+  }
 
   const select = async (suggestion: Suggestion) => {
     if (resolving) return
@@ -215,20 +228,29 @@ export default function AddressSearch({
             if (!place) setOpen(true)
           }}
           onBlur={() => setOpen(false)}
-          onCompositionStart={() => setComposing(true)}
-          onCompositionEnd={(event) => {
-            justCompletedComposition.current = true
-            setComposing(false)
-            // Some browsers deliver the final input event after composition.
-            // Commit that text before the immediate request can run.
-            if (event.currentTarget.value !== value)
-              onChange(event.currentTarget.value, null)
+          onCompositionStart={() => {
+            composing.current = true
           }}
-          onChange={(e) => {
-            requestVersion.current++
-            setResolving(false)
-            onChange(e.target.value, null)
-            setOpen(true)
+          onInput={(event) => {
+            // input fires for intermediate Hangul syllables even when the
+            // compositionend event is deferred until the next mouse click.
+            if (composing.current || (event.nativeEvent as InputEvent).isComposing)
+              updateQuery(event.currentTarget.value)
+          }}
+          onCompositionEnd={(event) => {
+            composing.current = false
+            // If the final committed value is new, request it immediately.
+            // If onInput already synchronized it, keep the existing request:
+            // restarting it would just add latency and extra Google calls.
+            if (event.currentTarget.value !== value) {
+              justCompletedComposition.current = true
+              updateQuery(event.currentTarget.value)
+            }
+          }}
+          onChange={(event) => {
+            // onInput has already synchronized each composing character.
+            if (!composing.current && !(event.nativeEvent as InputEvent).isComposing)
+              updateQuery(event.currentTarget.value)
           }}
           onKeyDown={(e) => {
             if (e.nativeEvent.isComposing) return

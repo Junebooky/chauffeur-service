@@ -9027,12 +9027,27 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   cursor: not-allowed;
 }
 
-.booking-cta-beam-halo {
-  opacity: 0.55;
+/* Shared ReservationButton beam. A single masked 1px ring, with two
+   identically shaped/bright highlights. The former soft halo made the
+   second lobe look substantially wider than the first. */
+.booking-cta-beam-ring {
+  --booking-cta-beam-stroke: 1px;
+  inset: 0;
+  padding: var(--booking-cta-beam-stroke);
+  opacity: 0.92;
 }
 
-.booking-cta-beam-ring {
-  opacity: 0.92;
+.booking-cta-beam-ring > .booking-glass-beam-spinner {
+  background: conic-gradient(from 0deg,
+    transparent 0deg 72deg,
+    rgba(255, 250, 242, 0.22) 82deg,
+    rgba(255, 250, 242, 0.94) 90deg,
+    rgba(255, 250, 242, 0.22) 98deg,
+    transparent 108deg 252deg,
+    rgba(255, 250, 242, 0.22) 262deg,
+    rgba(255, 250, 242, 0.94) 270deg,
+    rgba(255, 250, 242, 0.22) 278deg,
+    transparent 288deg 360deg);
 }
 
 .booking-cta-pill.fleet-right-tab-btn {
@@ -9085,18 +9100,9 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   gap: 16px;
 }
 
-.booking-cta-pill.fleet-right-tab-btn .booking-cta-beam-halo {
-  opacity: 0.18;
-  transition: opacity 0.28s ease;
-}
-
 .booking-cta-pill.fleet-right-tab-btn .booking-cta-beam-ring {
   opacity: 0.42;
   transition: opacity 0.28s ease;
-}
-
-.booking-cta-pill.fleet-right-tab-btn:is(:hover, :focus-visible) .booking-cta-beam-halo {
-  opacity: 0.55;
 }
 
 .booking-cta-pill.fleet-right-tab-btn:is(:hover, :focus-visible) .booking-cta-beam-ring {

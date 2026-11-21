@@ -190,3 +190,45 @@ test('Google Autocomplete uses English for Latin queries and Korean for Hangul q
     ])
   })
 })
+
+
+test('Popular Locations favors two verified hotels and no longer lists Seoul Station', () =>
+  service({}, async ({ post, selected }) => {
+    const opened = await post('/search', { query: '' })
+    assert.equal(opened.status, 200)
+    assert.equal(opened.body.mode, 'popular')
+    assert.equal(opened.body.results.length, 6)
+    assert.ok(!opened.body.results.some((p) => /Seoul Station/.test(p.name)))
+    const josun = opened.body.results.find((p) => p.id === 'curated:josun-palace')
+    const meridien = opened.body.results.find((p) => p.id === 'curated:le-meridien-myeongdong')
+    assert.equal(josun?.address, '231 Teheran-ro, Gangnam-gu, Seoul, South Korea')
+    assert.equal(meridien?.address, '38 Myeongdong 8na-gil, Jung-gu, Seoul, South Korea')
+    assert.equal(selected({ id: josun.id }).latitude, 37.50338)
+    assert.equal(selected({ id: meridien.id }).longitude, 126.98273)
+    assert.equal((await post('/search', { query: '조선팰리스' })).body.results[0].id, josun.id)
+    assert.equal((await post('/search', { query: '르메르디앙' })).body.results[0].id, meridien.id)
+  }))
+
+test('혜화역 and exact curated Korean places are instant without waiting for Google', () => {
+  let googleCalls = 0
+  return service(
+    {
+      apiKey: 'test-only-key',
+      fetcher: async () => {
+        googleCalls++
+        throw new Error('Exact curated places must not call Google')
+      },
+    },
+    async ({ post, selected }) => {
+      for (const query of ['혜화역', '혜화', 'Hyehwa Station']) {
+        const found = await post('/search', { query })
+        assert.equal(found.status, 200)
+        assert.equal(found.body.mode, 'popular')
+        assert.equal(found.body.results[0].id, 'curated:hyehwa-station')
+        assert.equal(found.body.results[0].address, 'B120 Daehak-ro, Jongno-gu, Seoul, South Korea')
+        assert.equal(selected({ id: found.body.results[0].id }).latitude, 37.58234)
+      }
+      assert.equal(googleCalls, 0)
+    },
+  )
+})

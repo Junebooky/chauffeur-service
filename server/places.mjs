@@ -73,19 +73,28 @@ export function createPlaces({
         .status(400)
         .json({ error: 'Please enter a valid place or address.' })
     const q = normalise(query.trim())
-    if (!apiKey || q.length < 2) {
-      const results = popular
-        .filter(
-          (p) =>
-            !q ||
-            [p.name, p.address, ...p.aliases].some((s) =>
-              normalise(s).includes(q),
-            ),
+    // A confirmed curated match can respond immediately even when the live
+    // Google API is configured. This is especially useful for Hangul station
+    // names (e.g. 혜화역), which must not wait for Google network latency.
+    const exactCurated = q.length >= 2
+      ? popular.filter((place) =>
+          [place.name, ...place.aliases].some((alias) => normalise(alias) === q),
         )
-        .slice(0, 6)
+      : []
+    if (!apiKey || q.length < 2 || exactCurated.length > 0) {
+      const results = exactCurated.length > 0
+        ? exactCurated
+        : popular.filter(
+            (place) =>
+              !q ||
+              [place.name, place.address, ...place.aliases].some((alias) =>
+                normalise(alias).includes(q),
+              ),
+          )
+      const limitedResults = results.slice(0, 6)
       return res.json({
         mode: 'popular',
-        results: results.map((p) => ({
+        results: limitedResults.map((p) => ({
           id: p.id,
           name: p.name,
           address: p.address,

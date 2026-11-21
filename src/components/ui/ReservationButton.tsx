@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react'
 import { resetGlassPointer, trackGlassPointer } from '../../liquidGlass'
+import BookingCtaBeam from './BookingCtaBeam'
 
 type ReservationButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
 
@@ -30,12 +31,7 @@ export default function ReservationButton({
         onPointerLeave?.(event)
       }}
     >
-      <span className="booking-glass-beam-halo booking-cta-beam-halo" aria-hidden="true">
-        <span className="booking-glass-beam-spinner" />
-      </span>
-      <span className="booking-glass-beam-ring booking-cta-beam-ring" aria-hidden="true">
-        <span className="booking-glass-beam-spinner" />
-      </span>
+      <BookingCtaBeam />
       <span className="booking-cta-pill-inner">{children}</span>
     </button>
   )
