@@ -17,6 +17,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Chauffeur Manrope';
+  src: url('/fonts/manrope.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
   font-family:
@@ -217,33 +225,69 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   backdrop-filter: blur(20px);
 }
 
+/* The metallic J stays an image; the lockup text is always browser-rendered. */
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 2px;
+  min-height: 64px;
   padding: 0;
-  color: #f5f7fa;
+  color: #fff;
   flex-shrink: 0;
   text-align: left;
 }
 
-.brand>span {
-  font-family: var(--serif);
-  font-size: 22px;
-  letter-spacing: 3.1px;
-}
-
-.brand small {
-  font-family: var(--sans);
-  display: block;
-  font-size: 7.8px;
-  letter-spacing: 2.3px;
-  margin-top: 1px;
-  color: #8e96a3;
+.brand:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 6px;
+  border-radius: 4px;
 }
 
 .brand-mark {
-  width: 46px;
+  display: block;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  object-fit: contain;
+  transform: scale(1.12);
+  transform-origin: center;
+  transition: filter 250ms ease;
+}
+
+.brand:hover .brand-mark {
+  filter: brightness(1.12) drop-shadow(0 0 8px rgba(255, 255, 255, 0.12));
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.brand-wordmark {
+  display: block;
+  padding-left: 0.3em;
+  font-family: 'Chauffeur Manrope', var(--sans);
+  font-size: 17px;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  line-height: 1;
+  white-space: nowrap;
+  color: #f7f7f7;
+}
+
+.brand-byline {
+  display: block;
+  padding-left: 0.24em;
+  font-family: 'Chauffeur Manrope', var(--sans);
+  font-size: 7.5px;
+  font-weight: 300;
+  letter-spacing: 0.24em;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .desktop-nav {
@@ -3962,13 +4006,16 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     display: none;
   }
 
-  .brand>span {
-    font-size: 19px;
+  .brand-wordmark {
+    font-size: 15px;
+    letter-spacing: 0.26em;
+    padding-left: 0.26em;
   }
 
-  .brand small {
+  .brand-byline {
     font-size: 7px;
-    letter-spacing: 1.9px;
+    letter-spacing: 0.22em;
+    padding-left: 0.22em;
   }
 
   .header-book {
@@ -4397,22 +4444,30 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   }
 
   .brand {
-    gap: 6px;
+    gap: 0;
+    min-height: 52px;
   }
 
   .brand-mark {
-    width: 33px;
-    height: 31px;
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
   }
 
-  .brand>span {
-    font-size: 17px;
-    letter-spacing: 2.4px;
+  .brand-lockup {
+    gap: 4px;
   }
 
-  .brand small {
-    font-size: 5.8px;
-    letter-spacing: 1.4px;
+  .brand-wordmark {
+    font-size: 13px;
+    letter-spacing: 0.23em;
+    padding-left: 0.23em;
+  }
+
+  .brand-byline {
+    font-size: 6.3px;
+    letter-spacing: 0.2em;
+    padding-left: 0.2em;
   }
 
   .header-actions {
@@ -7189,8 +7244,8 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: #e9eef7;
 }
 
-.site-header .brand small {
-  color: #9aa6b8;
+.site-header .brand-byline {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .site-header .header-book,
@@ -9611,5 +9666,25 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 @media (max-width: 780px) {
   .glass-lab-grid {
     grid-template-columns: 1fr;
+  }
+}
+/* Narrow-phone logo: retain both lines without crowding the menu. */
+@media (max-width: 380px) {
+  .brand-mark {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+
+  .brand-wordmark {
+    font-size: 11.5px;
+    letter-spacing: 0.19em;
+    padding-left: 0.19em;
+  }
+
+  .brand-byline {
+    font-size: 5.7px;
+    letter-spacing: 0.15em;
+    padding-left: 0.15em;
   }
 }

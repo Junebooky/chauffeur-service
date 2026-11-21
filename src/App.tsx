@@ -18,28 +18,23 @@ import { DEFAULT_USD_RATE } from './utils'
 
 function Brand({ onClick }: { onClick: () => void }) {
   return (
-    <button className="brand" onClick={onClick} aria-label="Chauffeur home">
-      <svg
+    <button
+      type="button"
+      className="brand"
+      onClick={onClick}
+      aria-label="Chauffeur home"
+    >
+      <img
         className="brand-mark"
-        width="49"
-        height="37"
-        viewBox="0 0 60 44"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="m7 15 13 5M3 20l17 5M10 26l12 3m31-14-13 5m17 0-17 5m10 1-12 3M34 12a13 13 0 1 0 4 19"
-          stroke="currentColor"
-          strokeWidth="1.3"
-        />
-        <path
-          d="M30 7v31m-7-32 2 4h10l2-4-4 2-3-5-3 5-4-2Z"
-          stroke="currentColor"
-          strokeWidth="1.1"
-        />
-      </svg>
-      <span>
-        CHAUFFEUR<small>PRIVATE TRAVEL, PERFECTED</small>
+        src="/media/brand/chauffeur-mark.png"
+        alt=""
+        width={64}
+        height={64}
+        draggable={false}
+      />
+      <span className="brand-lockup">
+        <span className="brand-wordmark">CHAUFFEUR</span>
+        <small className="brand-byline">BY J PRODUCTION</small>
       </span>
     </button>
   )
