@@ -510,7 +510,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   />
                 )}
                 {slide.fgImage && (
-                  <div className="fleet-vehicle-stage-layer is-ppt-slide">
+                  <div className={`fleet-vehicle-stage-layer is-ppt-slide vehicle-${activeVehicle.id}`}>
                     <div className="fleet-vehicle-floor-shadow" aria-hidden="true" />
                     <img
                       src={slide.fgImage}
@@ -633,7 +633,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                 />
                 <div className="fleet-slide-overlay" aria-hidden="true" />
                 {car.fgImage && (
-                  <div className="fleet-vehicle-stage-layer">
+                  <div className={`fleet-vehicle-stage-layer vehicle-${car.id}`}>
                     <div className="fleet-vehicle-floor-shadow" aria-hidden="true" />
                     <img
                       src={car.fgImage}

@@ -1001,16 +1001,52 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .fleet-vehicle-stage-layer {
+  /* =========================================================
+     차량 위치 및 크기 개별 컨트롤 변수 (기본값)
+     - --vehicle-x     : 좌우 이동 (음수 = 왼쪽, 양수 = 오른쪽)
+     - --vehicle-y     : 상하 이동 (양수 = 위쪽, 음수 = 아래쪽)
+     - --vehicle-scale : 크기 배율 (1 = 100%, 1.15 = 15% 확대)
+     ========================================================= */
+  --vehicle-x: 0px;
+  --vehicle-y: 0px;
+  --vehicle-scale: 1;
+
   position: absolute;
   left: 52%;
   bottom: clamp(134px, 16.8vh, 182px);
   width: clamp(500px, 55vw, 860px);
-  transform: translateX(-50%);
+  transform: translate(calc(-50% + var(--vehicle-x)), calc(var(--vehicle-y) * -1)) scale(var(--vehicle-scale));
+  transform-origin: center bottom;
   z-index: 3;
   pointer-events: none;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+
+/* 차량별 상하/좌우/크기 개별 조정 */
+.fleet-vehicle-stage-layer.vehicle-g90 {
+  --vehicle-x: 0px;
+  --vehicle-y: 0px;
+  --vehicle-scale: 1;
+}
+
+.fleet-vehicle-stage-layer.vehicle-carnival {
+  --vehicle-x: 0px;
+  --vehicle-y: 38px;
+  --vehicle-scale: 1;
+}
+
+.fleet-vehicle-stage-layer.vehicle-staria {
+  --vehicle-x: 0px;
+  --vehicle-y: 30px;
+  --vehicle-scale: 1;
+}
+
+.fleet-vehicle-stage-layer.vehicle-sprinter319 {
+  --vehicle-x: 20px;
+  --vehicle-y: 36px;
+  --vehicle-scale: 1.15;
 }
 
 .fleet-vehicle-stage-layer.is-ppt-slide {
