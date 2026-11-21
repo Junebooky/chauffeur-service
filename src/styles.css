@@ -996,7 +996,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   object-position: center 56%;
 }
 
-.slide-g90 .fleet-slide-bg {
+.slide-vehicle .fleet-slide-bg {
   object-position: center 62%;
 }
 
@@ -1062,7 +1062,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   z-index: 2;
 }
 
-.slide-g90 .fleet-slide-overlay {
+.slide-vehicle .fleet-slide-overlay {
   background:
     radial-gradient(ellipse 68% 48% at 50% 62%, transparent 40%, rgba(6, 7, 10, 0.45) 100%),
     linear-gradient(180deg,

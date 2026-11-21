@@ -73,7 +73,7 @@ const FLEET_DATA: VehicleInfo[] = [
       'Wi-Fi',
     ],
     bgImage: '/media/fleet/bg_fleet_vehicle.png',
-    fgImage: '/media/fleet/g90.png',
+    fgImage: '/media/fleet/vehicles/g90/exterior.png',
     slides: [
       {
         category: 'exterior',
@@ -83,7 +83,7 @@ const FLEET_DATA: VehicleInfo[] = [
         description:
           'The iconic two-line lamp signature and athletic elegance establish an authoritative, dignified arrival for diplomats and executives.',
         image: '/media/fleet/bg_fleet_vehicle.png',
-        fgImage: '/media/fleet/g90.png',
+        fgImage: '/media/fleet/vehicles/g90/exterior.png',
       },
       {
         category: 'interior',
@@ -112,7 +112,7 @@ const FLEET_DATA: VehicleInfo[] = [
         description:
           'Precision tuned multi-chamber air suspension delivering a magic carpet ride across the Seoul metropolitan area.',
         image: '/media/fleet/bg_fleet_vehicle.png',
-        fgImage: '/media/fleet/g90.png',
+        fgImage: '/media/fleet/vehicles/g90/exterior.png',
       },
     ],
   },
@@ -138,7 +138,8 @@ const FLEET_DATA: VehicleInfo[] = [
       'Raised Roof',
       'VIP Captain Seats',
     ],
-    bgImage: '/media/car_info/carnival_car_info.png',
+    bgImage: '/media/fleet/bg_fleet_vehicle.png',
+    fgImage: '/media/fleet/vehicles/carnival/exterior.png',
     slides: [
       {
         category: 'exterior',
@@ -147,7 +148,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Signature Raised Roof & Star-Map LED',
         description:
           'Bespoke high-roof contour with integrated third brake lamp and star-map headlights, creating a prestigious executive presence.',
-        image: '/media/car_info/carnival_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/vehicles/carnival/exterior.png',
       },
       {
         category: 'interior',
@@ -175,7 +177,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Spacious Dimensions & Efficient Hybrid Power',
         description:
           'Ultra-smooth electric-assisted acceleration with expansive cabin walk-through floor for effortless boarding.',
-        image: '/media/car_info/carnival_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/vehicles/carnival/exterior.png',
       },
     ],
   },
@@ -201,7 +204,8 @@ const FLEET_DATA: VehicleInfo[] = [
       'Lounge Seating',
       'Panoramic Windows',
     ],
-    bgImage: '/media/car_info/staria_car_info.png',
+    bgImage: '/media/fleet/bg_fleet_vehicle.png',
+    fgImage: '/media/fleet/vehicles/staria/exterior.png',
     slides: [
       {
         category: 'exterior',
@@ -210,7 +214,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Full-Width Horizon Lamp & Low Beltline',
         description:
           'Spaceship-inspired silhouette featuring continuous horizontal daytime running lights and massive tinted panoramic windows.',
-        image: '/media/car_info/staria_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/vehicles/staria/exterior.png',
       },
       {
         category: 'interior',
@@ -238,7 +243,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Maximum Luggage Capacity & High Efficiency',
         description:
           'Class-leading luggage flexibility accommodating up to 9 passengers and 8 large suitcases without compromise.',
-        image: '/media/car_info/staria_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/vehicles/staria/exterior.png',
       },
     ],
   },
@@ -264,7 +270,8 @@ const FLEET_DATA: VehicleInfo[] = [
       'VIP Conference',
       'Extra Luggage',
     ],
-    bgImage: '/media/car_info/319_car_info.png',
+    bgImage: '/media/fleet/bg_fleet_vehicle.png',
+    fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
     slides: [
       {
         category: 'exterior',
@@ -273,7 +280,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'High-Roof Presence & Mercedes Chrome Line',
         description:
           'Stately high-roof architecture with extended wheelbase and privacy glass, making a powerful impression at embassies and summits.',
-        image: '/media/car_info/319_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
       },
       {
         category: 'interior',
@@ -301,7 +309,8 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'V6 Turbo Power & Unmatched Cargo Volume',
         description:
           'Smooth V6 diesel torque with dedicated partition cargo space holding 12+ large check-in bags for international delegations.',
-        image: '/media/car_info/319_car_info.png',
+        image: '/media/fleet/bg_fleet_vehicle.png',
+        fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
       },
     ],
   },

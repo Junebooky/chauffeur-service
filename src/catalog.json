@@ -55,7 +55,7 @@
       "model": "Executive Lounge Cabin · 9 Seats · Hybrid",
       "passengers": 9,
       "surcharge": 0,
-      "image": "/media/fleet/staria.png",
+      "image": "/media/fleet/vehicles/staria/exterior.png",
       "quoteRequired": false
     },
     {
@@ -64,7 +64,7 @@
       "model": "Luxury High-Roof Limousine · 6 Seats · Hybrid",
       "passengers": 6,
       "surcharge": 0,
-      "image": "/media/fleet/carnival_limousine.png",
+      "image": "/media/fleet/vehicles/carnival/exterior.png",
       "quoteRequired": false
     },
     {
@@ -73,7 +73,7 @@
       "model": "Flagship Luxury Sedan · 3–4 Seats",
       "passengers": 3,
       "surcharge": 100000,
-      "image": "/media/fleet/g90.png",
+      "image": "/media/fleet/vehicles/g90/exterior.png",
       "quoteRequired": false
     },
     {
@@ -82,7 +82,7 @@
       "model": "VIP Protocol High-Roof Van · 6 Seats",
       "passengers": 6,
       "surcharge": 150000,
-      "image": "/media/fleet/sprinter.png",
+      "image": "/media/fleet/vehicles/sprinter/exterior.png",
       "quoteRequired": false
     },
     {
