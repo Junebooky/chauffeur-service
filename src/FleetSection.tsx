@@ -11,13 +11,14 @@ import {
   Luggage,
 } from 'lucide-react'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
+import FleetInteriorGallery from './FleetInteriorGallery'
 
 export interface FleetSectionProps {
   goTo: (index: number) => void
   onSelectVehicle: (vehicleId: string) => void
 }
 
-type SlideCategory = 'exterior' | 'interior' | 'details' | 'specs'
+type SlideCategory = 'exterior' | 'interior' | 'specs'
 
 interface SlideInfo {
   category: SlideCategory
@@ -27,6 +28,7 @@ interface SlideInfo {
   description: string
   image: string
   fgImage?: string
+  interiorImages?: readonly [string, string]
 }
 
 interface VehicleInfo {
@@ -92,19 +94,13 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'VIP Reclining Lounge with Ambient Starlight',
         description:
           'Supple quilted Nappa leather, motorized footrests, individual climate zones, and acoustic laminated privacy glass for total serenity.',
-        image:
-          '/media/car_info/g90_interior.png',
+        image: '/media/car_info/g90_interior.png',
+        interiorImages: [
+          '/media/fleet/vehicles/g90/interior-01.webp',
+          '/media/fleet/vehicles/g90/interior-02.webp',
+        ],
       },
-      {
-        category: 'details',
-        label: 'Details',
-        eyebrow: 'METICULOUS CRAFTSMANSHIP',
-        title: 'Touch Console & Active Noise Cancellation',
-        description:
-          'Chilled console compartment, bespoke fragrance system, and Bang & Olufsen 3D sound engineered for confidential conversations.',
-        image: '/media/cockpit.webp',
-      },
-      {
+{
         category: 'specs',
         label: 'Specs',
         eyebrow: 'EXECUTIVE SPECIFICATIONS',
@@ -158,19 +154,13 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Zero-Gravity Recliners & Starlight Mood Ceiling',
         description:
           'Premium captain chairs with power leg rests, ambient starlight headliner, and customized climate settings for peaceful transit.',
-        image:
-          '/media/car_info/carnival_interior.png',
+        image: '/media/car_info/carnival_interior.png',
+        interiorImages: [
+          '/media/fleet/vehicles/carnival/interior-01.webp',
+          '/media/fleet/vehicles/carnival/interior-02.webp',
+        ],
       },
-      {
-        category: 'details',
-        label: 'Details',
-        eyebrow: 'MOBILE APPOINTMENTS',
-        title: '21.5-Inch Smart Display & Air Filtration',
-        description:
-          'Ceiling-mounted smart monitor with HDMI streaming, built-in HEPA air purification, and wireless smartphone fast-chargers.',
-        image: '/media/cabin.webp',
-      },
-      {
+{
         category: 'specs',
         label: 'Specs',
         eyebrow: 'HYBRID SPECIFICATIONS',
@@ -224,19 +214,13 @@ const FLEET_DATA: VehicleInfo[] = [
         title: '9-Seat Executive Lounge & Sky View',
         description:
           'Unrivaled cabin volume with reconfigurable seating rows, dual sunroofs, and broad walk-through accessibility for larger parties.',
-        image:
-          '/media/car_info/staria_interior.png',
+        image: '/media/car_info/staria_interior.png',
+        interiorImages: [
+          '/media/fleet/vehicles/staria/interior-01.webp',
+          '/media/fleet/vehicles/staria/interior-02.webp',
+        ],
       },
-      {
-        category: 'details',
-        label: 'Details',
-        eyebrow: 'SEAMLESS BOARDING',
-        title: 'Smart Sliding Doors & Clean Air Climate',
-        description:
-          'Hands-free electric sliding doors with ultra-low floor step-in height, multi-zone air vents, and rear USB ports for every guest.',
-        image: '/media/cockpit.webp',
-      },
-      {
+{
         category: 'specs',
         label: 'Specs',
         eyebrow: 'CABIN SPECIFICATIONS',
@@ -290,19 +274,13 @@ const FLEET_DATA: VehicleInfo[] = [
         title: 'Full 1.9m Stand-Up Room & Custom Armchairs',
         description:
           'Walk inside without ducking. Hand-crafted wide leather captain recliners in a conference configuration for on-the-road briefings.',
-        image:
-          '/media/car_info/sprinter_interior.png',
+        image: '/media/car_info/sprinter_interior.png',
+        interiorImages: [
+          '/media/fleet/vehicles/sprinter/interior-01.webp',
+          '/media/fleet/vehicles/sprinter/interior-02.webp',
+        ],
       },
-      {
-        category: 'details',
-        label: 'Details',
-        eyebrow: 'EXECUTIVE APPOINTMENTS',
-        title: 'On-Board Mini Bar & 220V Workstation',
-        description:
-          'Integrated beverage refrigerator, 220V/110V power outlets, high-output auxiliary heating, and tailored luggage security.',
-        image: '/media/cabin.webp',
-      },
-      {
+{
         category: 'specs',
         label: 'Specs',
         eyebrow: 'COMMERCIAL SPECIFICATIONS',
@@ -383,7 +361,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
   const [selectedId, setSelectedId] = useState<VehicleInfo['id'] | null>(null)
   // isSlideDetailOpen is true when viewing the full PPT-slide detail view (Ref Image 2)
   const [isSlideDetailOpen, setIsSlideDetailOpen] = useState(false)
-  // activeSlideIndex: 0=Exterior, 1=Interior, 2=Details, 3=Specs
+  // activeSlideIndex: 0=Exterior, 1=Interior, 2=Specs
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
 
   // Active stage index on the showroom carousel track:
@@ -419,11 +397,11 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
   }
 
   const handlePrevSlide = () => {
-    setActiveSlideIndex((prev) => (prev > 0 ? prev - 1 : 3))
+    setActiveSlideIndex((prev) => (prev + activeVehicle.slides.length - 1) % activeVehicle.slides.length)
   }
 
   const handleNextSlide = () => {
-    setActiveSlideIndex((prev) => (prev < 3 ? prev + 1 : 0))
+    setActiveSlideIndex((prev) => (prev + 1) % activeVehicle.slides.length)
   }
 
   const handleReserve = (catalogId: string) => {
@@ -444,13 +422,15 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
       }
 
       if (isSlideDetailOpen) {
+        // Interior photo controls have their own arrow-key navigation.
+        if (e.target instanceof Element && e.target.closest('[data-fleet-interior-controls]')) return
         // PPT Slide Deck mode
         if (e.key === 'Escape') {
           setIsSlideDetailOpen(false)
         } else if (e.key === 'ArrowLeft') {
-          setActiveSlideIndex((prev) => (prev > 0 ? prev - 1 : 3))
+          setActiveSlideIndex((prev) => (prev + activeVehicle.slides.length - 1) % activeVehicle.slides.length)
         } else if (e.key === 'ArrowRight') {
-          setActiveSlideIndex((prev) => (prev < 3 ? prev + 1 : 0))
+          setActiveSlideIndex((prev) => (prev + 1) % activeVehicle.slides.length)
         }
       } else {
         // Showroom mode: smooth push navigation
@@ -473,7 +453,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isSlideDetailOpen, selectedId, activeStageIndex])
+  }, [isSlideDetailOpen, selectedId, activeStageIndex, activeVehicle.slides.length])
 
   return (
     <section
@@ -500,7 +480,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             type="button"
             className="fleet-slide-back-btn"
             onClick={() => setIsSlideDetailOpen(false)}
-            aria-label="Close detail slides and return to vehicle"
+            aria-label="Close vehicle views and return to vehicle"
           >
             <ArrowLeft size={14} />
             <span>Vehicle</span>
@@ -568,12 +548,22 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             >
               {/* Slide Background Image */}
               <div className="fleet-slide-image-wrap">
-                <img
-                  src={slide.image}
-                  alt={slide.fgImage ? '' : `${activeVehicle.name} ${slide.label}`}
-                  className="fleet-slide-img"
-                  loading="eager"
-                />
+                {slide.category === 'interior' && slide.interiorImages ? (
+                  <FleetInteriorGallery
+                    key={activeVehicle.id}
+                    vehicleName={activeVehicle.name}
+                    images={slide.interiorImages}
+                    fallbackImage={slide.image}
+                    active={isSlideDetailOpen && activeSlideIndex === idx}
+                  />
+                ) : (
+                  <img
+                    src={slide.image}
+                    alt={slide.fgImage ? '' : `${activeVehicle.name} ${slide.label}`}
+                    className="fleet-slide-img"
+                    loading="eager"
+                  />
+                )}
                 {slide.fgImage && (
                   <div className="fleet-vehicle-stage-layer is-ppt-slide">
                     <div className="fleet-vehicle-floor-shadow" aria-hidden="true" />
@@ -658,7 +648,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   </div>
                 </div>
               ) : (
-                /* Editorial Caption for Exterior / Interior / Details */
+                /* Editorial captions for Exterior / Interior */
                 <div className="fleet-slide-caption-bar">
                   <div className="fleet-slide-caption-content">
                     <span className="fleet-slide-caption-eyebrow">
@@ -806,7 +796,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     </div>
                   </div>
 
-                  {/* Right-Side View Switch Buttons (Exterior, Interior, Details, Specs) */}
+                  {/* Right-Side View Switch Buttons (Exterior, Interior, Specs) */}
                   <div
                     className="fleet-right-view-tabs"
                     aria-label={`${car.name} viewpoints`}
