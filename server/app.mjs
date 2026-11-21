@@ -127,15 +127,15 @@ export function createApp({
       currency: catalog.currency,
       date: d.date,
       time: d.time,
-      service: catalog.services.find((s) => s.id === d.service).name,
-      vehicle: catalog.vehicles.find((v) => v.id === d.vehicle).name,
+      service: catalog.services.find((s) => s.id === d.service)?.name || d.service,
+      vehicle: catalog.vehicles.find((v) => v.id === d.vehicle)?.name || d.vehicle,
       journeys: (
         d.journeys || [{ date: d.date, time: d.time, vehicle: d.vehicle, total: row.total }]
       ).map((day) => ({
         date: day.date,
         time: day.time || d.time,
-        service: catalog.services.find((s) => s.id === d.service).name,
-        vehicle: catalog.vehicles.find((v) => v.id === day.vehicle).name,
+        service: catalog.services.find((s) => s.id === d.service)?.name || d.service,
+        vehicle: catalog.vehicles.find((v) => v.id === day.vehicle)?.name || day.vehicle,
         pickup: day.pickup || d.pickup,
         destination: day.destination || d.destination,
         total: day.total,

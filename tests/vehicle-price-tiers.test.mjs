@@ -18,10 +18,16 @@ test('the customer sees one official Mercedes-Benz Sprinter, with legacy variant
   assert.equal(vehicle('carnival_limousine').surcharge, 0)
   assert.equal(vehicle('staria').surcharge, 0)
   assert.equal(vehicle('sprinter_319').name, 'Mercedes-Benz Sprinter')
+  assert.equal(vehicle('sprinter_319').passengers, 9)
+  assert.match(vehicle('sprinter_319').model, /9 Seats/)
   assert.equal(vehicle('sprinter_519').name, 'Mercedes-Benz Sprinter')
   assert.equal(vehicle('sprinter_319').surcharge, vehicle('g90').surcharge)
   assert.equal(vehicle('sprinter_519').surcharge, 180000)
   assert.equal(vehicle('sprinter_519').bookable, false)
+  assert.equal(
+    catalog.options.some((item) => item.id === 'childSeat'),
+    false,
+  )
 
   const publicVehicles = catalog.vehicles.filter((v) => v.bookable !== false)
   assert.equal(publicVehicles.length, 4)

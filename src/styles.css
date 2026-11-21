@@ -8172,9 +8172,12 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 /* Translucent Liquid Glass Card Container */
 .booking-glass-stage.is-expanded .booking-glass-surface {
-  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 540px;
   width: min(1140px, 100%) !important;
   height: auto !important;
+  min-height: 0;
   max-height: 100% !important;
   border-radius: 20px !important;
   overflow: hidden !important;
@@ -8216,7 +8219,9 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .booking-glass-stage.is-expanded .booking-glass-content {
-  height: auto;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -8245,9 +8250,10 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .booking-glass-stage.is-expanded .booking-panel {
+  flex: 1 1 0;
   display: grid;
   width: 100%;
-  height: auto;
+  height: 100%;
   max-height: 100%;
   min-height: 0;
   border: 0 !important;
@@ -8272,7 +8278,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .booking-glass-stage.is-expanded .booking-fields {
-  padding: 26px 34px !important;
+  padding: 20px 34px !important;
   overflow: visible !important;
 }
 
@@ -8470,12 +8476,15 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 /* Right Column Inputs & Custom Dropdowns (>= 13px) */
 .booking-glass-stage.is-expanded .schedule-route-col .field,
 .booking-glass-stage.is-expanded .schedule-route-col .address-field {
-  margin-bottom: 18px !important;
-  gap: 8px !important;
+  margin-bottom: 11px !important;
+  gap: 6px !important;
 }
 
 .booking-glass-stage.is-expanded .schedule-route-col .time-field {
   margin-top: 0 !important;
+}
+
+.booking-glass-stage.is-expanded .schedule-route-col > :last-child {
   margin-bottom: 0 !important;
 }
 
@@ -8502,7 +8511,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .booking-glass-stage.is-expanded .field input,
 .booking-glass-stage.is-expanded .address-control input {
-  height: 46px !important;
+  height: 44px !important;
   border-radius: 10px !important;
   background: rgba(12, 14, 19, 0.56) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
@@ -8557,7 +8566,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .glass-select-trigger {
   width: 100%;
-  height: 46px;
+  height: 44px;
   padding: 0 14px;
   border-radius: 10px;
   background: rgba(12, 14, 19, 0.56);
@@ -8613,6 +8622,88 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .glass-select.is-open .glass-select-chevron {
   transform: rotate(180deg);
+}
+
+/* Editable Frosted-Glass Time Combobox */
+.glass-time-control {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(12, 14, 19, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-time.is-compact .glass-time-control {
+  height: 34px;
+  border-radius: 8px;
+}
+
+.glass-time-control:hover:not(:has(input:disabled)) {
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(18, 21, 28, 0.68);
+}
+
+.glass-time.is-open .glass-time-control,
+.glass-time-control:focus-within {
+  border-color: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.glass-time-control.is-invalid,
+.glass-time-control:has(.glass-time-input[aria-invalid="true"]) {
+  border-color: rgba(248, 113, 113, 0.72);
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.booking-glass-stage.is-expanded .field .glass-time-input {
+  flex: 1;
+  min-width: 0;
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 10px 0 0 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 8px 0 14px !important;
+  font-size: 14px !important;
+  font-variant-numeric: tabular-nums;
+  color: #f4f5f7 !important;
+}
+
+.booking-glass-stage.is-expanded .glass-time.is-compact .glass-time-input {
+  border-radius: 8px 0 0 8px !important;
+  padding: 0 6px 0 12px !important;
+  font-size: 13px !important;
+}
+
+.booking-glass-stage.is-expanded .field .glass-time-input:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.glass-time-toggle {
+  flex-shrink: 0;
+  width: 38px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: rgba(212, 220, 232, 0.78);
+  cursor: pointer;
+}
+
+.glass-time.is-compact .glass-time-toggle {
+  width: 32px;
+}
+
+.glass-time-toggle:hover:not(:disabled) {
+  color: #ffffff;
 }
 
 .glass-select-menu {
@@ -9329,6 +9420,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 34px;
   padding: 12px 14px;
   border-radius: 10px;
   background: rgba(14, 16, 22, 0.54);
@@ -9350,6 +9442,11 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: #f4f5f7;
   font-weight: 400;
   text-align: right;
+}
+
+.summary-route-recap small {
+  font-size: 13px;
+  color: rgba(186, 195, 210, 0.8);
 }
 
 .booking-glass-stage.is-expanded .summary-lines {
@@ -9479,11 +9576,16 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   }
 
   #reservation.booking-screen.booking-glass-open .booking-glass-surface {
+    flex: 0 0 auto;
+    height: auto !important;
     max-height: none !important;
     overflow: visible !important;
   }
 
+  #reservation.booking-screen.booking-glass-open .booking-glass-content,
   #reservation.booking-screen.booking-glass-open .booking-panel {
+    flex: 0 0 auto;
+    height: auto;
     overflow: visible !important;
   }
 

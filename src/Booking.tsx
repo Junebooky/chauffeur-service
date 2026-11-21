@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Clock3,
   LoaderCircle,
-  LockKeyhole,
   Plus,
   X,
 } from 'lucide-react'
@@ -20,6 +19,7 @@ import catalog from './catalog.json'
 import AddressSearch from './AddressSearch'
 import type { Place } from './AddressSearch'
 import GlassSelect from './GlassSelect'
+import GlassTimeInput from './GlassTimeInput'
 import VehicleCarousel from './VehicleCarousel'
 import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
@@ -441,6 +441,8 @@ export default function Booking({
   }, [datesKey])
 
   useEffect(() => {
+    const validTimeRe = /^([01]\d|2[0-3]):[0-5]\d$/
+    if (!dates.every((d) => validTimeRe.test(getTime(d)))) return
     const controller = new AbortController()
     setChecking(true)
     setAvailability({})
@@ -667,11 +669,6 @@ export default function Booking({
           Your journey.
           <br className="mobile-break" /> <em>Your way.</em>
         </DisplayHeading>
-        <p>
-          A few details. Endless possibilities.
-          <br />
-          We'll take care of the road ahead.
-        </p>
       </div>
       <div className={`booking-glass-stage ${glassOpen || result ? 'is-expanded' : 'is-idle'}`}>
         <div className="booking-glass-refraction-backdrop" ref={refractionBackdrop} aria-hidden="true" />
@@ -978,10 +975,6 @@ export default function Booking({
                                       <button type="button" onClick={() => setConfirmCopySchedule(false)}>Cancel</button>
                                     </div>
                                   )}
-                                  <p className="field-note">
-                                    All dates use the default route and time unless you customize them.
-                                    Select a date to change its pick-up, destination or time.
-                                  </p>
                                   <div className="daily-times-grid" data-native-scroll>
                                     {dates.map((d, index) => {
                                       const route = getRoute(d)
@@ -1019,6 +1012,15 @@ export default function Booking({
                                                 rightIcon="nav"
                                                 onChange={(value, place) => setRouteForDate(d, { destination: value, destinationPlace: place })}
                                               />
+                                              <div className="field">
+                                                <span>Pick-up Time</span>
+                                                <GlassTimeInput compact
+                                                  ariaLabel={`Pick-up time for Day ${index + 1}`}
+                                                  value={getTime(d)}
+                                                  onChange={(time) => setTimeForDate(d, time)}
+                                                  options={timeOptions}
+                                                />
+                                              </div>
                                               {service === 'airport' && (
                                                 <label className="field">
                                                   <span>Flight number <small>optional</small></span>
@@ -1027,15 +1029,6 @@ export default function Booking({
                                                     placeholder="e.g. KE 902" />
                                                 </label>
                                               )}
-                                              <div className="field">
-                                                <span>Pick-up Time</span>
-                                                <GlassSelect compact
-                                                  ariaLabel={`Pick-up time for Day ${index + 1}`}
-                                                  value={getTime(d)}
-                                                  onChange={(time) => setTimeForDate(d, time)}
-                                                  options={timeOptions.map((time) => ({ value: time, label: time }))}
-                                                />
-                                              </div>
                                               <button type="button" className="apply-all-btn" onClick={() => {
                                                 setRoutesByDate((previous) => {
                                                   const next = { ...previous }
@@ -1096,20 +1089,6 @@ export default function Booking({
                               setPickupPlace(selected)
                             }}
                           />
-                          {service === 'airport' && (
-                            <label className="field">
-                              <span>
-                                Flight number <small>optional</small>
-                              </span>
-                              <input
-                                name="flight"
-                                maxLength={30}
-                                value={flight}
-                                onChange={(e) => setFlight(e.target.value)}
-                                placeholder="e.g. KE 902"
-                              />
-                            </label>
-                          )}
                           <AddressSearch
                             name="destination"
                             label="Destination"
@@ -1127,7 +1106,7 @@ export default function Booking({
                               <Clock3 size={15} aria-hidden="true" />{' '}
                               {multiDay ? 'Default Pick-up Time' : 'Pick-up Time'}
                             </span>
-                            <GlassSelect
+                            <GlassTimeInput
                               ariaLabel={
                                 multiDay ? 'Default Pick-up Time' : 'Pick-up Time'
                               }
@@ -1137,27 +1116,31 @@ export default function Booking({
                                 setDefaultTime(t)
                                 if (!multiDay) setTimeForDate(dates[0] || tomorrow(), t)
                               }}
-                              options={timeOptions.map((t) => ({
-                                value: t,
-                                label: t,
-                              }))}
+                              options={timeOptions}
                             />
-                            <small className="field-note">Korea time (KST, UTC+9). All daily times use this time zone.</small>
+                            <small className="field-note">Korea time (KST, UTC+9)</small>
                           </div>
+                          {service === 'airport' && (
+                            <label className="field">
+                              <span>
+                                Flight number <small>optional</small>
+                              </span>
+                              <input
+                                name="flight"
+                                maxLength={30}
+                                value={flight}
+                                onChange={(e) => setFlight(e.target.value)}
+                                placeholder="e.g. KE 902"
+                              />
+                            </label>
+                          )}
                         </div>
                       </div>
                     )}
                     {step === 1 && (
                       <div className="preferences-fields">
-                        <p className="field-section-title">Select your collection</p>
                         {multiDay && dates.length > 1 && (
                           <div className="daily-schedule-configuration">
-                            <div className="daily-schedule-header">
-                              <div>
-                                <strong>How would you like to travel?</strong>
-                                <small>Choose once for the whole trip, or set a vehicle for each day.</small>
-                              </div>
-                            </div>
                             <div className="day-mode-segmented" role="radiogroup" aria-label="Vehicle assignment">
                               <button type="button" role="radio" aria-checked={vehicleMode === 'same'}
                                 className={`day-mode-pill ${vehicleMode === 'same' ? 'active' : ''}`}
@@ -1173,9 +1156,7 @@ export default function Booking({
                                 Choose per day
                               </button>
                             </div>
-                            {vehicleMode === 'same' ? (
-                              <p className="field-note">Select a vehicle in the existing showroom. Your choice applies to every day.</p>
-                            ) : (
+                            {vehicleMode === 'daily' && (
                               <div className="daily-schedule-cards" role="group" aria-label="Choose a day to assign a vehicle">
                                 {dates.map((d, index) => {
                                   const selected = getVehicle(d)
@@ -1205,12 +1186,9 @@ export default function Booking({
                           </div>
                         )}
                         <p className="field-section-title extras-title">
-                          Make it personal{' '}
-                          <span>
-                            {dates.length > 1
-                              ? 'Optional additions · per day'
-                              : 'Optional additions'}
-                          </span>
+                          {dates.length > 1
+                            ? 'Optional additions · per day'
+                            : 'Optional additions'}
                         </p>
                         <div className="extras">
                           {catalog.options.map((option) => (
@@ -1243,19 +1221,10 @@ export default function Booking({
                             </button>
                           ))}
                         </div>
-                        {dates.length > 1 && (
-                          <p className="field-note">
-                            Selected extras apply to every day of your journey.
-                          </p>
-                        )}
                       </div>
                     )}
                     {step === 2 && (
                       <div className="contact-fields">
-                        <p className="field-section-title">How may we address you?</p>
-                        <p className="contact-intro">
-                          Your details are used only to arrange your journey.
-                        </p>
                         <label className="field">
                           <span>Full name</span>
                           <input
@@ -1367,10 +1336,6 @@ export default function Booking({
                               </small>
                             </label>
                           )}
-                          <p className="messenger-help">
-                            Your preference is saved with your request. Messaging is
-                            not connected yet.
-                          </p>
                         </fieldset>
                         <label className="consent">
                           <input
@@ -1400,9 +1365,6 @@ export default function Booking({
                 </div>
                 {step >= 1 && (
                   <aside className="journey-summary">
-                    <div className="summary-heading">
-                      <span className="eyebrow">YOUR JOURNEY, AT A GLANCE</span>
-                    </div>
                     {step === 1 && multiDay && dates.length > 1 && (
                       <div className="showroom-day-bar">
                         <div className="showroom-header-row">
@@ -1485,17 +1447,11 @@ export default function Booking({
                       </div>
                     )}
                     {step === 1 && (
-                      <>
-                        <div className="booking-glass-fleet-label">
-                          <span>Select your vehicle</span>
-                          <small>Click or swipe to explore</small>
-                        </div>
-                        <VehicleCarousel
-                          value={activeVehicle}
-                          onChange={changeVehicle}
-                          availability={availability[currentActiveDate] || {}}
-                        />
-                      </>
+                      <VehicleCarousel
+                        value={activeVehicle}
+                        onChange={changeVehicle}
+                        availability={availability[currentActiveDate] || {}}
+                      />
                     )}
                     {step === 2 && (
                       <div className="summary-route-recap">
@@ -1629,9 +1585,6 @@ export default function Booking({
                         </button>
                       </div>
                     )}
-                    <p className="privacy-aside-note">
-                      <LockKeyhole size={14} aria-hidden="true" /> Your details stay private.
-                    </p>
                   </aside>
                 )}
               </form>

@@ -191,7 +191,7 @@ const FLEET_DATA: VehicleInfo[] = [
     description:
       'Full stand-up cabin height with custom leather captain chairs and extended legroom. Built for prestigious delegations and roadshows.',
     specs: {
-      passengers: '6 Passengers (Coach Layout)',
+      passengers: '9 Passengers (Coach Layout)',
       luggage: '12+ Large Suitcases',
       powertrain: '3.0L V6 Turbo Diesel',
       amenities: '1.9m Standing Room · Conference Table · 220V Outlets',

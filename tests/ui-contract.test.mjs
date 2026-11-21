@@ -111,3 +111,25 @@ test('fleet dock shows only a selected glow dot, never an arrow on vehicle cards
   assert.doesNotMatch(styles, /\.fleet-arrow-circle/)
 })
 
+test('reservation step 1 orders Flight number last, supports editable time, and removes filler text', () => {
+  const booking = readFileSync(join(root, 'src/Booking.tsx'), 'utf8')
+  const routeCol = booking.slice(
+    booking.indexOf('className="route-fields schedule-route-col"'),
+    booking.indexOf('{step === 1 && ('),
+  )
+  const idxService = routeCol.indexOf('name="service"')
+  const idxPickup = routeCol.indexOf('name="pickup"')
+  const idxDest = routeCol.indexOf('name="destination"')
+  const idxTime = routeCol.indexOf('<GlassTimeInput')
+  const idxFlight = routeCol.indexOf('name="flight"')
+  assert.ok(
+    idxService > 0 &&
+      idxService < idxPickup &&
+      idxPickup < idxDest &&
+      idxDest < idxTime &&
+      idxTime < idxFlight,
+    'Step 1 fields must be ordered: Service -> Pickup -> Destination -> Pick-up Time -> Flight',
+  )
+  assert.doesNotMatch(booking, /YOUR JOURNEY, AT A GLANCE/)
+})
+

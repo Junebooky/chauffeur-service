@@ -79,8 +79,8 @@
     {
       "id": "sprinter_319",
       "name": "Mercedes-Benz Sprinter",
-      "model": "VIP Protocol High-Roof Van · 6 Seats",
-      "passengers": 6,
+      "model": "VIP Protocol High-Roof Van · 9 Seats",
+      "passengers": 9,
       "surcharge": 100000,
       "image": "/media/fleet/vehicles/sprinter/exterior.png",
       "quoteRequired": false
@@ -102,12 +102,6 @@
       "name": "Fluent English Chauffeur",
       "description": "Dedicated English-fluent VIP chauffeur for diplomatic & corporate delegations",
       "price": 100000
-    },
-    {
-      "id": "childSeat",
-      "name": "Child Safety Seat",
-      "description": "Premium certified safety seat for infants or young passengers",
-      "price": 20000
     },
     {
       "id": "extraStop",

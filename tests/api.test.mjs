@@ -66,12 +66,12 @@ test('saves a pending request and independently calculates the price', () =>
     const result = await post({
       ...valid,
       vehicle: 'sprinter_319',
-      options: ['childSeat'],
+      options: ['extraStop'],
       total: 1,
     })
     assert.equal(result.status, 201)
     assert.equal(result.data.status, 'pending')
-    assert.equal(result.data.total, 400000)
+    assert.equal(result.data.total, 410000)
     assert.match(result.data.reference, /^CH-[0-9A-F]{8}$/)
     assert.equal(result.data.currency, 'KRW')
     assert.equal(result.data.taxIncluded, false)
@@ -128,7 +128,8 @@ test('rejects invalid dates, insufficient notice, forged options and missing con
     { phone: 'abcdefg' },
     { consent: false },
     { options: ['freeUpgrade'] },
-    { options: ['childSeat', 'childSeat'] },
+    { options: ['childSeat'] },
+    { options: ['extraStop', 'extraStop'] },
     { vehicle: 'invalid' },
     { service: 'invalid' },
     { name: '' },
@@ -243,17 +244,17 @@ test('prices every daily vehicle and extra, retries safely, and reserves only th
     const key = randomUUID()
     const body = {
       ...twoDays,
-      options: ['childSeat', 'englishDriver'],
+      options: ['extraStop', 'englishDriver'],
       total: 1,
     }
     const result = await post(body, key)
     assert.equal(result.status, 201)
-    assert.equal(result.data.total, 900000)
+    assert.equal(result.data.total, 920000)
     assert.deepEqual(
       result.data.journeys.map((day) => [day.date, day.vehicle, day.total]),
       [
-        ['2026-11-10', 'Staria Lounge Limousine Hybrid', 400000],
-        ['2026-11-11', 'Genesis G90', 500000],
+        ['2026-11-10', 'Staria Lounge Limousine Hybrid', 410000],
+        ['2026-11-11', 'Genesis G90', 510000],
       ],
     )
     assert.deepEqual((await post(body, key)).data, result.data)
@@ -339,7 +340,7 @@ test('rejects missing, duplicate, unordered and invalid daily selections', async
 
 test('supports non-consecutive dates with custom times and vehicles, calculating dynamic prices', () =>
   withServer(async ({ post, base }) => {
-    // Nov 10 with staria at 10:00, and Nov 12 with sprinter_519 at 14:00
+    // Nov 10 with staria at 10:00, and Nov 12 with sprinter_319 at custom typed time 14:25
     const nonConsecutive = {
       ...valid,
       date: '2026-11-10',
@@ -347,25 +348,25 @@ test('supports non-consecutive dates with custom times and vehicles, calculating
       vehicle: 'staria',
       journeys: [
         { date: '2026-11-10', time: '10:00', vehicle: 'staria' },
-        { date: '2026-11-12', time: '14:00', vehicle: 'sprinter_519' },
+        { date: '2026-11-12', time: '14:25', vehicle: 'sprinter_319' },
       ],
       total: 1,
     }
     const res = await post(nonConsecutive)
     assert.equal(res.status, 201)
-    // hourly service (280,000) * 2 = 560,000 + staria (0) + sprinter_519 (180,000) = 740,000
-    assert.equal(res.data.total, 740000)
+    // hourly service (280,000) * 2 = 560,000 + staria (0) + sprinter_319 (100,000) = 660,000
+    assert.equal(res.data.total, 660000)
     assert.equal(res.data.journeys.length, 2)
     assert.equal(res.data.journeys[0].date, '2026-11-10')
     assert.equal(res.data.journeys[0].time, '10:00')
     assert.equal(res.data.journeys[0].total, 280000)
     assert.equal(res.data.journeys[1].date, '2026-11-12')
-    assert.equal(res.data.journeys[1].time, '14:00')
-    assert.equal(res.data.journeys[1].total, 460000)
+    assert.equal(res.data.journeys[1].time, '14:25')
+    assert.equal(res.data.journeys[1].total, 380000)
 
-    // Check availability endpoint handles discrete dates & times
+    // Check availability endpoint handles discrete dates & custom typed minutes
     const availRes = await fetch(
-      `${base}/api/availability?dates=2026-11-10,2026-11-12&times=10:00,14:00&service=hourly`,
+      `${base}/api/availability?dates=2026-11-10,2026-11-12&times=10:00,14:25&service=hourly`,
     )
     assert.equal(availRes.status, 200)
     const availData = await availRes.json()
@@ -373,8 +374,8 @@ test('supports non-consecutive dates with custom times and vehicles, calculating
     // staria is booked on day 1
     const day1Staria = availData.days[0].vehicles.find((v) => v.id === 'staria')
     assert.equal(day1Staria.available, false)
-    // sprinter_519 is booked on day 2
-    const day2Sprinter = availData.days[1].vehicles.find((v) => v.id === 'sprinter_519')
+    // sprinter_319 is booked on day 2
+    const day2Sprinter = availData.days[1].vehicles.find((v) => v.id === 'sprinter_319')
     assert.equal(day2Sprinter.available, false)
     // but staria is available on day 2
     const day2Staria = availData.days[1].vehicles.find((v) => v.id === 'staria')
