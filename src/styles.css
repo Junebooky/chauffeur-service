@@ -1255,7 +1255,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   position: relative;
   z-index: 10;
   max-width: min(840px, calc(100vw - var(--gutter) - var(--gutter) - 210px));
-  margin-top: clamp(10px, 1.7vh, 22px);
+  margin-top: clamp(32px, 4.2vh, 48px);
 }
 
 .fleet-vehicle-tagline {
@@ -1695,7 +1695,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: rgba(255, 255, 255, 0.76);
   text-transform: uppercase;
   font-weight: 400;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
 .fleet-detail-title {
@@ -1705,7 +1705,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   letter-spacing: -0.02em;
   line-height: 1.06;
   color: #fff;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
