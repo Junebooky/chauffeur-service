@@ -200,7 +200,12 @@ export default function App() {
       >
         <Hero reducedMotion={reducedMotion} goTo={nav} />
         <FleetSection goTo={nav} onSelectVehicle={setVehicle} />
-        <PricingSection onSelectService={setService} goTo={nav} usdRate={usdRate} />
+        <PricingSection
+          onSelectService={setService}
+          onRequestCustom={() => setModal('contact')}
+          goTo={nav}
+          usdRate={usdRate}
+        />
         <Booking
           service={service}
           setService={setService}

@@ -1,60 +1,66 @@
 import catalog from './catalog.json'
-import { DEFAULT_USD_RATE, money, moneyUsd } from './utils'
+import { money } from './utils'
 
 type PricingSectionProps = {
   onSelectService: (serviceId: string) => void
+  onRequestCustom: () => void
   goTo: (index: number) => void
   usdRate?: number
 }
 
-const airportService = catalog.services.find((s) => s.id === 'airport')!
-const hourlyService = catalog.services.find((s) => s.id === 'hourly')!
-const dayService = catalog.services.find((s) => s.id === 'day')!
+const airportService = catalog.services.find((service) => service.id === 'airport')!
+const scheduleService = catalog.services.find((service) => service.id === 'day')!
+
+/** Vehicle surcharges are defined once in catalog.json and shared with Booking. */
+const PRICE_TIERS = [
+  {
+    id: 'standard',
+    label: 'Carnival · Staria',
+    category: 'STANDARD FLEET',
+    representativeVehicleId: 'carnival_limousine',
+  },
+  {
+    id: 'premium',
+    label: 'Genesis G90 · Sprinter',
+    category: 'PREMIUM FLEET',
+    representativeVehicleId: 'g90',
+  },
+] as const
+
+function priceForTier(serviceId: 'airport' | 'day', vehicleId: string) {
+  const service = catalog.services.find((item) => item.id === serviceId)
+  const vehicle = catalog.vehicles.find((item) => item.id === vehicleId)
+  if (!service || !vehicle) return null
+  return service.price + vehicle.surcharge
+}
 
 const PRICING_PLANS = [
   {
-    id: 'airport',
+    id: 'pickup',
     serviceId: 'airport',
-    lines: ['Airport', 'Transfer'] as const,
+    lines: ['Pick-up', 'Service'] as const,
     image: '/media/price/price_airport.png',
     alt: 'Private jet parked on an illuminated runway at night',
-    eyebrow: `FROM · ${airportService.unit.toUpperCase()}`,
-    price: airportService.price,
-    unit: airportService.unit,
-    subtitle: 'Incheon & Gimpo Airport protocol',
+    eyebrow: `SERVICE · ${airportService.unit.toUpperCase()}`,
+    subtitle: 'Airport arrivals & departures',
   },
   {
-    id: 'hourly',
-    serviceId: 'hourly',
-    lines: ['By the', 'Hour'] as const,
-    image: '/media/price/price_hour.png',
-    alt: 'Close-up of a luxury minimalist black dial timepiece',
-    eyebrow: `FROM · ${hourlyService.unit.toUpperCase()}`,
-    price: hourlyService.price,
-    unit: hourlyService.unit,
-    subtitle: 'Flexible point-to-point charter',
-  },
-  {
-    id: 'day',
+    id: 'schedule',
     serviceId: 'day',
-    lines: ['Full', 'Day'] as const,
+    lines: ['Schedule', 'Service'] as const,
     image: '/media/price/price_full.png',
     alt: 'Scenic mountain highway at sunset',
-    eyebrow: `FROM · ${dayService.unit.toUpperCase()}`,
-    price: dayService.price,
-    unit: dayService.unit,
-    subtitle: '9 hours dedicated VIP service',
+    eyebrow: `SERVICE · ${scheduleService.unit.toUpperCase()}`,
+    subtitle: 'Dedicated service for your schedule',
   },
   {
     id: 'custom',
-    serviceId: 'day',
+    serviceId: null,
     lines: ['Custom'] as const,
     image: '/media/price/price_custom.png',
     alt: 'Illuminated luxury hotel entrance at night',
     eyebrow: 'BESPOKE ITINERARY',
-    price: null as number | null,
-    unit: 'Tailored schedule',
-    subtitle: 'Multi-day & diplomatic protocol',
+    subtitle: 'Tailored to your plans',
   },
 ] as const
 
@@ -71,14 +77,14 @@ const BEAM_MASK_STYLE = {
 
 export default function PricingSection({
   onSelectService,
+  onRequestCustom,
   goTo,
-  usdRate = DEFAULT_USD_RATE,
 }: PricingSectionProps) {
   return (
     <section
       id="services"
       aria-labelledby="services-title"
-      className="relative flex h-dvh w-full snap-start snap-always flex-col justify-between overflow-clip bg-[#050608] px-[clamp(28px,4.5vw,84px)] pt-[calc(var(--header)+24px)] pb-[clamp(54px,10.4vh,120px)] antialiased select-none"
+      className="relative flex min-h-dvh w-full snap-start snap-always flex-col overflow-hidden bg-[#050608] px-[clamp(20px,4.5vw,84px)] pt-[calc(var(--header)+24px)] pb-14 antialiased select-none lg:h-dvh lg:justify-between lg:pb-[clamp(54px,10.4vh,120px)]"
     >
       {/* Full-bleed architectural lighting background */}
       <img
@@ -92,7 +98,7 @@ export default function PricingSection({
       />
 
       {/* Content Wrapper */}
-      <div className="relative z-10 mx-auto flex h-full w-full max-w-[1540px] flex-col justify-between 2xl:max-w-[1720px]">
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-[1380px] flex-col justify-between gap-9 lg:gap-8">
         {/* Section Header positioned higher up */}
         <div className="pl-1">
           <div className="mb-3.5 flex items-center gap-4">
@@ -111,16 +117,16 @@ export default function PricingSection({
             Tailored Chauffeur Services
           </h2>
           <p className="!mt-3 !font-sans !text-[clamp(12.5px,1.04vw,16px)] !font-extralight !tracking-[0.01em] !text-[#d1d5db]/85">
-            Choose the ideal plan for your travel needs, from airport transfers to fully customized service.
+            Choose a pick-up, plan your schedule, or tell us what you have in mind.
           </p>
         </div>
 
-        {/* 4 Pricing Plan Cards with wider horizontal gaps & taller stature */}
-        <div className="grid w-full grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-7 xl:gap-8 2xl:gap-10">
+        {/* Three equally sized editorial cards; stacked on smaller screens. */}
+        <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-7 xl:gap-8">
           {PRICING_PLANS.map((plan) => (
             <article
               key={plan.id}
-              className="group relative flex h-[clamp(320px,53vh,640px)] flex-col justify-between rounded-[18px] border border-[#e5dfd5]/35 bg-[#050608] shadow-[0_26px_60px_rgba(0,0,0,0.84),inset_0_1px_0_rgba(255,250,242,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-[#f4f5f7]/30 focus-within:-translate-y-1 focus-within:border-[#f4f5f7]/40"
+              className="group relative flex h-[clamp(400px,49vh,525px)] flex-col justify-between rounded-[18px] border border-[#e5dfd5]/35 bg-[#050608] shadow-[0_26px_60px_rgba(0,0,0,0.84),inset_0_1px_0_rgba(255,250,242,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-[#f4f5f7]/30 focus-within:-translate-y-1 focus-within:border-[#f4f5f7]/40"
             >
               {/* Clockwise Border Beam Halo (subtle soft bloom on hover/focus) */}
               <span
@@ -170,8 +176,14 @@ export default function PricingSection({
                     <button
                       type="button"
                       onClick={() => {
-                        onSelectService(plan.serviceId)
-                        goTo(3)
+                        if (plan.serviceId === null) {
+                          // The Custom quote flow isn't in Booking yet. Do not
+                          // silently start a fixed-price Full Day reservation.
+                          onRequestCustom()
+                        } else {
+                          onSelectService(plan.serviceId)
+                          goTo(3)
+                        }
                       }}
                       className="text-left !font-sans !text-[clamp(22px,2vw,31px)] !font-thin !leading-[1.18] !tracking-[-0.012em] !text-[#f4f5f7] focus-visible:outline-none after:absolute after:inset-0"
                     >
@@ -184,25 +196,57 @@ export default function PricingSection({
                   </h3>
                 </header>
 
-                {/* Hover / Focus Slide-Up Price Drawer */}
-                <div className="pointer-events-none relative z-10 mt-auto translate-y-full bg-[linear-gradient(180deg,rgba(5,6,8,0)_0%,rgba(5,6,8,0.84)_28%,rgba(5,6,8,0.96)_100%)] px-6 pt-12 pb-6 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 sm:px-8 sm:pb-7 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
-                  <div className="border-t border-white/15 pt-4">
-                    <span className="block !font-sans text-[9.5px] !font-normal tracking-[0.22em] text-[#d1d5db]/75 uppercase">
+                {/* Hover/focus drawer; on touch devices both rates stay visible. */}
+                <div className="pointer-events-none relative z-10 mt-auto translate-y-full bg-[linear-gradient(180deg,rgba(5,6,8,0)_0%,rgba(5,6,8,0.87)_25%,rgba(5,6,8,0.97)_100%)] px-6 pt-10 pb-6 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 sm:px-8 sm:pb-7 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
+                  <div className="border-t border-white/20 pt-4">
+                    <span className="block !font-sans text-[10px] !font-normal tracking-[0.2em] text-white/75 uppercase">
                       {plan.eyebrow}
                     </span>
-                    <div className="mt-1.5 flex items-baseline justify-between gap-2">
-                      <strong className="!font-sans text-[clamp(23px,2vw,31px)] !font-extralight tracking-[-0.02em] text-[#f4f5f7] tabular-nums">
-                        {plan.price !== null ? money(plan.price) : 'Tailored Quote'}
-                      </strong>
-                      <span className="!font-sans text-[11px] !font-light tracking-[0.04em] text-[#f4f5f7]/85">
-                        Reserve →
-                      </span>
-                    </div>
-                    <p className="!mt-1 !font-sans text-[10.5px] !font-extralight text-[#9ca3af]">
-                      {plan.price !== null
-                        ? `KRW · TAX excluded · approx. ${moneyUsd(plan.price, usdRate)} USD`
-                        : plan.subtitle}
-                    </p>
+                    {plan.serviceId !== null ? (
+                      <>
+                        <div className="mt-3 flex flex-col gap-3">
+                          {PRICE_TIERS.map((tier) => {
+                            const price = priceForTier(
+                              plan.serviceId,
+                              tier.representativeVehicleId,
+                            )
+                            return (
+                              <div
+                                key={tier.id}
+                                className="flex items-center justify-between gap-3 border-b border-white/15 pb-3 last:border-b-0 last:pb-0"
+                              >
+                                <div className="min-w-0">
+                                  <p className="!m-0 !font-sans text-[clamp(12px,1vw,14px)] !font-light leading-[1.3] text-white">
+                                    {tier.label}
+                                  </p>
+                                  <span className="mt-1 block !font-sans text-[9px] font-normal tracking-[0.13em] text-white/55">
+                                    {tier.category}
+                                  </span>
+                                </div>
+                                <strong className="shrink-0 !font-sans text-[clamp(19px,1.65vw,25px)] !font-extralight tracking-[-0.035em] text-white tabular-nums">
+                                  {price === null ? 'Ask for rate' : money(price)}
+                                </strong>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <p className="!mt-3 !mb-0 !font-sans text-[10.5px] !font-light text-white/70">
+                          KRW · TAX excluded
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <strong className="mt-3 block !font-sans text-[clamp(24px,2vw,30px)] !font-extralight tracking-[-0.02em] text-white">
+                          Tailored Quote
+                        </strong>
+                        <p className="!mt-1.5 !mb-0 !font-sans text-[12px] !font-light text-white/75">
+                          {plan.subtitle}
+                        </p>
+                      </>
+                    )}
+                    <span className="mt-3 block !font-sans text-[11px] !font-light text-white/90">
+                      {plan.serviceId === null ? 'Explore custom options' : 'Plan your journey'} →
+                    </span>
                   </div>
                 </div>
               </div>
