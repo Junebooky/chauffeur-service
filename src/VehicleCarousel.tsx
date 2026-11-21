@@ -13,10 +13,12 @@ export default function VehicleCarousel({
   value,
   onChange,
   availability,
+  ariaLabel = 'Interactive vehicle selection',
 }: {
   value: string
   onChange: (value: string) => void
   availability: Record<string, boolean>
+  ariaLabel?: string
 }) {
   const active = Math.max(0, visibleVehicles.findIndex((v) => v.id === value))
   const current = visibleVehicles[active] || visibleVehicles[0]
@@ -103,7 +105,7 @@ export default function VehicleCarousel({
     <div
       className="fleet-selector"
       role="region"
-      aria-label="Interactive vehicle selection"
+      aria-label={ariaLabel}
       aria-roledescription="carousel"
       tabIndex={0}
       onKeyDown={(e) => {

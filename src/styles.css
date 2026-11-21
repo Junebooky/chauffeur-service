@@ -9387,6 +9387,12 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.65) !important;
 }
 
+/* Vehicle Carousel indicators: each button is already one 2px line.
+   The inherited ::after drew a second (lower) row of dashes. */
+.booking-glass-stage.is-expanded .fleet-pagination>button::after {
+  content: none !important;
+}
+
 .booking-glass-stage.is-expanded .fleet-selected {
   padding: 0 !important;
   margin: 0 !important;
@@ -10186,4 +10192,36 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   .booking-glass-stage.is-expanded .booking-panel.is-daily-schedule .booking-fields {
     padding-block: 14px !important;
   }
+}
+
+
+/* Compact day/vehicle breakdown in the narrow showroom summary.
+   Keep date + local pick-up time as an indivisible one-line label;
+   only allow the full label group to wrap on genuinely narrow screens. */
+.booking-glass-stage.is-expanded .booking-vehicle-day-summary > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 12px;
+  row-gap: 3px;
+}
+
+.booking-glass-stage.is-expanded .booking-vehicle-day-summary .booking-vehicle-day-date {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 12px !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.booking-glass-stage.is-expanded .booking-vehicle-day-summary .booking-vehicle-day-price {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 12px !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.booking-glass-stage.is-expanded .daily-schedule-configuration .day-indicator strong {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }

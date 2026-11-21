@@ -294,8 +294,6 @@ export default function Booking({
   const successHeading = useRef<HTMLHeadingElement>(null)
   const glassTrigger = useRef<HTMLButtonElement>(null)
   const refractionBackdrop = useRef<HTMLDivElement>(null)
-  const pillsContainerRef = useRef<HTMLDivElement>(null)
-  const activePillRef = useRef<HTMLButtonElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
   // One field works for international names and keeps the existing API stable.
   const nameReady = name.trim().length >= 2
@@ -319,25 +317,12 @@ export default function Booking({
   const compactDate = (value: string) =>
     new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
-  const scrollPills = (delta: number) => {
-    pillsContainerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
-  }
-
   const currentActiveDate = dates.includes(activeDate)
     ? activeDate
     : dates[0] || tomorrow()
 
-  const activeDayIndex = Math.max(0, dates.indexOf(currentActiveDate))
   const scheduleActiveDate = editingDate && dates.includes(editingDate)
     ? editingDate : (dates[0] || tomorrow())
-
-  useEffect(() => {
-    activePillRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest',
-      inline: 'center',
-    })
-  }, [currentActiveDate])
 
   const getTime = (d: string) =>
     multiDay && dailyScheduleMode === 'same' ? defaultTime : (timesByDate[d] || defaultTime)
@@ -1308,7 +1293,7 @@ export default function Booking({
                                       <span className="card-top">
                                         <span className="day-indicator">
                                           <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
-                                          <strong>{displayDate(d)}</strong>
+                                          <strong title={displayDate(d)}>{compactDate(d)}</strong>
                                         </span>
                                         <span className="day-price"><strong>{money(currentService.price + car.surcharge + extras)}</strong></span>
                                       </span>
@@ -1524,92 +1509,14 @@ export default function Booking({
                 </div>
                 {step >= 1 && (
                   <aside className={`journey-summary ${step === 2 ? 'is-details-summary' : ''}`}>
-                    {step === 1 && multiDay && dates.length > 1 && (
-                      <div className="showroom-day-bar">
-                        <div className="showroom-header-row">
-                          <div className="showroom-title-group">
-                            <span className="showroom-label">FLEET SHOWROOM</span>
-                            <div className="showroom-date-info">
-                              <strong>Day 0{activeDayIndex + 1}</strong>
-                              <span className="showroom-dot">·</span>
-                              <span>{displayDate(currentActiveDate)}</span>
-                              <span className="showroom-time">({getTime(currentActiveDate)} KST)</span>
-                            </div>
-                          </div>
-                          <div className="showroom-nav-arrows">
-                            <button
-                              type="button"
-                              className="showroom-arrow-btn"
-                              disabled={activeDayIndex <= 0}
-                              onClick={() => {
-                                if (activeDayIndex > 0) {
-                                  setActiveDate(dates[activeDayIndex - 1])
-                                }
-                              }}
-                              aria-label="Previous day"
-                            >
-                              <ChevronLeft size={14} />
-                            </button>
-                            <span className="showroom-page-counter">
-                              {activeDayIndex + 1} / {dates.length}
-                            </span>
-                            <button
-                              type="button"
-                              className="showroom-arrow-btn"
-                              disabled={activeDayIndex >= dates.length - 1}
-                              onClick={() => {
-                                if (activeDayIndex < dates.length - 1) {
-                                  setActiveDate(dates[activeDayIndex + 1])
-                                }
-                              }}
-                              aria-label="Next day"
-                            >
-                              <ChevronRight size={14} />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="showroom-pills-row">
-                          {dates.length > 4 && (
-                            <button
-                              type="button"
-                              className="pills-scroll-btn left"
-                              onClick={() => scrollPills(-120)}
-                              aria-label="Scroll days left"
-                            >
-                              <ChevronLeft size={14} />
-                            </button>
-                          )}
-                          <div className="showroom-day-pills" ref={pillsContainerRef}>
-                            {dates.map((d, index) => (
-                              <button
-                                key={d}
-                                type="button"
-                                ref={currentActiveDate === d ? activePillRef : null}
-                                className={`showroom-day-pill ${currentActiveDate === d ? 'active' : ''}`}
-                                onClick={() => setActiveDate(d)}
-                              >
-                                Day 0{index + 1}
-                              </button>
-                            ))}
-                          </div>
-                          {dates.length > 4 && (
-                            <button
-                              type="button"
-                              className="pills-scroll-btn right"
-                              onClick={() => scrollPills(120)}
-                              aria-label="Scroll days right"
-                            >
-                              <ChevronRight size={14} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
                     {step === 1 && (
                       <VehicleCarousel
                         value={activeVehicle}
                         onChange={changeVehicle}
                         availability={availability[currentActiveDate] || {}}
+                        ariaLabel={multiDay && vehicleMode === 'daily'
+                          ? `Choose a vehicle for Day ${dates.indexOf(currentActiveDate) + 1}, ${displayDate(currentActiveDate)}`
+                          : 'Interactive vehicle selection'}
                       />
                     )}
                     {step === 2 && (
@@ -1654,7 +1561,7 @@ export default function Booking({
                         </div>
                       )}
                       {step === 1 && dates.length > 1 && (
-                        <div className="summary-daily-vehicles">
+                        <div className="summary-daily-vehicles booking-vehicle-day-summary">
                           {journeys.map((day, index) => {
                             const v = catalog.vehicles.find(
                               (veh) => veh.id === day.vehicle,
@@ -1663,11 +1570,11 @@ export default function Booking({
                               currentService.price + v.surcharge + extras
                             return (
                               <div key={day.date}>
-                                <span>
-                                  Day {String(index + 1).padStart(2, '0')} · {displayDate(day.date)} ({day.time})
+                                <span className="booking-vehicle-day-date" title={displayDate(day.date)}>
+                                  Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time}
                                 </span>
-                                <span>
-                                  {v.name} · {v.quoteRequired ? 'Quote' : money(dayTotal)}
+                                <span className="booking-vehicle-day-price">
+                                  <span title={v.name}>{shortVehicleName(day.vehicle)}</span> · {v.quoteRequired ? 'Quote' : money(dayTotal)}
                                 </span>
                               </div>
                             )
