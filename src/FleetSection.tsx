@@ -23,9 +23,6 @@ type SlideCategory = 'exterior' | 'interior' | 'specs'
 interface SlideInfo {
   category: SlideCategory
   label: string
-  title: string
-  eyebrow: string
-  description: string
   image: string
   fgImage?: string
   interiorImages?: readonly [string, string]
@@ -80,20 +77,12 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'EXTERIOR ARCHITECTURE',
-        title: 'Two-Line Headlamps & Diamond Crest Grille',
-        description:
-          'The iconic two-line lamp signature and athletic elegance establish an authoritative, dignified arrival for diplomats and executives.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/g90/exterior.png',
       },
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'EXECUTIVE SANCTUARY',
-        title: 'VIP Reclining Lounge with Ambient Starlight',
-        description:
-          'Supple quilted Nappa leather, motorized footrests, individual climate zones, and acoustic laminated privacy glass for total serenity.',
         image: '/media/car_info/g90_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/g90/interior-01.webp',
@@ -103,10 +92,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'EXECUTIVE SPECIFICATIONS',
-        title: 'Engineering & Comfort Specifications',
-        description:
-          'Precision tuned multi-chamber air suspension delivering a magic carpet ride across the Seoul metropolitan area.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/g90/exterior.png',
       },
@@ -140,20 +125,12 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'AERODYNAMIC STATURE',
-        title: 'Signature Raised Roof & Star-Map LED',
-        description:
-          'Bespoke high-roof contour with integrated third brake lamp and star-map headlights, creating a prestigious executive presence.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/carnival/exterior.png',
       },
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'VIP CAPTAIN CABIN',
-        title: 'Zero-Gravity Recliners & Starlight Mood Ceiling',
-        description:
-          'Premium captain chairs with power leg rests, ambient starlight headliner, and customized climate settings for peaceful transit.',
         image: '/media/car_info/carnival_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/carnival/interior-01.webp',
@@ -163,10 +140,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'HYBRID SPECIFICATIONS',
-        title: 'Spacious Dimensions & Efficient Hybrid Power',
-        description:
-          'Ultra-smooth electric-assisted acceleration with expansive cabin walk-through floor for effortless boarding.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/carnival/exterior.png',
       },
@@ -200,20 +173,12 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'HORIZON ARCHITECTURE',
-        title: 'Full-Width Horizon Lamp & Low Beltline',
-        description:
-          'Spaceship-inspired silhouette featuring continuous horizontal daytime running lights and massive tinted panoramic windows.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/staria/exterior.png',
       },
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'PANORAMIC CABIN',
-        title: '9-Seat Executive Lounge & Sky View',
-        description:
-          'Unrivaled cabin volume with reconfigurable seating rows, dual sunroofs, and broad walk-through accessibility for larger parties.',
         image: '/media/car_info/staria_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/staria/interior-01.webp',
@@ -223,10 +188,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'CABIN SPECIFICATIONS',
-        title: 'Maximum Luggage Capacity & High Efficiency',
-        description:
-          'Class-leading luggage flexibility accommodating up to 9 passengers and 8 large suitcases without compromise.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/staria/exterior.png',
       },
@@ -260,20 +221,12 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'exterior',
         label: 'Exterior',
-        eyebrow: 'STATELY PROPORTIONS',
-        title: 'High-Roof Presence & Mercedes Chrome Line',
-        description:
-          'Stately high-roof architecture with extended wheelbase and privacy glass, making a powerful impression at embassies and summits.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
       },
       {
         category: 'interior',
         label: 'Interior',
-        eyebrow: 'CONFERENCE CABIN',
-        title: 'Full 1.9m Stand-Up Room & Custom Armchairs',
-        description:
-          'Walk inside without ducking. Hand-crafted wide leather captain recliners in a conference configuration for on-the-road briefings.',
         image: '/media/car_info/sprinter_interior.png',
         interiorImages: [
           '/media/fleet/vehicles/sprinter/interior-01.webp',
@@ -283,10 +236,6 @@ const FLEET_DATA: VehicleInfo[] = [
       {
         category: 'specs',
         label: 'Specs',
-        eyebrow: 'COMMERCIAL SPECIFICATIONS',
-        title: 'V6 Turbo Power & Unmatched Cargo Volume',
-        description:
-          'Smooth V6 diesel torque with dedicated partition cargo space holding 12+ large check-in bags for international delegations.',
         image: '/media/fleet/bg_fleet_vehicle.png',
         fgImage: '/media/fleet/vehicles/sprinter/exterior.png',
       },
@@ -651,20 +600,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                     </button>
                   </div>
                 </div>
-              ) : (
-                /* Editorial captions for Exterior / Interior */
-                <div className="fleet-slide-caption-bar">
-                  <div className="fleet-slide-caption-content">
-                    <span className="fleet-slide-caption-eyebrow">
-                      {slide.eyebrow}
-                    </span>
-                    <h3 className="fleet-slide-caption-title">{slide.title}</h3>
-                    <p className="fleet-slide-caption-desc">
-                      {slide.description}
-                    </p>
-                  </div>
-                </div>
-              )}
+              ) : null}
             </div>
           ))}
         </div>
@@ -673,7 +609,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
       {/* =========================================================================
           SHOWROOM HORIZONTAL CAROUSEL VIEWPORT & SLIDE PUSH TRACK
           Slide 0: Overview (4 cars parked together + header + next button)
-          Slide 1: Genesis G90 (side profile + details + right view tabs)
+          Slide 1: Genesis G90 (side profile + right view tabs)
           Slide 2: Kia Carnival Hi Limousine
           Slide 3: Hyundai Staria Lounge Limousine
           Slide 4: Mercedes Sprinter 319

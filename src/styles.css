@@ -1511,47 +1511,6 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   pointer-events: none;
 }
 
-/* Editorial Caption Bar for Exterior / Interior / Details */
-.fleet-slide-caption-bar {
-  position: relative;
-  z-index: 10;
-  max-width: 500px;
-  margin-bottom: 20px;
-  padding: 16px 24px;
-  border-radius: 16px;
-  background: rgba(14, 16, 24, 0.72);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-  animation: fleetFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.fleet-slide-caption-eyebrow {
-  display: block;
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  color: #B8C0CB;
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.fleet-slide-caption-title {
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: #ffffff;
-  margin-bottom: 4px;
-  line-height: 1.3;
-}
-
-.fleet-slide-caption-desc {
-  font-size: 13px;
-  line-height: 1.55;
-  color: #b5b5c2;
-}
-
 /* Apple-style Keynote Specs Slide Card */
 .fleet-specs-slide-card {
   position: relative;
