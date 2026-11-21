@@ -58,7 +58,13 @@ test('interior gallery supports two images per car and safely handles missing up
   assert.doesNotMatch(gallery, /tabular-nums/)
   assert.doesNotMatch(fleet, /EXECUTIVE SANCTUARY/)
   assert.ok(fleet.includes("slide.category === 'exterior' ?"), 'No editorial caption on Interior')
-  assert.ok(fleet.includes("?.category !== 'interior'"), 'No side arrows on Interior')
+  assert.ok(fleet.includes('className="fleet-slide-arrow fleet-slide-prev"'))
+  assert.ok(fleet.includes('className="fleet-slide-arrow fleet-slide-next"'))
+  assert.ok(!fleet.includes("?.category !== 'interior'"), 'Category arrows stay on Interior')
+  assert.ok(gallery.includes('<BorderBeam />'), 'Interior cards use the shared Fleet Beam')
+  const styles = source('src/styles.css')
+  assert.match(styles, /\.fleet-interior-photo-card > \.fleet-card-beam-ring/)
+  assert.match(styles, /\.fleet-interior-photo-card:is\(:hover, :focus-visible, \[aria-pressed="true"\]\)/)
 })
 
 test('existing Fleet actions and Border Beam remain present', () => {

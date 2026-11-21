@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import BorderBeam from './components/ui/BorderBeam'
 
 interface FleetInteriorGalleryProps {
   vehicleName: string
@@ -83,12 +84,13 @@ export default function FleetInteriorGallery({
               onClick={() => setPhotoIndex(index)}
               aria-label={`Show ${vehicleName} interior photo ${index + 1}`}
               aria-pressed={currentIndex === index}
-              className={`group relative aspect-[16/10] w-[min(40vw,260px)] overflow-hidden rounded-xl border bg-black/45 p-[5px] shadow-[0_16px_44px_rgba(0,0,0,0.55)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+              className={`group fleet-interior-photo-card relative isolate aspect-[16/10] w-[min(40vw,260px)] overflow-hidden rounded-xl border bg-black/45 p-[5px] shadow-[0_16px_44px_rgba(0,0,0,0.55)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
                 currentIndex === index
                   ? 'border-white/85 shadow-[0_20px_52px_rgba(0,0,0,0.64)]'
                   : 'border-white/25 hover:border-white/60'
               }`}
             >
+              <BorderBeam />
               <img
                 src={src}
                 alt=""

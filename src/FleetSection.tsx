@@ -388,7 +388,12 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
   }
 
   const handlePrevSlide = () => {
-    setActiveSlideIndex((prev) => (prev + activeVehicle.slides.length - 1) % activeVehicle.slides.length)
+    if (activeSlideIndex === 0) {
+      // Exterior's previous arrow returns to the selected Vehicle showroom.
+      setIsSlideDetailOpen(false)
+      return
+    }
+    setActiveSlideIndex((prev) => prev - 1)
   }
 
   const handleNextSlide = () => {
@@ -423,7 +428,11 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
         if (e.key === 'Escape') {
           setIsSlideDetailOpen(false)
         } else if (e.key === 'ArrowLeft') {
-          setActiveSlideIndex((prev) => (prev + activeVehicle.slides.length - 1) % activeVehicle.slides.length)
+          if (activeSlideIndex === 0) {
+            setIsSlideDetailOpen(false)
+          } else {
+            setActiveSlideIndex((prev) => prev - 1)
+          }
         } else if (e.key === 'ArrowRight') {
           setActiveSlideIndex((prev) => (prev + 1) % activeVehicle.slides.length)
         }
@@ -448,7 +457,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isSlideDetailOpen, selectedId, activeStageIndex, activeVehicle.slides.length])
+  }, [isSlideDetailOpen, selectedId, activeStageIndex, activeSlideIndex, activeVehicle.slides.length])
 
   return (
     <section
@@ -511,28 +520,25 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
           </button>
         </div>
 
-        {/* Interior switches photos through the centered cards, not side arrows. */}
-        {activeVehicle.slides[activeSlideIndex]?.category !== 'interior' && (
-          <>
-            <button
-              type="button"
-              className="fleet-slide-arrow fleet-slide-prev"
-              onClick={handlePrevSlide}
-              aria-label="Previous vehicle category"
-            >
-              <ChevronLeft size={28} />
-            </button>
+        {/* The outer arrows always navigate Exterior / Interior / Specs.
+            Only the photo gallery itself uses card clicks instead of arrows. */}
+        <button
+          type="button"
+          className="fleet-slide-arrow fleet-slide-prev"
+          onClick={handlePrevSlide}
+          aria-label={activeSlideIndex === 0 ? 'Back to vehicle' : 'Previous vehicle category'}
+        >
+          <ChevronLeft size={28} />
+        </button>
 
-            <button
-              type="button"
-              className="fleet-slide-arrow fleet-slide-next"
-              onClick={handleNextSlide}
-              aria-label="Next vehicle category"
-            >
-              <ChevronRight size={28} />
-            </button>
-          </>
-        )}
+        <button
+          type="button"
+          className="fleet-slide-arrow fleet-slide-next"
+          onClick={handleNextSlide}
+          aria-label="Next vehicle category"
+        >
+          <ChevronRight size={28} />
+        </button>
 
         {/* PPT Horizontal Slide Track */}
         <div
