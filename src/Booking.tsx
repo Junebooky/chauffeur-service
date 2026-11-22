@@ -268,7 +268,6 @@ export default function Booking({
   const [glassOpen, setGlassOpen] = useState(false)
   const [multiDay, setMultiDay] = useState(false)
   const [dailyScheduleOpen, setDailyScheduleOpen] = useState(false)
-  const [dailyScheduleMode, setDailyScheduleMode] = useState<'same' | 'custom'>('custom')
   const [multiDayMode, setMultiDayMode] = useState<'range' | 'discrete'>('range')
   const [dates, setDates] = useState<string[]>(() => [tomorrow()])
   const [timesByDate, setTimesByDate] = useState<Record<string, string>>({})
@@ -541,7 +540,6 @@ export default function Booking({
       if (multiDay && !dailyScheduleOpen) {
         setError('')
         setEditingDate(dates[0])
-        setDailyScheduleMode('custom')
         setDailyScheduleOpen(true)
         requestAnimationFrame(() => heading.current?.focus())
         return
@@ -862,7 +860,6 @@ export default function Booking({
                       setResult(null)
                       setStep(0)
                       setDailyScheduleOpen(false)
-                      setDailyScheduleMode('same')
                       setMultiDay(false)
                       setRoutesByDate({})
                       setTimesByDate({})
@@ -950,7 +947,6 @@ export default function Booking({
                                 setTimesByDate({})
                                 setVehicleMode('same')
                                 setDailyScheduleOpen(false)
-                                setDailyScheduleMode('custom')
                               }}
                             >
                               Single Day
@@ -1126,60 +1122,19 @@ export default function Booking({
                     )}
                     {step === 0 && dailyScheduleOpen && (
                       <section className="booking-daily-screen" aria-label="Daily Schedule">
-                        <div className="day-mode-segmented booking-daily-choice" role="radiogroup" aria-label="Daily schedule mode">
-                          <button
-                            type="button"
-                            role="radio"
-                            aria-checked={dailyScheduleMode === 'same'}
-                            className={`day-mode-pill ${dailyScheduleMode === 'same' ? 'active' : ''}`}
-                            onClick={() => setDailyScheduleMode('same')}
-                          >
-                            Same schedule for all days
-                          </button>
-                          <button
-                            type="button"
-                            role="radio"
-                            aria-checked={dailyScheduleMode === 'custom'}
-                            className={`day-mode-pill ${dailyScheduleMode === 'custom' ? 'active' : ''}`}
-                            onClick={() => {
-                              setDailyScheduleMode('custom')
-                              setEditingDate((previous) =>
-                                previous && dates.includes(previous) ? previous : dates[0],
-                              )
-                            }}
-                          >
-                            Customize individual days
-                          </button>
-                        </div>
-                        {dailyScheduleMode === 'same' ? (
-                          <div className="booking-daily-same">
-                            <p className="field-note">
-                              Your pick-up, destination and time apply to every day.
-                              You can go straight to vehicle selection.
-                            </p>
-                            <div className="booking-daily-days">
-                              {dates.map((day, index) => (
-                                <div className="daily-journey-card" key={day}>
-                                  <div className="card-top">
-                                    <span className="day-indicator">
-                                      <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
-                                      <strong>{displayDate(day)}</strong>
-                                    </span>
-                                    <span className="active-hint">Shared</span>
-                                  </div>
-                                  <p className="field-note">
-                                    {defaultTime} · {pickup || 'Pick-up not set'} → {destination || 'Destination not set'}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
+                        <div className="booking-daily-progress">
+                          <div>
+                            <span className="field-section-title">Your daily itinerary</span>
+                            <p className="field-note">Set the pick-up, schedule and time for each date.</p>
                           </div>
-                        ) : (
+                          <span className="booking-daily-progress-count">
+                            {dates.filter((day) => isRouteComplete(getRoute(day))).length} of {dates.length} ready
+                          </span>
+                        </div>
                           <div className="booking-daily-layout">
                             <div className="booking-daily-day-list" role="group" aria-label="Select a date to customize">
                               {dates.map((day, index) => {
-                                const customized = Boolean(routesByDate[day]) ||
-                                  (timesByDate[day] !== undefined && timesByDate[day] !== defaultTime)
+                                const ready = isRouteComplete(getRoute(day))
                                 const route = getRoute(day)
                                 return (
                                   <button
@@ -1187,7 +1142,11 @@ export default function Booking({
                                     key={day}
                                     className={`daily-journey-card ${scheduleActiveDate === day ? 'active-day-card' : ''}`}
                                     aria-pressed={scheduleActiveDate === day}
-                                    onClick={() => setEditingDate(day)}
+                                    onClick={() => {
+                                      setEditingDate(day)
+                                      setConfirmCopySchedule(false)
+                                      setError('')
+                                    }}
                                   >
                                     <span className="card-top">
                                       <span className="day-indicator">
@@ -1195,7 +1154,7 @@ export default function Booking({
                                         <strong>{displayDate(day)}</strong>
                                       </span>
                                       <span className="active-hint">
-                                        {customized ? 'Customized' : 'Shared'}
+                                        {ready ? 'Ready' : 'To complete'}
                                       </span>
                                     </span>
                                     <span className="field-note">
@@ -1208,26 +1167,8 @@ export default function Booking({
                             <div className="booking-daily-editor" key={scheduleActiveDate}>
                               <div className="daily-times-header">
                                 <span className="field-label">
-                                  <CalendarDays size={14} /> {displayDate(scheduleActiveDate)}
+                                  <CalendarDays size={14} /> Day {String(dates.indexOf(scheduleActiveDate) + 1).padStart(2, '0')} · {displayDate(scheduleActiveDate)}
                                 </span>
-                                <button
-                                  type="button"
-                                  className="apply-all-btn"
-                                  onClick={() => {
-                                    setRoutesByDate((previous) => {
-                                      const next = { ...previous }
-                                      delete next[scheduleActiveDate]
-                                      return next
-                                    })
-                                    setTimesByDate((previous) => {
-                                      const next = { ...previous }
-                                      delete next[scheduleActiveDate]
-                                      return next
-                                    })
-                                  }}
-                                >
-                                  Use shared
-                                </button>
                               </div>
                               <AddressSearch
                                 name={`pickup-${scheduleActiveDate}`}
@@ -1240,10 +1181,53 @@ export default function Booking({
                                   pickup: value, pickupPlace: place,
                                 })}
                               />
+                              <div className="booking-daily-schedule-group">
+                                <div className="booking-daily-schedule-heading">
+                                  <span className="field-section-title">Schedule</span>
+                                  <small>Optional stops · final drop-off</small>
+                                </div>
+                                {getRoute(scheduleActiveDate).stops.map((stop, index) => (
+                                  <div className="booking-daily-stop" key={index}>
+                                    <AddressSearch
+                                      name={`stop-${scheduleActiveDate}-${index}`}
+                                      label={`Stop ${index + 1}`}
+                                      placeholder="Add a stop to this day"
+                                      value={stop.location}
+                                      place={stop.place}
+                                      rightIcon="pin"
+                                      onChange={(value, place) => {
+                                        const stops = getRoute(scheduleActiveDate).stops.map((item, i) =>
+                                          i === index ? { location: value, place } : item)
+                                        setRouteForDate(scheduleActiveDate, { stops })
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="booking-daily-remove-stop"
+                                      aria-label={`Remove stop ${index + 1}`}
+                                      onClick={() => setRouteForDate(scheduleActiveDate, {
+                                        stops: getRoute(scheduleActiveDate).stops.filter((_, i) => i !== index),
+                                      })}
+                                    >
+                                      <X size={15} aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                ))}
+                                {getRoute(scheduleActiveDate).stops.length < 8 && (
+                                  <button
+                                    type="button"
+                                    className="apply-all-btn booking-daily-add-stop"
+                                    onClick={() => setRouteForDate(scheduleActiveDate, {
+                                      stops: [...getRoute(scheduleActiveDate).stops, { location: '', place: null }],
+                                    })}
+                                  >
+                                    <Plus size={15} aria-hidden="true" /> Add stop
+                                  </button>
+                                )}
                               <AddressSearch
                                 name={`destination-${scheduleActiveDate}`}
-                                label="Destination"
-                                placeholder="Enter destination"
+                                label="Final Drop-off"
+                                placeholder="Where does this day end?"
                                 value={getRoute(scheduleActiveDate).destination}
                                 place={getRoute(scheduleActiveDate).destinationPlace}
                                 rightIcon="nav"
@@ -1251,6 +1235,7 @@ export default function Booking({
                                   destination: value, destinationPlace: place,
                                 })}
                               />
+                              </div>
                               <div className="field time-field">
                                 <span className="booking-time-label">
                                   <span className="booking-time-heading"><Clock3 size={15} aria-hidden="true" /> Pick-up Time</span>
@@ -1278,7 +1263,7 @@ export default function Booking({
                               <div className="booking-daily-copy">
                                 {confirmCopySchedule ? (
                                   <div className="selected-dates-summary">
-                                    <span>Replace the other days with Day 1's route and time?</span>
+                                    <span>Copy this day's route, stops and time to all other dates? Existing plans will be replaced.</span>
                                     <button type="button" onClick={applyScheduleToAll}>Confirm</button>
                                     <button type="button" onClick={() => setConfirmCopySchedule(false)}>Cancel</button>
                                   </div>
@@ -1286,15 +1271,21 @@ export default function Booking({
                                   <button
                                     type="button"
                                     className="apply-all-btn"
-                                    onClick={() => setConfirmCopySchedule(true)}
+                                    onClick={() => {
+                                      if (!isRouteComplete(getRoute(scheduleActiveDate))) {
+                                        setError('Finish this day before copying its schedule.')
+                                        return
+                                      }
+                                      setError('')
+                                      setConfirmCopySchedule(true)
+                                    }}
                                   >
-                                    Copy Day 1 to all
+                                    Copy this day to all
                                   </button>
                                 )}
                               </div>
                             </div>
                           </div>
-                        )}
                       </section>
                     )}
                     {step === 1 && (
