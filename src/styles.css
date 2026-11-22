@@ -10225,3 +10225,91 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+
+
+/* Multiple Days — individual daily routes and an optional stop sequence.
+   Keep the existing subdued glass palette and a single scrolling panel. */
+.booking-daily-intro {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 180px;
+  padding: clamp(18px, 2.5vw, 28px);
+  border: 1px solid rgba(239, 243, 249, 0.11);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.booking-daily-intro .field-note { margin: 0; line-height: 1.6; }
+.booking-daily-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.booking-daily-progress .field-note { margin: 6px 0 0; }
+.booking-daily-progress-count {
+  flex: none;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: rgba(231, 236, 243, 0.78);
+  padding-top: 4px;
+}
+.booking-daily-schedule-group {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.booking-daily-schedule-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+}
+.booking-daily-schedule-heading small {
+  color: rgba(215, 221, 229, 0.58);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+.booking-daily-stop {
+  position: relative;
+  min-width: 0;
+  padding-right: 34px;
+}
+.booking-daily-stop .address-field { min-width: 0; }
+.booking-daily-remove-stop {
+  position: absolute;
+  right: 0;
+  top: 28px;
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 33px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(243, 246, 250, 0.7);
+  cursor: pointer;
+}
+.booking-daily-remove-stop:hover,
+.booking-daily-remove-stop:focus-visible {
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #fff;
+}
+.booking-daily-add-stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 32px;
+}
+.booking-daily-day-list .daily-journey-card { text-align: left; }
+@media (max-width: 760px) {
+  .booking-daily-progress { align-items: start; }
+  .booking-daily-schedule-group { gap: 12px; }
+  .booking-daily-intro { min-height: 0; padding: 18px; }
+}
