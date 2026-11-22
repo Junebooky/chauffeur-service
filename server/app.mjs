@@ -138,6 +138,7 @@ export function createApp({
         vehicle: catalog.vehicles.find((v) => v.id === day.vehicle)?.name || day.vehicle,
         pickup: day.pickup || d.pickup,
         destination: day.destination || d.destination,
+        stops: Array.isArray(day.stops) ? day.stops.map((stop) => stop.location) : [],
         total: day.total,
       })),
     }
@@ -245,8 +246,15 @@ export function createApp({
           'Please include each journey date once, in chronological order.',
         )
       const vehicle = days[0].vehicle
-      const pickupPlace = places.selected(b.pickupPlace)
-      const destinationPlace = places.selected(b.destinationPlace)
+      const firstInput = submittedDays[0]
+      // Prefer first-day locations when a request supplies independent daily routes.
+      // Legacy clients can still submit the shared top-level route.
+      const pickupPlace = places.selected(
+        Object.hasOwn(firstInput, 'pickupPlace') ? firstInput.pickupPlace : b.pickupPlace,
+      )
+      const destinationPlace = places.selected(
+        Object.hasOwn(firstInput, 'destinationPlace') ? firstInput.destinationPlace : b.destinationPlace,
+      )
       if (pickupPlace.id === destinationPlace.id)
         throw new Error(
           'Please choose a destination different from your pickup location.',
@@ -271,20 +279,30 @@ export function createApp({
         const dayFlight = inputDay.flight === undefined ? b.flight : inputDay.flight
         if (dayFlight && (typeof dayFlight !== 'string' || dayFlight.length > 30))
           throw new Error('Please enter a valid daily flight number.')
+        const requestedStops = inputDay.stops === undefined ? [] : inputDay.stops
+        if (!Array.isArray(requestedStops) || requestedStops.length > 8)
+          throw new Error('Each day can have up to eight scheduled stops.')
+        const stops = requestedStops.map((stop) => {
+          if (!stop || typeof stop !== 'object' || Array.isArray(stop) ||
+            typeof stop.location !== 'string' || !stop.location.trim() ||
+            stop.location.length > 250)
+            throw new Error('Please select a valid location for every stop.')
+          const selected = places.selected(stop.place)
+          return { location: selected.address, place: selected }
+        })
         return {
           pickup: dayPickup.address,
           destination: dayDestination.address,
           pickupPlace: dayPickup,
           destinationPlace: dayDestination,
           flight: (dayFlight || '').trim(),
+          stops,
         }
       })
       for (const [field, label, max] of [
         ['name', 'name', 100],
         ['email', 'email address', 180],
         ['phone', 'phone number', 40],
-        ['pickup', 'pickup address', 250],
-        ['destination', 'destination', 250],
       ]) {
         if (
           typeof b[field] !== 'string' ||
@@ -358,8 +376,6 @@ export function createApp({
           'name',
           'email',
           'phone',
-          'pickup',
-          'destination',
         ].map((k) => [k, b[k].trim()]),
       )
       details.options = b.options
@@ -380,7 +396,7 @@ export function createApp({
       details.destination = destinationPlace.address
       details.pickupPlace = pickupPlace
       details.destinationPlace = destinationPlace
-      details.flight = (b.flight || '').trim()
+      details.flight = dailyRoutes[0].flight
       details.consent = true
       const reference = `CH-${randomUUID().slice(0, 8).toUpperCase()}`
       db.exec('BEGIN IMMEDIATE')
