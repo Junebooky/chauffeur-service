@@ -1,0 +1,157 @@
+// Operator notification for saved (pending) booking requests.
+// The admin email is private: only the server reads the recipient address.
+import catalog from '../src/catalog.json' with { type: 'json' }
+
+export const DEFAULT_OPERATOR_EMAIL = 'gotoward7@gmail.com'
+
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+})[char])
+
+const readableMoney = (value) => value === null || value === undefined
+  ? 'Quote on request'
+  : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 }).format(value)
+
+const prettyDate = (value) => {
+  const [year, month, day] = String(value ?? '').split('-').map(Number)
+  if (!year || !month || !day) return String(value ?? '')
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(year, month - 1, day)))
+}
+
+const safeMailto = (email, reference) =>
+  'mailto:' + encodeURIComponent(email).replace(/%40/g, '@') +
+  '?subject=' + encodeURIComponent('CHAUFFEUR · ' + reference)
+
+function dayRow(day, index) {
+  const pickup = day.pickupPlace?.name || day.pickup || ''
+  const destination = day.destinationPlace?.name || day.destination || ''
+  const stops = Array.isArray(day.stops) ? day.stops : []
+  const flightText = day.flight
+    ? '<div style="padding:7px 0 0;font-size:11px;color:#7e8582">Flight ' +
+      escapeHtml(day.flight) + '</div>'
+    : ''
+  const stopText = stops.length
+    ? '<div style="padding:7px 0 0;font-size:11px;color:#7e8582">Via ' +
+      stops.map((stop) => escapeHtml(stop.place?.name || stop.location)).join(' · ') + '</div>'
+    : ''
+  return `<tr><td style="padding:19px 0;border-bottom:1px solid #e7eae6;vertical-align:top;width:76px">
+      <span style="font-size:10px;letter-spacing:1px;font-weight:700;color:#899766">DAY ${String(index + 1).padStart(2, '0')}</span>
+    </td><td style="padding:19px 0;border-bottom:1px solid #e7eae6">
+      <div style="font-size:13px;font-weight:650;color:#1d2422">${escapeHtml(prettyDate(day.date))} · ${escapeHtml(day.time || '')} KST</div>
+      <div style="padding-top:6px;font-size:12px;color:#59625d">${escapeHtml(day.service)} · ${escapeHtml(day.vehicle)}</div>
+      <div style="padding-top:10px;font-size:12px;color:#222b26;line-height:1.6">${escapeHtml(pickup)} <span style="color:#899766">→</span> ${escapeHtml(destination)}</div>
+      <div style="font-size:10px;color:#89908b;line-height:1.6">${escapeHtml(day.pickup || '')} → ${escapeHtml(day.destination || '')}</div>
+      ${flightText}${stopText}
+    </td><td align="right" style="padding:19px 0 19px 12px;border-bottom:1px solid #e7eae6;white-space:nowrap;vertical-align:top;font-size:12px;color:#424b45">${escapeHtml(readableMoney(day.total))}</td></tr>`
+}
+
+export function buildOperatorEmail({ reference, status = 'pending', total, details }) {
+  const days = Array.isArray(details.journeys) ? details.journeys : []
+  const options = Array.isArray(details.options) && details.options.length
+    ? details.options.map((id) =>
+        catalog.options.find((option) => option.id === id)?.name || id).join(', ')
+    : 'None'
+  const name = String(details.name || '')
+  const email = String(details.email || '')
+  const phone = String(details.phone || '')
+  const method = String(details.contactMethod || 'email')
+  const messenger = String(details.messengerContact || '')
+  const subject = `[CHAUFFEUR] New Booking Request · ${reference}`
+  const plainDays = days.map((day, i) =>
+    `Day ${String(i + 1).padStart(2, '0')} · ${prettyDate(day.date)} · ${day.time} KST\n` +
+    `${day.service} · ${day.vehicle}\n${day.pickup} → ${day.destination}\n` +
+    `${(day.stops || []).map((stop) => 'Stop: ' + stop.location).join('\n')}\n` +
+    `${readableMoney(day.total)}`
+  ).join('\n\n')
+  const text = [
+    'CHAUFFEUR — New reservation request',
+    'Reference: ' + reference,
+    'Status: ' + status + ' (awaiting confirmation)',
+    '', 'GUEST',
+    'Name: ' + name,
+    'Email: ' + email,
+    'Phone: ' + phone,
+    'Preferred contact: ' + method,
+    messenger ? 'Messenger: ' + messenger : '',
+    '', 'ITINERARY', plainDays,
+    '', 'Add-ons: ' + options,
+    'Estimated total, tax excluded: ' + readableMoney(total),
+    '', 'This is a pending request. No booking has been confirmed or payment taken.',
+  ].filter((line) => line !== undefined).join('\n')
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:24px 12px;background:#f0f2ef;font-family:Arial,Helvetica,sans-serif;color:#202723">
+<table role="presentation" align="center" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;background:#ffffff;border:1px solid #e1e5df;border-collapse:collapse">
+<tr><td style="background:#171b1d;color:#ffffff;padding:30px 36px">
+  <div style="font-size:13px;letter-spacing:3px;font-weight:700">CHAUFFEUR</div>
+  <div style="margin-top:22px;font-size:10px;letter-spacing:2px;color:#b8c6a6">NEW RESERVATION REQUEST</div>
+  <div style="margin-top:8px;font-size:27px;font-weight:400">A new journey awaits.</div>
+  <div style="margin-top:17px;font-size:12px;color:#d5dcd5">Reference <strong style="color:#ffffff">${escapeHtml(reference)}</strong> &nbsp;·&nbsp; Pending confirmation</div>
+</td></tr>
+<tr><td style="padding:28px 36px 31px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+    <tr><td style="font-size:12px;letter-spacing:1px;font-weight:700;color:#899766;padding-bottom:14px">GUEST DETAILS</td></tr>
+    <tr><td style="font-size:18px;font-weight:600;padding-bottom:5px">${escapeHtml(name)}</td></tr>
+    <tr><td style="font-size:12px;color:#555e59;line-height:1.9">Email: ${escapeHtml(email)}<br>Phone: ${escapeHtml(phone)}<br>Preferred contact: ${escapeHtml(method)}
+      ${messenger ? '<br>Messenger: ' + escapeHtml(messenger) : ''}</td></tr>
+    <tr><td style="font-size:12px;letter-spacing:1px;font-weight:700;color:#899766;padding:28px 0 7px">DAILY ITINERARY · ${days.length} ${days.length === 1 ? 'DAY' : 'DAYS'}</td></tr>
+  </table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+    ${days.map(dayRow).join('')}
+  </table>
+  <div style="padding-top:18px;font-size:12px;color:#646e66">Add-ons: ${escapeHtml(options)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;border-top:1px solid #d7ded4">
+    <tr><td style="padding:19px 0;font-size:12px;color:#6f7572">Estimated total · Tax excluded</td>
+      <td align="right" style="padding:19px 0;font-size:19px;font-weight:700;white-space:nowrap">${escapeHtml(readableMoney(total))}</td></tr>
+  </table>
+  <p style="margin:9px 0 20px;font-size:11px;line-height:1.6;color:#717b73">This request is saved but not confirmed. Review the schedule, vehicle availability and guest details before responding.</p>
+  <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+    <td bgcolor="#1d2320" style="padding:13px 20px"><a href="${escapeHtml(safeMailto(email, reference))}" style="color:#ffffff;text-decoration:none;font-size:12px;font-weight:bold">Reply to guest →</a></td>
+  </tr></table>
+</td></tr>
+<tr><td style="background:#f7f8f6;border-top:1px solid #e5e7e2;padding:16px 36px;font-size:10px;color:#8b938d">CHAUFFEUR · Reservation notification · ${escapeHtml(reference)}<br>Please treat guest contact information as confidential.</td></tr>
+</table></body></html>`
+  return { subject, html, text, replyTo: email }
+}
+
+export function createOperatorNotifier({
+  apiKey = process.env.RESEND_API_KEY || '',
+  from = process.env.RESEND_FROM_EMAIL || '',
+  to = process.env.BOOKING_NOTIFICATION_TO || DEFAULT_OPERATOR_EMAIL,
+  fetcher = fetch,
+  send,
+} = {}) {
+  // Provide send in tests for deterministic delivery without real email.
+  const enabled = Boolean(send || (apiKey && from && to))
+  const deliver = async (request) => {
+    if (!enabled) return false
+    const email = buildOperatorEmail(request)
+    if (send) {
+      await send({ to, ...email, reference: request.reference })
+      return true
+    }
+    const response = await fetcher('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'Idempotency-Key': `chauffeur-booking-${request.reference}`,
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        reply_to: email.replyTo,
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
+      }),
+      signal: AbortSignal.timeout(9000),
+    })
+    if (!response.ok) {
+      await response.body?.cancel?.()
+      throw new Error('Operator email provider unavailable')
+    }
+    return true
+  }
+  return { enabled, deliver, to }
+}

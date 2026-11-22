@@ -50,21 +50,21 @@ test('two visible vehicle-tier prices come directly from the reservation catalog
   }
 })
 
-test('all three pricing-card links actually navigate to Booking, including Custom', () => {
+test('fixed-rate pricing cards navigate to Booking while Custom opens email inquiry', () => {
   assert.match(pricing, /id: 'custom',\s*serviceId: null,/)
   assert.match(pricing, /const navigateToReservation = \(serviceId: 'airport' \| 'day' \| null\)/)
-  assert.match(pricing, /if \(serviceId !== null\) onSelectService\(serviceId\)/)
+  assert.match(pricing, /if \(serviceId === null\) \{/)
   assert.match(pricing, /goTo\(3\)/)
   assert.equal((pricing.match(/onClick=\{\(\) => navigateToReservation\(plan\.serviceId\)\}/g) || []).length, 2)
   assert.match(pricing, /pointer-events-auto relative z-10 mt-auto/)
   assert.doesNotMatch(pricing, /pointer-events-none relative z-10 mt-auto/)
   assert.doesNotMatch(pricing, /after:absolute after:inset-0/)
   assert.match(pricing, /Plan your journey/)
-  assert.match(pricing, /Plan a custom journey/)
+  assert.match(pricing, /Email us for a custom quote/)
   assert.match(pricing, /Tailored Quote/)
   assert.doesNotMatch(pricing, /onRequestCustom/)
   // Booking still directs the Custom choice to the Concierge inquiry.
-  assert.match(app, /onRequestCustom=\{\(\) => setModal\('contact'\)\}/)
+  assert.match(app, /onRequestCustom=\{\(\) => \{ window\.location\.href = customQuoteEmail\(\) \}\}/)
 })
 
 test('the existing photographic hover and Border Beam design is retained', () => {

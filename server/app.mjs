@@ -6,12 +6,14 @@ import { randomUUID } from 'node:crypto'
 import catalog from '../src/catalog.json' with { type: 'json' }
 import { createPlaces } from './places.mjs'
 import { createRatesService } from './rates.mjs'
+import { createOperatorNotifier } from './notifications.mjs'
 
 export function createApp({
   databasePath = resolve('.data/reservations.sqlite'),
   now = () => Date.now(),
   placesOptions = {},
   ratesOptions = {},
+  notificationsOptions = {},
 } = {}) {
   if (databasePath !== ':memory:')
     mkdirSync(dirname(databasePath), { recursive: true })
@@ -32,6 +34,14 @@ export function createApp({
       PRIMARY KEY (reservation_id, position)
     );
     CREATE INDEX IF NOT EXISTS leg_slots ON reservation_legs(vehicle_id, starts_at, ends_at);
+    CREATE TABLE IF NOT EXISTS reservation_notifications (
+      reservation_id TEXT PRIMARY KEY REFERENCES reservations(id),
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempts INTEGER NOT NULL DEFAULT 0,
+      next_attempt_at INTEGER NOT NULL DEFAULT 0,
+      sent_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS notification_retry ON reservation_notifications(status, next_attempt_at);
     INSERT OR IGNORE INTO reservation_legs
       (reservation_id, position, vehicle_id, starts_at, ends_at)
       SELECT id, 0, vehicle_id, starts_at, ends_at FROM reservations;
@@ -46,6 +56,63 @@ export function createApp({
   const places = createPlaces({ now, ...placesOptions })
   app.use('/api/places', places.router)
   const rates = createRatesService({ now, ...ratesOptions })
+
+  const notifier = createOperatorNotifier(notificationsOptions)
+  let sendingNotifications = false
+  let stopped = false
+
+  // Notifications are queued in the same database transaction as the booking.
+  // Never block or roll back a valid reservation because email delivery fails.
+  const flushOperatorNotifications = async () => {
+    if (!notifier.enabled || sendingNotifications || stopped) return
+    sendingNotifications = true
+    try {
+      const queued = db.prepare(`
+        SELECT n.reservation_id, n.attempts, r.total, r.details
+        FROM reservation_notifications n
+        JOIN reservations r ON r.id = n.reservation_id
+        WHERE n.status = 'pending' AND n.next_attempt_at <= ?
+        ORDER BY r.created_at ASC LIMIT 10
+      `).all(now())
+      for (const item of queued) {
+        if (stopped) break
+        try {
+          const details = JSON.parse(item.details)
+          await notifier.deliver({
+            reference: item.reservation_id,
+            status: 'pending',
+            total: details.quoteRequired ? null : item.total,
+            details,
+          })
+          if (stopped) break
+          db.prepare(`UPDATE reservation_notifications
+            SET status = 'sent', sent_at = ?, attempts = attempts + 1
+            WHERE reservation_id = ? AND status = 'pending'`)
+            .run(new Date(now()).toISOString(), item.reservation_id)
+        } catch {
+          if (stopped) break
+          const attempts = item.attempts + 1
+          const delay = Math.min(3600000, 30000 * 2 ** Math.min(7, attempts - 1))
+          db.prepare(`UPDATE reservation_notifications
+            SET attempts = ?, next_attempt_at = ?
+            WHERE reservation_id = ? AND status = 'pending'`)
+            .run(attempts, now() + delay, item.reservation_id)
+          // Intentionally no guest PII or provider error details in logs.
+          console.error('Operator email delivery failed; will retry.')
+        }
+      }
+    } catch {
+      if (!stopped) console.error('Reservation email queue could not be processed.')
+    } finally {
+      sendingNotifications = false
+    }
+  }
+  const emailRetry = notifier.enabled
+    ? setInterval(() => { void flushOperatorNotifications() }, 60000)
+    : null
+  emailRetry?.unref()
+  if (notifier.enabled) setImmediate(() => { void flushOperatorNotifications() })
+
 
   function schedule(input) {
     const service = catalog.services.find((s) => s.id === input.service)
@@ -460,6 +527,9 @@ export function createApp({
             day.endsAt,
           ),
         )
+        db.prepare(
+          'INSERT INTO reservation_notifications (reservation_id, next_attempt_at) VALUES (?, ?)',
+        ).run(reference, now())
         db.exec('COMMIT')
       } catch (error) {
         db.exec('ROLLBACK')
@@ -474,6 +544,7 @@ export function createApp({
               .get(reference),
           ),
         )
+      if (notifier.enabled) setImmediate(() => { void flushOperatorNotifications() })
     } catch (error) {
       if (error.code?.startsWith('ERR_SQLITE')) return next(error)
       res
@@ -496,7 +567,10 @@ export function createApp({
   })
   return {
     app,
+    flushNotifications: flushOperatorNotifications,
     close: () => {
+      stopped = true
+      if (emailRetry) clearInterval(emailRetry)
       db.close()
       void places.close()
     },

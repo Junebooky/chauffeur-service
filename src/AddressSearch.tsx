@@ -341,8 +341,11 @@ export default function AddressSearch({
             style={position}
             data-native-scroll
           >
-            <div className="address-popup-heading">
-              <Search size={12} />{' '}
+            <div className={`address-popup-heading ${recentMatches.length ? 'is-trip-recent' : ''}`}>
+              {recentMatches.length
+                ? <span className="address-trip-heading-rule" aria-hidden="true" />
+                : <Search size={12} />}
+              {' '}
               {recentMatches.length
                 ? 'RECENT FROM THIS TRIP'
                 : mode === 'google'

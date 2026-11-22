@@ -1,5 +1,6 @@
 import catalog from './catalog.json'
 import { money } from './utils'
+import { customQuoteEmail } from './contact'
 
 type PricingSectionProps = {
   onSelectService: (serviceId: string) => void
@@ -79,8 +80,11 @@ export default function PricingSection({
   goTo,
 }: PricingSectionProps) {
   const navigateToReservation = (serviceId: 'airport' | 'day' | null) => {
-    // Custom isn't a fixed-rate plan; choose Custom from Booking to inquire.
-    if (serviceId !== null) onSelectService(serviceId)
+    if (serviceId === null) {
+      window.location.href = customQuoteEmail()
+      return
+    }
+    onSelectService(serviceId)
     goTo(3)
   }
 
@@ -242,10 +246,10 @@ export default function PricingSection({
                     <button
                       type="button"
                       onClick={() => navigateToReservation(plan.serviceId)}
-                      aria-label={plan.serviceId === null ? 'Plan a custom journey' : `Plan your ${plan.lines.join(' ').toLowerCase()} journey`}
+                      aria-label={plan.serviceId === null ? 'Email us for a custom quote' : `Plan your ${plan.lines.join(' ').toLowerCase()} journey`}
                       className="relative z-40 mt-3 inline-flex cursor-pointer items-center gap-1.5 !font-sans text-[11px] !font-light text-white/90 transition-colors hover:text-white hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                     >
-                      {plan.serviceId === null ? 'Plan a custom journey' : 'Plan your journey'}
+                      {plan.serviceId === null ? 'Email us for a custom quote' : 'Plan your journey'}
                       <span aria-hidden="true">→</span>
                     </button>
                   </div>

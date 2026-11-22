@@ -64,12 +64,13 @@ async function withApi(run) {
   }
 }
 
-test('new reservation UI offers two priced services plus Custom without By the Hour', () => {
+test('Booking offers two fixed-rate services with a direct email link for custom quotes', () => {
   assert.match(appSource, /useState\('airport'\)/)
   assert.match(bookingSource, /item\.id === 'airport' \|\| item\.id === 'day'/)
-  assert.match(bookingSource, /\{ value: 'custom', label: 'Custom'/)
-  assert.match(bookingSource, /if \(next === 'custom'\) onRequestCustom\(\)/)
-  assert.match(appSource, /onRequestCustom=\{\(\) => setModal\('contact'\)\}/)
+  assert.match(bookingSource, /options=\{bookableServices\}/)
+  assert.doesNotMatch(bookingSource, /value: 'custom'/)
+  assert.match(bookingSource, /Need a custom itinerary\? Email us/)
+  assert.match(appSource, /onRequestCustom=\{\(\) => \{ window\.location\.href = customQuoteEmail\(\) \}\}/)
   assert.equal(catalog.services.find((s) => s.id === 'airport').name, 'Pick-up Service')
   assert.equal(catalog.services.find((s) => s.id === 'day').name, 'Schedule Service')
 })
@@ -169,4 +170,18 @@ test('each daily location input offers verified places already selected during t
   assert.equal((bookingSource.match(/recentPlaces=/g) || []).length, 5)
   assert.match(bookingSource, /recentPlaces=\{multiDay \? recentTripPlaces : \[\]\}/)
   assert.match(bookingSource, /recentPlaces=\{recentTripPlaces\}/)
+})
+
+test('the saved confirmation provides PDF, PNG and a direct email contact', () => {
+  assert.match(bookingSource, /booking-confirmation-status/)
+  assert.match(bookingSource, /Awaiting Confirmation/)
+  assert.match(bookingSource, /booking-confirmation-stats/)
+  assert.match(bookingSource, /booking-confirmation-day/)
+  assert.match(bookingSource, /exportItineraryPdf\(result\)/)
+  assert.match(bookingSource, /exportItineraryPng\(result\)/)
+  assert.match(bookingSource, /Export PDF/)
+  assert.match(bookingSource, /Export PNG/)
+  assert.match(bookingSource, /composeEmail\('CHAUFFEUR/)
+  assert.doesNotMatch(bookingSource, /Save to calendar/)
+  assert.match(bookingSource, /Request saved · Not yet confirmed/)
 })

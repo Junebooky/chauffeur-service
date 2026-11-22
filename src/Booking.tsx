@@ -11,6 +11,9 @@ import {
   ChevronRight,
   Clock3,
   LoaderCircle,
+  FileDown,
+  Image,
+  Mail,
   Plus,
   X,
 } from 'lucide-react'
@@ -20,6 +23,8 @@ import type { Place } from './AddressSearch'
 import GlassSelect from './GlassSelect'
 import GlassTimeInput from './GlassTimeInput'
 import VehicleCarousel from './VehicleCarousel'
+import { exportItineraryPdf, exportItineraryPng } from './itineraryExport'
+import { composeEmail } from './contact'
 import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import DisplayHeading from './components/ui/DisplayHeading'
@@ -53,6 +58,8 @@ type Result = {
     total: number | null
     pickup: string
     destination: string
+    pickupName?: string
+    destinationName?: string
     stops?: string[]
   }[]
   date: string
@@ -299,6 +306,7 @@ export default function Booking({
   const [checking, setChecking] = useState(false)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
+  const [exportError, setExportError] = useState('')
   const [availabilityVersion, setAvailabilityVersion] = useState(0)
   const form = useRef<HTMLFormElement>(null)
   const idempotency = useRef(crypto.randomUUID())
@@ -666,7 +674,15 @@ export default function Booking({
           data.error || 'We could not save your request. Please try again.',
         )
       }
-      setResult(data)
+      setExportError('')
+      setResult({
+        ...data,
+        journeys: data.journeys.map((day: Result['journeys'][number], i: number) => ({
+          ...day,
+          pickupName: journeys[i]?.pickupPlace?.name || day.pickup,
+          destinationName: journeys[i]?.destinationPlace?.name || day.destination,
+        })),
+      })
     } catch (error) {
       setError(
         error instanceof Error && error.name === 'AbortError'
@@ -680,53 +696,23 @@ export default function Booking({
       setSending(false)
     }
   }
-  const downloadCalendar = () => {
+  const exportPdf = () => {
     if (!result) return
-    const stamp = (d: Date) =>
-      d
-        .toISOString()
-        .replace(/[-:]/g, '')
-        .replace(/\.\d{3}/, '')
-    const escape = (s: string) =>
-      s.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/[,;]/g, '\\$&')
-    const calendar = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Chauffeur//Journey Request//EN',
-      ...result.journeys.flatMap((day) => {
-        const start = new Date(`${day.date}T${day.time}:00+09:00`)
-        const end = new Date(
-          start.getTime() + (day.duration ??
-            catalog.services.find((item) => item.name === day.service)?.duration ??
-            currentService.duration) * 3600000,
-        )
-        return [
-          'BEGIN:VEVENT',
-          `UID:${result.reference}-${day.date}@chauffeur.local`,
-          `DTSTAMP:${stamp(new Date())}`,
-          `DTSTART:${stamp(start)}`,
-          `DTEND:${stamp(end)}`,
-          `SUMMARY:${escape(`Chauffeur request ${result.reference} — ${day.vehicle} — pending confirmation`)}`,
-          `LOCATION:${escape(day.pickup)}`,
-          `DESCRIPTION:${escape([
-            day.stops?.length ? `Stops: ${day.stops.join(' → ')}` : '',
-            `Final drop-off: ${day.destination}`,
-            'Reservation request only. This journey has not been confirmed. All prices exclude TAX.',
-          ].filter(Boolean).join('\\n'))}`,
-          'STATUS:TENTATIVE',
-          'END:VEVENT',
-        ]
-      }),
-      'END:VCALENDAR',
-    ].join('\r\n')
-    const url = URL.createObjectURL(
-      new Blob([calendar], { type: 'text/calendar;charset=utf-8' }),
-    )
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${result.reference}.ics`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    try {
+      setExportError('')
+      exportItineraryPdf(result)
+    } catch {
+      setExportError('Could not save the PDF. Please try again.')
+    }
+  }
+  const exportPng = async () => {
+    if (!result) return
+    try {
+      setExportError('')
+      await exportItineraryPng(result)
+    } catch {
+      setExportError('Could not save the image. Please try again.')
+    }
   }
 
   return (
@@ -868,43 +854,91 @@ export default function Booking({
           <div id="reservation-glass-content" className="booking-glass-content">
             {result ? (
               <div className="booking-success">
-                <div className="success-symbol">
-                  <CheckCircle2 size={35} strokeWidth={1} />
+                <div className="booking-confirmation-header">
+                  <div className="booking-confirmation-status">
+                    <CheckCircle2 size={22} strokeWidth={1.5} aria-hidden="true" />
+                    <span>REQUEST SAVED</span>
+                  </div>
+                  <span className="booking-confirmation-pending">Awaiting Confirmation</span>
                 </div>
-                <p className="eyebrow">YOUR REQUEST HAS BEEN SAVED</p>
-                <h3 ref={successHeading} tabIndex={-1}>
-                  A beautiful journey
-                  <br />
-                  <em>starts here.</em>
-                </h3>
-                <p className="success-reference">{result.reference}</p>
-                <div className="success-details">
-                  {result.journeys.map((day) => (
-                    <span key={day.date}>
-                      {displayDate(day.date)} · {day.time} KST · {day.service} · {day.vehicle}
-                      <small> · {[day.pickup, ...(day.stops || []), day.destination].join(' → ')}</small>
-                    </span>
-                  ))}
-                  <span>
-                    {result.journeys.length}{' '}
-                    {result.journeys.length === 1 ? 'day' : 'days'}
-                  </span>
-                  <span>
-                    {result.total === null
-                      ? 'Quote on request'
-                      : `${money(result.total)} estimated total`}{' '}
-                    · TAX excluded
-                  </span>
+                <div className="booking-confirmation-heading">
+                  <div>
+                    <p className="eyebrow">YOUR RESERVATION REQUEST</p>
+                    <h3 ref={successHeading} tabIndex={-1}>Your journey, arranged.</h3>
+                    <p>Your itinerary is saved and ready for our team to review.</p>
+                  </div>
+                  <div className="booking-confirmation-reference">
+                    <small>REFERENCE</small>
+                    <strong>{result.reference}</strong>
+                  </div>
                 </div>
-                <p className="pending-notice">
-                  This is a pending reservation request, not a confirmed booking. No
-                  payment has been taken. This site stores requests locally; email and
-                  operator delivery are not connected.
-                </p>
-                <div className="success-actions">
-                  <button className="button gold-button" onClick={downloadCalendar}>
-                    Save to calendar <CalendarDays size={16} />
-                  </button>
+                <div className="booking-confirmation-stats">
+                  <div>
+                    <small>DATES</small>
+                    <strong>{displayDate(result.journeys[0].date)}
+                      {result.journeys.length > 1 && ' – ' + displayDate(result.journeys[result.journeys.length - 1].date)}
+                    </strong>
+                  </div>
+                  <div>
+                    <small>JOURNEYS</small>
+                    <strong>{result.journeys.length} {result.journeys.length === 1 ? 'day' : 'days'}</strong>
+                  </div>
+                  <div>
+                    <small>ESTIMATED TOTAL</small>
+                    <strong>{result.total === null ? 'Quote on request' : money(result.total)}</strong>
+                    <span>KRW · Tax excluded</span>
+                  </div>
+                </div>
+                <div className="booking-confirmation-itinerary">
+                  <div className="booking-confirmation-itinerary-heading">
+                    <h4>Daily itinerary</h4>
+                    <span>KST (UTC+9)</span>
+                  </div>
+                  <div className="booking-confirmation-days">
+                    {result.journeys.map((day, index) => (
+                      <article className="booking-confirmation-day" key={day.date}>
+                        <div className="booking-confirmation-day-date">
+                          <small>DAY {String(index + 1).padStart(2, '0')}</small>
+                          <strong>{displayDate(day.date)}</strong>
+                        </div>
+                        <div className="booking-confirmation-day-info">
+                          <div className="booking-confirmation-day-meta">
+                            <strong>{day.service} · {day.time}</strong>
+                            <span>{day.vehicle}</span>
+                          </div>
+                          <div className="booking-confirmation-route">
+                            <span>{day.pickupName || day.pickup}</span>
+                            <span className="booking-confirmation-route-arrow" aria-hidden="true">→</span>
+                            <span>{day.destinationName || day.destination}</span>
+                          </div>
+                          {!!day.stops?.length && (
+                            <p className="booking-confirmation-stops">
+                              Via {day.stops.join(' · ')}
+                            </p>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+                <div className="booking-confirmation-footer">
+                  <p><strong>Request saved · Not yet confirmed.</strong> No payment has been taken.</p>
+                  <div className="success-actions">
+                    <button type="button" className="booking-confirmation-export" onClick={exportPdf}>
+                      <FileDown size={16} aria-hidden="true" /> Export PDF
+                    </button>
+                    <button type="button" className="booking-confirmation-export" onClick={() => { void exportPng() }}>
+                      <Image size={16} aria-hidden="true" /> Export PNG
+                    </button>
+                    <a className="booking-confirmation-email"
+                      href={composeEmail('CHAUFFEUR · ' + result.reference,
+                        'Hello CHAUFFEUR,\n\nI have a question about my reservation request ' + result.reference + '.\n\n')}>
+                      <Mail size={16} aria-hidden="true" /> Email Us
+                    </a>
+                  </div>
+                  {exportError && <p className="booking-confirmation-error" role="alert">{exportError}</p>}
+                </div>
+                <div className="booking-confirmation-secondary">
                   <button
                     className="text-link"
                     onClick={() => {
@@ -1099,18 +1133,15 @@ export default function Booking({
                               name="service"
                               value={getService(dates[0] || tomorrow())}
                               onChange={(next) => {
-                                if (next === 'custom') onRequestCustom()
-                                else {
-                                  setService(next)
-                                  if (multiDay) setServiceForDate(dates[0], next)
-                                }
+                                setService(next)
+                                if (multiDay) setServiceForDate(dates[0], next)
                               }}
-                              options={[
-                                ...bookableServices,
-                                { value: 'custom', label: 'Custom', meta: 'Tailored quote' },
-                              ]}
+                              options={bookableServices}
                             />
                           </div>
+                          <button type="button" className="booking-custom-contact" onClick={onRequestCustom}>
+                            Need a custom itinerary? Email us
+                          </button>
   
                           <AddressSearch
                                 labelIcon={false}
@@ -1220,7 +1251,8 @@ export default function Booking({
                                         <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
                                         <strong>{displayDate(day)}</strong>
                                       </span>
-                                      <span className="active-hint">
+                                      <span className={`active-hint ${ready ? 'is-ready' : ''}`}>
+                                        {ready && <Check size={13} strokeWidth={1.7} aria-hidden="true" />}
                                         {ready ? 'Ready' : 'To complete'}
                                       </span>
                                     </span>
@@ -1248,14 +1280,8 @@ export default function Booking({
                                   ariaLabel={`Service for ${displayDate(scheduleActiveDate)}`}
                                   name={`service-${scheduleActiveDate}`}
                                   value={getService(scheduleActiveDate)}
-                                  onChange={(next) => {
-                                    if (next === 'custom') onRequestCustom()
-                                    else setServiceForDate(scheduleActiveDate, next)
-                                  }}
-                                  options={[
-                                    ...bookableServices,
-                                    { value: 'custom', label: 'Custom', meta: 'Tailored quote' },
-                                  ]}
+                                  onChange={(next) => setServiceForDate(scheduleActiveDate, next)}
+                                  options={bookableServices}
                                 />
                               </div>
                               <AddressSearch

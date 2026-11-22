@@ -13,6 +13,7 @@ import Hero from './Hero'
 import FleetSection from './FleetSection'
 import PricingSection from './PricingSection'
 import Booking from './Booking'
+import { customQuoteEmail, OPERATOR_EMAIL } from './contact'
 import { useJourneyScroll } from './useJourneyScroll'
 import { DEFAULT_USD_RATE } from './utils'
 
@@ -212,7 +213,7 @@ export default function App() {
           setVehicle={setVehicle}
           usdRate={usdRate}
           showPrivacy={() => setModal('privacy')}
-          onRequestCustom={() => setModal('contact')}
+          onRequestCustom={() => { window.location.href = customQuoteEmail() }}
         />
       </main>
       <aside className="section-rail" aria-label="Page sections">
@@ -264,18 +265,12 @@ export default function App() {
               </div>
             </div>
             <p className="dialog-note">
-              The online request service is available here. Live concierge
-              messaging and email delivery have not been connected.
+              For a custom itinerary, send us an email directly. Online reservation
+              requests are saved pending confirmation; delivery requires a configured mail service.
             </p>
-            <button
-              className="button gold-button"
-              onClick={() => {
-                setModal(null)
-                nav(3)
-              }}
-            >
-              Tell us about your journey <ArrowRight size={16} />
-            </button>
+            <a className="button gold-button" href={customQuoteEmail()}>
+              Email {OPERATOR_EMAIL} <ArrowRight size={16} />
+            </a>
           </>
         ) : (
           <>

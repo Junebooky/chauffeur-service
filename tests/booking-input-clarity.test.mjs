@@ -71,3 +71,12 @@ test('recent places stay at the top of autocomplete and still resolve through th
   assert.match(address, /fetch\('\/api\/places\/resolve'/)
   assert.doesNotMatch(address, /localStorage|sessionStorage|indexedDB/)
 })
+
+test('booking autocomplete highlights recent trip places using the restrained olive accent', () => {
+  const css = read('src/styles.css')
+  assert.match(address, /address-popup-heading \$\{recentMatches\.length \? 'is-trip-recent' : ''\}/)
+  assert.match(address, /address-trip-heading-rule/)
+  assert.match(css, /\.address-popup-heading\.is-trip-recent \{/)
+  assert.match(css, /color: #9bab7e !important/)
+  assert.match(css, /background: #899766/)
+})
