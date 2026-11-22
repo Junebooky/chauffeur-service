@@ -188,8 +188,11 @@ export function createApp({
       })
     return days
   }
+  // A pending booking is an enquiry, not a held vehicle. Only an operator-
+  // confirmed booking blocks a slot, so test/pending requests never make
+  // all showroom vehicles appear unavailable to later guests.
   const occupied = db.prepare(
-    "SELECT r.id FROM reservation_legs l JOIN reservations r ON r.id = l.reservation_id WHERE l.vehicle_id = ? AND r.status IN ('pending', 'confirmed') AND l.starts_at < ? AND l.ends_at > ? LIMIT 1",
+    "SELECT r.id FROM reservation_legs l JOIN reservations r ON r.id = l.reservation_id WHERE l.vehicle_id = ? AND r.status = 'confirmed' AND l.starts_at < ? AND l.ends_at > ? LIMIT 1",
   )
   const publicBooking = (row) => {
     const d = JSON.parse(row.details)

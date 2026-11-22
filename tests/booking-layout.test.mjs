@@ -69,3 +69,25 @@ test('daily routes reuse the same pickup, destination and pickup time labels as 
   assert.equal((booking.match(/className="booking-time-heading">Pickup Time/g) || []).length, 2)
   assert.doesNotMatch(booking, /label="Final Drop-off"|label="Pick-up Location"/)
 })
+
+test('Schedule omits the redundant date heading and places custom inquiry after route fields', () => {
+  assert.doesNotMatch(booking, /className="schedule-col-header"/)
+  const scheduleStart = booking.indexOf('className="route-fields schedule-route-col"')
+  const service = booking.indexOf('name="service"', scheduleStart)
+  const pickup = booking.indexOf('name="pickup"', service)
+  const destination = booking.indexOf('name="destination"', pickup)
+  const time = booking.indexOf('name="pickup-time"', destination)
+  const flight = booking.indexOf('name="flight"', time)
+  const footer = booking.indexOf('className="booking-custom-footer"', flight)
+  assert.ok(scheduleStart >= 0 && service > scheduleStart && pickup > service)
+  assert.ok(destination > pickup && time > destination && flight > time)
+  assert.ok(footer > flight)
+  assert.equal((booking.match(/Need a custom itinerary\? Email us/g) || []).length, 1)
+  assert.match(css, /\.booking-panel\.is-schedule-only \.booking-custom-footer \{/)
+  assert.match(css, /\.booking-panel\.is-schedule-only \.schedule-date-col \{\s*padding-top: 33px;/)
+})
+
+test('changing a Vehicle clears an outdated availability message', () => {
+  assert.match(booking, /const changeVehicle = \(vId: string\) => \{/)
+  assert.match(booking, /previous\.startsWith\('Please choose another vehicle or time'\) \? '' : previous/)
+})

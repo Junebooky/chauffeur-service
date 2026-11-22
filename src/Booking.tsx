@@ -381,6 +381,9 @@ export default function Booking({
 
   const activeVehicle = getVehicle(currentActiveDate)
   const changeVehicle = (vId: string) => {
+    // Do not leave a stale unavailable warning visible after changing vehicle.
+    setError((previous) =>
+      previous.startsWith('Please choose another vehicle or time') ? '' : previous)
     if (!multiDay || vehicleMode === 'same') {
       applyVehicleToAll(vId)
     } else {
@@ -991,9 +994,6 @@ export default function Booking({
                     {step === 0 && !dailyScheduleOpen && (
                       <div className="schedule-fields">
                         <div className="schedule-date-col">
-                          <div className="schedule-col-header">
-                            <span>Select Date</span>
-                          </div>
                           <Calendar
                             selectedDates={dates}
                             onChangeDates={(newDates) => {
@@ -1139,10 +1139,6 @@ export default function Booking({
                               options={bookableServices}
                             />
                           </div>
-                          <button type="button" className="booking-custom-contact" onClick={onRequestCustom}>
-                            Need a custom itinerary? Email us
-                          </button>
-  
                           <AddressSearch
                                 labelIcon={false}
 
@@ -1214,6 +1210,11 @@ export default function Booking({
                               />
                             </label>
                           )}
+                          <div className="booking-custom-footer">
+                            <button type="button" className="booking-custom-contact" onClick={onRequestCustom}>
+                              Need a custom itinerary? Email us
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}

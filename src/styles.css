@@ -10641,3 +10641,44 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   .booking-confirmation-day-date { flex-direction: row; justify-content: flex-start; }
   .booking-confirmation-day-meta { gap: 5px; }
 }
+
+/* Schedule: keep the calendar's deliberately empty top margin without
+   rendering a redundant 'Select Date' header. The custom enquiry is a small
+   secondary exit at the bottom of the form, never wedged between inputs. */
+.booking-glass-stage.is-expanded .booking-panel.is-schedule-only .schedule-route-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.booking-glass-stage.is-expanded .booking-panel.is-schedule-only .booking-custom-footer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  flex: 1 0 auto;
+  min-height: 36px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+.booking-glass-stage.is-expanded .booking-panel.is-schedule-only .booking-custom-footer .booking-custom-contact {
+  margin: 0 0 4px !important;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: rgba(187, 202, 169, 0.88);
+}
+@media (min-width: 961px) {
+  .booking-glass-stage.is-expanded .booking-panel.is-schedule-only .schedule-fields {
+    min-height: 520px;
+  }
+  .booking-glass-stage.is-expanded .booking-panel.is-schedule-only .schedule-date-col {
+    padding-top: 33px;
+  }
+}
+@media (max-width: 960px) {
+  .booking-glass-stage.is-expanded .booking-panel.is-schedule-only .booking-custom-footer {
+    min-height: 0;
+    padding-top: 22px;
+  }
+}
