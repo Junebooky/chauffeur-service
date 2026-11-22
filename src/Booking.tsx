@@ -425,6 +425,27 @@ export default function Booking({
     }
   }
 
+  // Session-only address reuse: prioritize the first day's confirmed places,
+  // then later days. Never cache unresolved text or persist private trip data.
+  const recentTripPlaces: Place[] = []
+  if (multiDay) {
+    const used = new Set<string>()
+    dates.forEach((day) => {
+      const route = getRoute(day)
+      const selections = [
+        route.pickupPlace,
+        route.destinationPlace,
+        ...route.stops.map((stop) => stop.place),
+      ]
+      selections.forEach((selected) => {
+        if (selected && !used.has(selected.id)) {
+          used.add(selected.id)
+          recentTripPlaces.push(selected)
+        }
+      })
+    })
+  }
+
   const journeys = dates.map((day) => ({
     date: day,
     time: getTime(day),
@@ -1055,6 +1076,10 @@ export default function Booking({
                                   </button>
                                 )}
                               </div>
+                              <div className="booking-first-day-note field-note">
+                                <span>Day 01 · Set pickup, time, and stops for each day next.</span>
+                                <span>Copy any day's itinerary to other days anytime.</span>
+                              </div>
                               {dates.length < 2 && (
                                 <p className="field-note booking-daily-next-note">
                                   Select at least two dates in the calendar to continue.
@@ -1087,14 +1112,10 @@ export default function Booking({
                             />
                           </div>
   
-                          {multiDay && (
-                            <p className="field-note booking-first-day-note">
-                              Day 01 · Set pickup, time, and stops for each day next.
-                              <span>Copy any day's itinerary to other days anytime.</span>
-                            </p>
-                          )}
                           <AddressSearch
                                 labelIcon={false}
+
+                                recentPlaces={multiDay ? recentTripPlaces : []}
                             name="pickup"
                             label="Pickup Location"
                             placeholder="Enter pickup location"
@@ -1112,6 +1133,8 @@ export default function Booking({
                           />
                           <AddressSearch
                                 labelIcon={false}
+
+                                recentPlaces={multiDay ? recentTripPlaces : []}
                             name="destination"
                             label="Destination"
                             placeholder="Enter destination"
@@ -1201,9 +1224,13 @@ export default function Booking({
                                         {ready ? 'Ready' : 'To complete'}
                                       </span>
                                     </span>
-                                    <span className="field-note">
-                                      {selectedService?.name ?? 'Service'} · {getTime(day)}
-                                      {' · '}{route.pickup || 'Pick-up'} → {route.destination || 'Destination'}
+                                    <span className="field-note booking-day-card-summary">
+                                      <span className="booking-day-card-meta">
+                                        {selectedService?.name ?? 'Service'} · {getTime(day)}
+                                      </span>
+                                      <span className="booking-day-card-route">
+                                        {route.pickup || 'Pickup Location'} → {route.destination || 'Destination'}
+                                      </span>
                                     </span>
                                   </button>
                                 )
@@ -1233,9 +1260,11 @@ export default function Booking({
                               </div>
                               <AddressSearch
                                 labelIcon={false}
+
+                                recentPlaces={recentTripPlaces}
                                 name={`pickup-${scheduleActiveDate}`}
-                                label="Pick-up Location"
-                                placeholder="Enter pick-up location"
+                                label="Pickup Location"
+                                placeholder="Enter pickup location"
                                 value={getRoute(scheduleActiveDate).pickup}
                                 place={getRoute(scheduleActiveDate).pickupPlace}
                                                                 onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
@@ -1251,6 +1280,8 @@ export default function Booking({
                                   <div className="booking-daily-stop" key={index}>
                                     <AddressSearch
                                 labelIcon={false}
+
+                                recentPlaces={recentTripPlaces}
                                       name={`stop-${scheduleActiveDate}-${index}`}
                                       label={`Stop ${index + 1}`}
                                       placeholder="Add a stop to this day"
@@ -1287,9 +1318,11 @@ export default function Booking({
                                 )}
                               <AddressSearch
                                 labelIcon={false}
+
+                                recentPlaces={recentTripPlaces}
                                 name={`destination-${scheduleActiveDate}`}
-                                label="Final Drop-off"
-                                placeholder="Where does this day end?"
+                                label="Destination"
+                                placeholder="Enter destination"
                                 value={getRoute(scheduleActiveDate).destination}
                                 place={getRoute(scheduleActiveDate).destinationPlace}
                                                                 onChange={(value, place) => setRouteForDate(scheduleActiveDate, {

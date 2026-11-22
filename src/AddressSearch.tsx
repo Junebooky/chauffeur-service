@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, LoaderCircle, MapPin, Navigation, Search, TrainFront } from 'lucide-react'
 
@@ -14,6 +14,10 @@ export type Place = {
   isStation?: boolean
 }
 type Suggestion = Pick<Place, 'id' | 'name' | 'address' | 'displayAddress' | 'isStation'>
+type DisplaySuggestion = Suggestion & { fromTrip?: boolean }
+const normalizeQuery = (text: string) =>
+  text.normalize('NFKC').normalize('NFD').replace(/\p{M}/gu, '')
+    .toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
 
 type Props = {
   name: string
@@ -23,6 +27,8 @@ type Props = {
   placeholder?: string
   rightIcon?: 'pin' | 'nav' | 'none'
   labelIcon?: boolean
+  /** Verified places selected in this booking; never stored between sessions. */
+  recentPlaces?: Place[]
   onChange: (value: string, place: Place | null) => void
 }
 export default function AddressSearch({
@@ -33,6 +39,7 @@ export default function AddressSearch({
   placeholder = 'Airport, hotel or address in any language',
   rightIcon = 'none',
   labelIcon = true,
+  recentPlaces = [],
   onChange,
 }: Props) {
   const id = useId()
@@ -56,6 +63,31 @@ export default function AddressSearch({
     width: 0,
     maxHeight: 280,
   })
+
+  // Render booking selections immediately, before any live Google results.
+  // Suggestions are displayed locally but re-resolved through the existing
+  // server verification endpoint before being accepted into another day.
+  const queryKey = normalizeQuery(value.trim())
+  const seenRecent = new Set<string>()
+  const recentMatches = recentPlaces.filter((candidate) => {
+    if (!candidate?.id || seenRecent.has(candidate.id) || candidate.id === place?.id)
+      return false
+    seenRecent.add(candidate.id)
+    return !queryKey || [candidate.name, candidate.address, candidate.displayAddress || '']
+      .some((text) => normalizeQuery(text).includes(queryKey))
+  }).slice(0, 6)
+  const recentIds = new Set(recentMatches.map((candidate) => candidate.id))
+  const visibleResults: DisplaySuggestion[] = [
+    ...recentMatches.map((candidate) => ({
+      id: candidate.id,
+      name: candidate.name,
+      address: candidate.address,
+      displayAddress: candidate.displayAddress,
+      isStation: candidate.isStation,
+      fromTrip: true,
+    })),
+    ...(!loading ? results.filter((result) => !recentIds.has(result.id)) : []),
+  ]
 
   useEffect(() => {
     input.current?.setCustomValidity(
@@ -266,17 +298,17 @@ export default function AddressSearch({
               e.preventDefault()
               setOpen(true)
               setHighlight((previous) =>
-                results.length
+                visibleResults.length
                   ? (previous +
                       (e.key === 'ArrowDown' ? 1 : -1) +
-                      results.length) %
-                    results.length
+                      visibleResults.length) %
+                    visibleResults.length
                   : -1,
               )
             }
             if (e.key === 'Enter' && open && !place) {
               e.preventDefault()
-              if (results[highlight]) void select(results[highlight])
+              if (visibleResults[highlight]) void select(visibleResults[highlight])
             }
           }}
         />
@@ -311,9 +343,11 @@ export default function AddressSearch({
           >
             <div className="address-popup-heading">
               <Search size={12} />{' '}
-              {mode === 'google'
-                ? 'PLACES IN SOUTH KOREA'
-                : 'POPULAR LOCATIONS'}
+              {recentMatches.length
+                ? 'RECENT FROM THIS TRIP'
+                : mode === 'google'
+                  ? 'PLACES IN SOUTH KOREA'
+                  : 'POPULAR LOCATIONS'}
             </div>
             <div role="status" className="address-status">
               {loading || resolving ? (
@@ -332,10 +366,14 @@ export default function AddressSearch({
               role="listbox"
               aria-label={`${label} suggestions`}
             >
-              {!loading &&
-                results.map((result, index) => (
+              {visibleResults.map((result, index) => (
+                <Fragment key={`${result.fromTrip ? 'trip' : 'search'}-${result.id}`}>
+                  {index === recentMatches.length && recentMatches.length > 0 && (
+                    <div className="address-popup-heading address-more-places-heading" role="presentation">
+                      {mode === 'google' ? 'PLACES IN SOUTH KOREA' : 'SUGGESTED PLACES'}
+                    </div>
+                  )}
                   <div
-                    key={result.id}
                     id={`${id}-option-${index}`}
                     role="option"
                     aria-selected={highlight === index}
@@ -355,8 +393,9 @@ export default function AddressSearch({
                       <small>{result.displayAddress || result.address}</small>
                     </span>
                   </div>
-                ))}
-              {!loading && !results.length && !error && (
+                </Fragment>
+              ))}
+              {!loading && !visibleResults.length && !error && (
                 <p className="address-empty">
                   No matches. Try a hotel, airport terminal or a more specific
                   address.

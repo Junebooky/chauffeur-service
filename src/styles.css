@@ -8822,6 +8822,13 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: #eef2f7 !important;
   border-top-color: rgba(255, 255, 255, 0.08) !important;
 }
+.address-more-places-heading {
+  margin-top: 6px;
+  padding-top: 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11px !important;
+}
+
 
 .address-result.highlighted,
 .address-result:hover {
@@ -9873,6 +9880,25 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   overflow-wrap: anywhere;
   margin: 0;
 }
+.booking-daily-day-list .booking-day-card-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  text-align: left;
+}
+.booking-daily-day-list .booking-day-card-meta,
+.booking-daily-day-list .booking-day-card-route {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.booking-daily-day-list .booking-day-card-meta {
+  color: rgba(225, 231, 239, 0.78);
+}
+.booking-daily-day-list .booking-day-card-route {
+  color: rgba(218, 224, 233, 0.92);
+}
 
 .booking-daily-editor {
   display: grid;
@@ -10230,12 +10256,20 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 /* Multiple Days — individual daily routes and an optional stop sequence.
    Keep the existing subdued glass palette and a single scrolling panel. */
 .booking-first-day-note {
-  margin: 0;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  margin: 12px 0 0;
   font-size: 12px;
   line-height: 1.45;
   color: rgba(220, 227, 236, 0.68);
 }
-.booking-first-day-note span { display: block; margin-top: 4px; }
+.booking-first-day-note span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .booking-daily-progress {
   display: flex;
   flex-wrap: wrap;

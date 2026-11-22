@@ -57,3 +57,17 @@ test('Schedule copy is concise and its fields use icon-free labels', () => {
   assert.match(booking, /Continue to Daily Schedule/)
   assert.match(css, /\.booking-daily-remove-stop \{[\s\S]*?width: 60px;/)
 })
+
+test('recent places stay at the top of autocomplete and still resolve through the API', () => {
+  assert.match(address, /recentPlaces\?: Place\[\]/)
+  assert.match(address, /RECENT FROM THIS TRIP/)
+  assert.match(address, /const recentMatches = recentPlaces\.filter/)
+  assert.match(address, /\.slice\(0, 6\)/)
+  assert.match(address, /const recentIds = new Set/)
+  assert.match(address, /!recentIds\.has\(result\.id\)/)
+  assert.match(address, /visibleResults\.map\(\(result, index\) =>/)
+  assert.match(address, /visibleResults\[highlight\]/)
+  assert.match(address, /void select\(result\)/)
+  assert.match(address, /fetch\('\/api\/places\/resolve'/)
+  assert.doesNotMatch(address, /localStorage|sessionStorage|indexedDB/)
+})

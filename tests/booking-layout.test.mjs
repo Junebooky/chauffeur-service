@@ -46,3 +46,26 @@ test('every selected date has an independent validated route, optional stops and
   assert.match(booking, /const journeys = dates\.map\(\(day\) => \(\{/)
   assert.match(booking, /\.\.\.getRoute\(day\)/)
 })
+
+test('multi-day guidance belongs to date selection and daily cards separate service from route', () => {
+  const dateStart = booking.indexOf('className="multi-day-control"')
+  const noteStart = booking.indexOf('className="booking-first-day-note field-note"')
+  const routeColumn = booking.indexOf('className="route-fields schedule-route-col"')
+  assert.ok(dateStart > 0 && dateStart < noteStart && noteStart < routeColumn)
+  const noteBlock = booking.slice(noteStart, routeColumn)
+  assert.match(noteBlock, /Set pickup, time, and stops for each day next/)
+  assert.match(noteBlock, /Copy any day's itinerary to other days anytime/)
+  assert.match(css, /\.booking-first-day-note \{\s*display: grid;/)
+  assert.match(booking, /className="field-note booking-day-card-summary"/)
+  assert.match(booking, /className="booking-day-card-meta"/)
+  assert.match(booking, /className="booking-day-card-route"/)
+  assert.match(css, /\.booking-daily-day-list \.booking-day-card-summary \{\s*display: grid;/)
+  assert.match(css, /\.booking-daily-day-list \.booking-day-card-route \{/)
+})
+
+test('daily routes reuse the same pickup, destination and pickup time labels as Schedule', () => {
+  assert.equal((booking.match(/label="Pickup Location"/g) || []).length, 2)
+  assert.equal((booking.match(/label="Destination"/g) || []).length, 2)
+  assert.equal((booking.match(/className="booking-time-heading">Pickup Time/g) || []).length, 2)
+  assert.doesNotMatch(booking, /label="Final Drop-off"|label="Pick-up Location"/)
+})
