@@ -10235,6 +10235,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   line-height: 1.45;
   color: rgba(220, 227, 236, 0.68);
 }
+.booking-first-day-note span { display: block; margin-top: 4px; }
 .booking-daily-progress {
   display: flex;
   flex-wrap: wrap;

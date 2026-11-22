@@ -1089,7 +1089,8 @@ export default function Booking({
   
                           {multiDay && (
                             <p className="field-note booking-first-day-note">
-                              Day 01 · Set your starting details here. Plan the other dates next.
+                              Day 01 · Set pickup, time, and stops for each day next.
+                              <span>Copy any day's itinerary to other days anytime.</span>
                             </p>
                           )}
                           <AddressSearch
