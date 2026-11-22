@@ -4,7 +4,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarDays,
-  CalendarRange,
   Car,
   Check,
   CheckCircle2,
@@ -906,7 +905,6 @@ export default function Booking({
                       <div className="schedule-fields">
                         <div className="schedule-date-col">
                           <div className="schedule-col-header">
-                            <CalendarDays size={16} aria-hidden="true" />
                             <span>Select Date</span>
                           </div>
                           <Calendar
@@ -989,7 +987,7 @@ export default function Booking({
                                   onClick={() => handleModeChange('range')}
                                 >
                                   <span>
-                                    <CalendarRange size={14} /> Consecutive Range
+                                    Consecutive Range
                                   </span>
                                 </button>
                                 <button
@@ -1000,7 +998,7 @@ export default function Booking({
                                   onClick={() => handleModeChange('discrete')}
                                 >
                                   <span>
-                                    <CalendarDays size={14} /> Specific Dates
+                                    Specific Dates
                                   </span>
                                 </button>
                               </div>
@@ -1023,11 +1021,11 @@ export default function Booking({
                                   </button>
                                 )}
                               </div>
-                              <p className="field-note booking-daily-next-note">
-                                {dates.length > 1
-                                  ? 'Next, set the pick-up and schedule for each date.'
-                                  : 'Select at least two dates in the calendar to continue.'}
-                              </p>
+                              {dates.length < 2 && (
+                                <p className="field-note booking-daily-next-note">
+                                  Select at least two dates in the calendar to continue.
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1035,7 +1033,7 @@ export default function Booking({
                         <div className="route-fields schedule-route-col">
                           <div className="field">
                             <span>
-                              <Car size={15} aria-hidden="true" /> Service
+                              Service
                             </span>
                             <GlassSelect
                               ariaLabel="Service"
@@ -1056,17 +1054,17 @@ export default function Booking({
                           {multiDay ? (
                             <div className="booking-daily-intro">
                               <span className="field-section-title">A schedule for every day</span>
-                              <p className="field-note">Each date has its own pick-up, time, stops and final drop-off. Set these in the next step.</p>
-                              <p className="field-note">You can copy any finished day's itinerary when needed.</p>
+                              <p className="field-note">Set pickup, time, and stops for each day next.</p>
+                              <p className="field-note">Copy any day's itinerary to other days anytime.</p>
                             </div>
                           ) : (
                             <>
                           <AddressSearch
+                                labelIcon={false}
                             name="pickup"
                             label="Pickup Location"
                             placeholder="Enter pickup location"
-                            rightIcon="nav"
-                            value={pickup}
+                                                        value={pickup}
                             place={pickupPlace}
                             onChange={(value, selected) => {
                               setPickup(value)
@@ -1074,11 +1072,11 @@ export default function Booking({
                             }}
                           />
                           <AddressSearch
+                                labelIcon={false}
                             name="destination"
                             label="Destination"
                             placeholder="Enter destination"
-                            rightIcon="nav"
-                            value={destination}
+                                                        value={destination}
                             place={destinationPlace}
                             onChange={(value, selected) => {
                               setDestination(value)
@@ -1087,11 +1085,11 @@ export default function Booking({
                           />
                           <div className="field time-field">
                             <span className="booking-time-label">
-                              <span className="booking-time-heading"><Clock3 size={15} aria-hidden="true" /> Pick-up Time</span>
-                              <small className="booking-timezone">Korea time (KST, UTC+9)</small>
+                              <span className="booking-time-heading">Pickup Time</span>
+                              <small className="booking-timezone">KST (UTC+9)</small>
                             </span>
                             <GlassTimeInput
-                              ariaLabel="Pick-up Time"
+                              ariaLabel="Pickup Time"
                               name="pickup-time"
                               value={getTime(dates[0] || tomorrow())}
                               onChange={(t) => {
@@ -1167,17 +1165,17 @@ export default function Booking({
                             <div className="booking-daily-editor" key={scheduleActiveDate}>
                               <div className="daily-times-header">
                                 <span className="field-label">
-                                  <CalendarDays size={14} /> Day {String(dates.indexOf(scheduleActiveDate) + 1).padStart(2, '0')} · {displayDate(scheduleActiveDate)}
+                                  Day {String(dates.indexOf(scheduleActiveDate) + 1).padStart(2, '0')} · {displayDate(scheduleActiveDate)}
                                 </span>
                               </div>
                               <AddressSearch
+                                labelIcon={false}
                                 name={`pickup-${scheduleActiveDate}`}
                                 label="Pick-up Location"
                                 placeholder="Enter pick-up location"
                                 value={getRoute(scheduleActiveDate).pickup}
                                 place={getRoute(scheduleActiveDate).pickupPlace}
-                                rightIcon="nav"
-                                onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
+                                                                onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
                                   pickup: value, pickupPlace: place,
                                 })}
                               />
@@ -1189,13 +1187,13 @@ export default function Booking({
                                 {getRoute(scheduleActiveDate).stops.map((stop, index) => (
                                   <div className="booking-daily-stop" key={index}>
                                     <AddressSearch
+                                labelIcon={false}
                                       name={`stop-${scheduleActiveDate}-${index}`}
                                       label={`Stop ${index + 1}`}
                                       placeholder="Add a stop to this day"
                                       value={stop.location}
                                       place={stop.place}
-                                      rightIcon="pin"
-                                      onChange={(value, place) => {
+                                                                            onChange={(value, place) => {
                                         const stops = getRoute(scheduleActiveDate).stops.map((item, i) =>
                                           i === index ? { location: value, place } : item)
                                         setRouteForDate(scheduleActiveDate, { stops })
@@ -1209,7 +1207,7 @@ export default function Booking({
                                         stops: getRoute(scheduleActiveDate).stops.filter((_, i) => i !== index),
                                       })}
                                     >
-                                      <X size={15} aria-hidden="true" />
+                                      Remove
                                     </button>
                                   </div>
                                 ))}
@@ -1221,28 +1219,28 @@ export default function Booking({
                                       stops: [...getRoute(scheduleActiveDate).stops, { location: '', place: null }],
                                     })}
                                   >
-                                    <Plus size={15} aria-hidden="true" /> Add stop
+                                    Add stop
                                   </button>
                                 )}
                               <AddressSearch
+                                labelIcon={false}
                                 name={`destination-${scheduleActiveDate}`}
                                 label="Final Drop-off"
                                 placeholder="Where does this day end?"
                                 value={getRoute(scheduleActiveDate).destination}
                                 place={getRoute(scheduleActiveDate).destinationPlace}
-                                rightIcon="nav"
-                                onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
+                                                                onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
                                   destination: value, destinationPlace: place,
                                 })}
                               />
                               </div>
                               <div className="field time-field">
                                 <span className="booking-time-label">
-                                  <span className="booking-time-heading"><Clock3 size={15} aria-hidden="true" /> Pick-up Time</span>
-                                  <small className="booking-timezone">Korea time (KST, UTC+9)</small>
+                                  <span className="booking-time-heading">Pickup Time</span>
+                                  <small className="booking-timezone">KST (UTC+9)</small>
                                 </span>
                                 <GlassTimeInput
-                                  ariaLabel={`Pick-up time for ${displayDate(scheduleActiveDate)}`}
+                                  ariaLabel={`Pickup time for ${displayDate(scheduleActiveDate)}`}
                                   value={getTime(scheduleActiveDate)}
                                   onChange={(time) => setTimeForDate(scheduleActiveDate, time)}
                                   options={timeOptions}
@@ -1738,7 +1736,7 @@ export default function Booking({
                     }
                   }}
                 >
-                  <ArrowLeft size={16} aria-hidden="true" /> Back
+                  {step > 0 && <ArrowLeft size={16} aria-hidden="true" />} Back
                 </ReservationButton>
               )}
               <ReservationButton
@@ -1758,7 +1756,7 @@ export default function Booking({
                   </>
                 ) : step === 0 ? (
                   <>
-                    {multiDay && !dailyScheduleOpen ? 'Continue to Daily Schedule' : 'Continue to Select Vehicle'} <ArrowRight size={17} />
+                    {multiDay && !dailyScheduleOpen ? 'Continue to Daily Schedule' : 'Continue to Vehicle'} <span aria-hidden="true">→</span>
                   </>
                 ) : step === 1 ? (
                   <>

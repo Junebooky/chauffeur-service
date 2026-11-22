@@ -26,10 +26,10 @@ test('Korean IME search runs during composition and still debounces ordinary cha
   assert.match(places, /includedRegionCodes: \['kr'\]/)
 })
 
-test('time zone appears beside Pick-up Time, never below or as extra calendar noise', () => {
+test('KST time zone appears beside Pickup Time without extra calendar noise', () => {
   assert.equal((booking.match(/className="booking-timezone"/g) || []).length, 2)
   assert.match(booking, /className="booking-time-heading"/)
-  assert.match(booking, /ariaLabel="Pick-up Time"/)
+  assert.match(booking, /ariaLabel="Pickup Time"/)
   assert.doesNotMatch(booking, /Default Pick-up Time/)
   assert.doesNotMatch(booking, /className="calendar-note"/)
   assert.doesNotMatch(booking, /<small className="field-note">Korea time/)
@@ -42,4 +42,18 @@ test('booking input labels are noticeably softer than input values', () => {
   assert.match(css, /\.booking-glass-stage\.is-expanded \.field input,[\s\S]*?color: #f4f5f7 !important/)
   assert.match(css, /\.booking-glass-stage\.is-expanded \.booking-time-heading/)
   assert.match(css, /\.booking-glass-stage\.is-expanded \.field > span\.booking-time-label > small\.booking-timezone/)
+})
+
+test('Schedule copy is concise and its fields use icon-free labels', () => {
+  assert.match(booking, /Set pickup, time, and stops for each day next\./)
+  assert.match(booking, /Copy any day's itinerary to other days anytime\./)
+  assert.doesNotMatch(booking, /Next, set the pick-up and schedule for each date\./)
+  assert.equal((booking.match(/labelIcon=\{false\}/g) || []).length, 5)
+  assert.doesNotMatch(booking, /rightIcon="nav"|rightIcon="pin"/)
+  assert.doesNotMatch(booking, /<Clock3 size=\{15\} aria-hidden="true" \/> Pick-up Time/)
+  assert.equal((booking.match(/className="booking-time-heading">Pickup Time/g) || []).length, 2)
+  assert.equal((booking.match(/KST \(UTC\+9\)/g) || []).length, 2)
+  assert.match(booking, /'Continue to Vehicle'/)
+  assert.match(booking, /Continue to Daily Schedule/)
+  assert.match(css, /\.booking-daily-remove-stop \{[\s\S]*?width: 60px;/)
 })

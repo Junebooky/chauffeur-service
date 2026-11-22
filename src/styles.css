@@ -10277,7 +10277,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 .booking-daily-stop {
   position: relative;
   min-width: 0;
-  padding-right: 34px;
+  padding-right: 66px;
 }
 .booking-daily-stop .address-field { min-width: 0; }
 .booking-daily-remove-stop {
@@ -10286,8 +10286,9 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   top: 28px;
   display: grid;
   place-items: center;
-  width: 29px;
+  width: 60px;
   height: 33px;
+  font-size: 11px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 9px;
   background: rgba(255, 255, 255, 0.035);

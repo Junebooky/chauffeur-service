@@ -22,6 +22,7 @@ type Props = {
   place: Place | null
   placeholder?: string
   rightIcon?: 'pin' | 'nav' | 'none'
+  labelIcon?: boolean
   onChange: (value: string, place: Place | null) => void
 }
 export default function AddressSearch({
@@ -31,6 +32,7 @@ export default function AddressSearch({
   place,
   placeholder = 'Airport, hotel or address in any language',
   rightIcon = 'none',
+  labelIcon = true,
   onChange,
 }: Props) {
   const id = useId()
@@ -205,7 +207,7 @@ export default function AddressSearch({
   return (
     <div className={`field address-field ${place ? 'has-place' : ''}`}>
       <label htmlFor={id}>
-        <MapPin size={13} /> {label}
+        {labelIcon && <MapPin size={13} aria-hidden="true" />} {label}
       </label>
       <div className="address-control">
         <input
