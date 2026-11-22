@@ -239,6 +239,91 @@ const twoDays = {
   ],
 }
 
+test('stores separate daily pick-ups, ordered stops and drop-offs without a shared route', () =>
+  withServer(async ({ post }) => {
+    const result = await post({
+      ...twoDays,
+      pickup: undefined,
+      destination: undefined,
+      pickupPlace: undefined,
+      destinationPlace: undefined,
+      journeys: [
+        {
+          date: '2026-11-10', time: '10:00', vehicle: 'staria',
+          pickup: 'Incheon Airport Terminal 2',
+          pickupPlace: { id: 'curated:icn-t2' },
+          destination: 'Four Seasons Hotel Seoul',
+          destinationPlace: { id: 'curated:four-seasons' },
+          stops: [{ location: 'Josun Palace', place: { id: 'curated:josun-palace' } }],
+        },
+        {
+          date: '2026-11-11', time: '14:00', vehicle: 'g90',
+          pickup: 'Four Seasons Hotel Seoul',
+          pickupPlace: { id: 'curated:four-seasons' },
+          destination: 'Gimpo Airport',
+          destinationPlace: { id: 'curated:gimpo' },
+          stops: [{ location: 'Le Méridien Seoul Myeongdong', place: { id: 'curated:le-meridien-myeongdong' } }],
+        },
+      ],
+    })
+    assert.equal(result.status, 201, JSON.stringify(result.data))
+    assert.equal(result.data.journeys[0].time, '10:00')
+    assert.equal(result.data.journeys[1].time, '14:00')
+    assert.match(result.data.journeys[0].pickup, /Je2terminal-daero/)
+    assert.match(result.data.journeys[0].destination, /Saemunan-ro/)
+    assert.match(result.data.journeys[1].pickup, /Saemunan-ro/)
+    assert.match(result.data.journeys[1].destination, /Haneul-gil/)
+    assert.match(result.data.journeys[0].stops[0], /Teheran-ro/)
+    assert.match(result.data.journeys[1].stops[0], /Myeongdong/)
+  }))
+
+test('rejects missing or forged per-date route selections and invalid stops', () =>
+  withServer(async ({ post }) => {
+    const noShared = {
+      ...twoDays,
+      pickup: undefined,
+      destination: undefined,
+      pickupPlace: undefined,
+      destinationPlace: undefined,
+      journeys: [
+        { date: '2026-11-10', vehicle: 'staria',
+          pickupPlace: { id: 'curated:icn-t2' },
+          destinationPlace: { id: 'curated:four-seasons' } },
+        { date: '2026-11-11', vehicle: 'g90',
+          pickupPlace: { id: 'curated:four-seasons' },
+          destinationPlace: { id: 'curated:gimpo' } },
+      ],
+    }
+    assert.equal((await post(noShared)).status, 201)
+    const forged = {
+      ...noShared,
+      journeys: [
+        noShared.journeys[0],
+        { ...noShared.journeys[1], stops: [
+          { location: 'Unknown', place: { id: 'forged-stop' } },
+        ] },
+      ],
+    }
+    assert.equal((await post(forged)).status, 400)
+    const incomplete = {
+      ...noShared,
+      journeys: [noShared.journeys[0], {
+        ...noShared.journeys[1], pickupPlace: undefined,
+      }],
+    }
+    assert.equal((await post(incomplete)).status, 400)
+    const tooMany = {
+      ...noShared,
+      journeys: [noShared.journeys[0], {
+        ...noShared.journeys[1],
+        stops: Array.from({ length: 9 }, () => ({
+          location: 'Josun Palace', place: { id: 'curated:josun-palace' },
+        })),
+      }],
+    }
+    assert.equal((await post(tooMany)).status, 400)
+  }))
+
 test('prices every daily vehicle and extra, retries safely, and reserves only the actual daily slots', () =>
   withServer(async ({ post, base }) => {
     const key = randomUUID()
