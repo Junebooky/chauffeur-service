@@ -239,6 +239,60 @@ const twoDays = {
   ],
 }
 
+test('mixed daily services calculate independent rates and availability windows', () =>
+  withServer(async ({ post, base }) => {
+    const body = {
+      ...valid,
+      service: 'airport',
+      journeys: [
+        { date: '2026-11-10', time: '10:00', service: 'airport', vehicle: 'staria' },
+        { date: '2026-11-11', time: '10:00', service: 'day', vehicle: 'staria' },
+      ],
+    }
+    const response = await post(body)
+    assert.equal(response.status, 201, JSON.stringify(response.data))
+    assert.equal(response.data.total, 630000)
+    assert.deepEqual(
+      response.data.journeys.map((day) => [day.service, day.duration, day.total]),
+      [
+        ['Pick-up Service', 3, 200000],
+        ['Schedule Service', 9, 430000],
+      ],
+    )
+    const slots = await fetch(
+      `${base}/api/availability?dates=2026-11-10,2026-11-11&times=13:30,13:30&service=airport&services=airport,day`,
+    )
+    assert.equal(slots.status, 200)
+    const availability = await slots.json()
+    assert.equal(availability.days.length, 2)
+    assert.equal(
+      availability.days[0].vehicles.find((v) => v.id === 'staria').available,
+      true,
+    )
+    assert.equal(
+      availability.days[1].vehicles.find((v) => v.id === 'staria').available,
+      false,
+    )
+    const mismatchedService = await post({
+      ...body,
+      journeys: [{ ...body.journeys[0], service: 'day' }, body.journeys[1]],
+    })
+    assert.equal(mismatchedService.status, 400)
+    const invalidService = await post({
+      ...body,
+      date: '2026-11-12',
+      journeys: [
+        { date: '2026-11-12', time: '10:00', service: 'airport', vehicle: 'staria' },
+        { date: '2026-11-13', time: '10:00', service: 'invalid', vehicle: 'staria' },
+      ],
+    })
+    assert.equal(invalidService.status, 400)
+    const invalidAvailability = await fetch(
+      `${base}/api/availability?dates=2026-11-12,2026-11-13&times=10:00,10:00&service=airport&services=airport`,
+    )
+    assert.equal(invalidAvailability.status, 400)
+  }))
+
 test('stores separate daily pick-ups, ordered stops and drop-offs without a shared route', () =>
   withServer(async ({ post }) => {
     const result = await post({

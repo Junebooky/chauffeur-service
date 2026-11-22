@@ -49,6 +49,7 @@ type Result = {
     time: string
     vehicle: string
     service: string
+    duration?: number
     total: number | null
     pickup: string
     destination: string
@@ -270,6 +271,7 @@ export default function Booking({
   const [multiDayMode, setMultiDayMode] = useState<'range' | 'discrete'>('range')
   const [dates, setDates] = useState<string[]>(() => [tomorrow()])
   const [timesByDate, setTimesByDate] = useState<Record<string, string>>({})
+  const [servicesByDate, setServicesByDate] = useState<Record<string, string>>({})
   const [defaultTime, setDefaultTime] = useState('10:00')
   const [vehiclesByDate, setVehiclesByDate] = useState<Record<string, string>>({})
   const [vehicleMode, setVehicleMode] = useState<'same' | 'daily'>('same')
@@ -305,6 +307,9 @@ export default function Booking({
   const glassTrigger = useRef<HTMLButtonElement>(null)
   const refractionBackdrop = useRef<HTMLDivElement>(null)
   const currentService = catalog.services.find((s) => s.id === service)!
+  const bookableServices = catalog.services
+    .filter((item) => item.id === 'airport' || item.id === 'day')
+    .map((item) => ({ value: item.id, label: item.name, meta: item.unit }))
   // One field works for international names and keeps the existing API stable.
   const nameReady = name.trim().length >= 2
   const emailReady = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
@@ -334,6 +339,11 @@ export default function Booking({
   const scheduleActiveDate = editingDate && dates.includes(editingDate)
     ? editingDate : (dates[0] || tomorrow())
 
+  const getService = (d: string) =>
+    multiDay ? (servicesByDate[d] || service) : service
+  const setServiceForDate = (d: string, serviceId: string) => {
+    setServicesByDate((previous) => ({ ...previous, [d]: serviceId }))
+  }
   const getTime = (d: string) => timesByDate[d] || defaultTime
   const setTimeForDate = (d: string, t: string) => {
     setTimesByDate((prev) => ({ ...prev, [d]: t }))
@@ -390,6 +400,11 @@ export default function Booking({
       return
     }
     const time = getTime(scheduleActiveDate)
+    const dailyService = getService(scheduleActiveDate)
+    setServicesByDate((previous) => ({
+      ...previous,
+      ...Object.fromEntries(dates.map((day) => [day, dailyService])),
+    }))
     setRoutesByDate((previous) => ({
       ...previous,
       ...Object.fromEntries(dates.map((day) => [day, {
@@ -414,6 +429,7 @@ export default function Booking({
     date: day,
     time: getTime(day),
     vehicle: getVehicle(day),
+    service: getService(day),
     ...getRoute(day),
   }))
 
@@ -431,10 +447,15 @@ export default function Booking({
     0,
   )
 
+  const serviceBaseTotal = journeys.reduce((sum, day) =>
+    sum + (catalog.services.find((item) => item.id === day.service)?.price ?? 0), 0)
   const total = journeys.reduce((sum, day) => {
     const v = catalog.vehicles.find((veh) => veh.id === day.vehicle)
-    return sum + currentService.price + (v?.surcharge || 0) + extras
+    const selectedService = catalog.services.find((item) => item.id === day.service)
+    return sum + (selectedService?.price ?? 0) + (v?.surcharge || 0) + extras
   }, 0)
+  const mixedServices = new Set(journeys.map((day) => day.service)).size > 1
+  const summaryService = catalog.services.find((item) => item.id === journeys[0]?.service) ?? currentService
 
   const allAvailable =
     journeys.length > 0 &&
@@ -446,6 +467,7 @@ export default function Booking({
 
   const datesKey = dates.join(',')
   const timesKey = dates.map((d) => getTime(d)).join(',')
+  const servicesKey = dates.map((d) => getService(d)).join(',')
 
   // Removing a date also removes its unsent per-day overrides.
   useEffect(() => {
@@ -458,6 +480,7 @@ export default function Booking({
     }
     setRoutesByDate(prune)
     setTimesByDate(prune)
+    setServicesByDate(prune)
     setVehiclesByDate(prune)
     setEditingDate((previous) => previous && !present.has(previous) ? null : previous)
   }, [datesKey])
@@ -470,9 +493,10 @@ export default function Booking({
     setAvailability({})
     setError('')
     const params = new URLSearchParams()
-    params.set('service', service)
+    params.set('service', getService(dates[0] || tomorrow()))
     params.set('dates', dates.join(','))
     params.set('times', dates.map((d) => getTime(d)).join(','))
+    params.set('services', servicesKey)
     params.set('date', dates[0] || tomorrow())
     params.set('time', getTime(dates[0] || tomorrow()))
     if (dates.length > 1) {
@@ -517,7 +541,7 @@ export default function Booking({
         if (!controller.signal.aborted) setChecking(false)
       })
     return () => controller.abort()
-  }, [datesKey, timesKey, service, availabilityVersion])
+  }, [datesKey, timesKey, servicesKey, availabilityVersion])
   useEffect(() => {
     if (initialUsdRate) setUsdRate(initialUsdRate)
   }, [initialUsdRate])
@@ -537,6 +561,11 @@ export default function Booking({
         return
       }
       if (multiDay && !dailyScheduleOpen) {
+        if (!isRouteComplete(getRoute(dates[0]))) {
+          setError('Choose different pickup and destination locations for the first date before continuing.')
+          return
+        }
+        if (!form.current?.reportValidity()) return
         setError('')
         setEditingDate(dates[0])
         setDailyScheduleOpen(true)
@@ -594,7 +623,7 @@ export default function Booking({
           pickupPlace: journeys[0].pickupPlace,
           destinationPlace: journeys[0].destinationPlace,
           flight: journeys[0].flight,
-          service,
+          service: journeys[0].service,
           vehicle: journeys[0].vehicle,
           journeys,
           options,
@@ -646,7 +675,9 @@ export default function Booking({
       ...result.journeys.flatMap((day) => {
         const start = new Date(`${day.date}T${day.time}:00+09:00`)
         const end = new Date(
-          start.getTime() + currentService.duration * 3600000,
+          start.getTime() + (day.duration ??
+            catalog.services.find((item) => item.name === day.service)?.duration ??
+            currentService.duration) * 3600000,
         )
         return [
           'BEGIN:VEVENT',
@@ -829,12 +860,12 @@ export default function Booking({
                 <div className="success-details">
                   {result.journeys.map((day) => (
                     <span key={day.date}>
-                      {displayDate(day.date)} · {day.time} KST · {day.vehicle}
+                      {displayDate(day.date)} · {day.time} KST · {day.service} · {day.vehicle}
                       <small> · {[day.pickup, ...(day.stops || []), day.destination].join(' → ')}</small>
                     </span>
                   ))}
                   <span>
-                    {result.service} · {result.journeys.length}{' '}
+                    {result.journeys.length}{' '}
                     {result.journeys.length === 1 ? 'day' : 'days'}
                   </span>
                   <span>
@@ -862,6 +893,7 @@ export default function Booking({
                       setMultiDay(false)
                       setRoutesByDate({})
                       setTimesByDate({})
+                      setServicesByDate({})
                       setVehiclesByDate({})
                       setVehicleMode('same')
                       setEditingDate(null)
@@ -937,12 +969,14 @@ export default function Booking({
                                 setDestinationPlace(firstRoute.destinationPlace)
                                 setFlight(firstRoute.flight)
                                 setDefaultTime(getTime(first))
+                                setService(getService(first))
                                 setMultiDay(false)
                                 setDates([first])
                                 setActiveDate(first)
                                 setEditingDate(null)
                                 setRoutesByDate({})
                                 setTimesByDate({})
+                                setServicesByDate({})
                                 setVehicleMode('same')
                                 setDailyScheduleOpen(false)
                               }}
@@ -1038,37 +1072,41 @@ export default function Booking({
                             <GlassSelect
                               ariaLabel="Service"
                               name="service"
-                              value={service}
+                              value={getService(dates[0] || tomorrow())}
                               onChange={(next) => {
                                 if (next === 'custom') onRequestCustom()
-                                else setService(next)
+                                else {
+                                  setService(next)
+                                  if (multiDay) setServiceForDate(dates[0], next)
+                                }
                               }}
                               options={[
-                                ...catalog.services.filter((s) => s.id === 'airport' || s.id === 'day').map((s) => ({
-                                  value: s.id, label: s.name, meta: s.unit,
-                                })),
+                                ...bookableServices,
                                 { value: 'custom', label: 'Custom', meta: 'Tailored quote' },
                               ]}
                             />
                           </div>
-                          {multiDay ? (
-                            <div className="booking-daily-intro">
-                              <span className="field-section-title">A schedule for every day</span>
-                              <p className="field-note">Set pickup, time, and stops for each day next.</p>
-                              <p className="field-note">Copy any day's itinerary to other days anytime.</p>
-                            </div>
-                          ) : (
-                            <>
+  
+                          {multiDay && (
+                            <p className="field-note booking-first-day-note">
+                              Day 01 · Set your starting details here. Plan the other dates next.
+                            </p>
+                          )}
                           <AddressSearch
                                 labelIcon={false}
                             name="pickup"
                             label="Pickup Location"
                             placeholder="Enter pickup location"
-                                                        value={pickup}
-                            place={pickupPlace}
+                            value={multiDay ? getRoute(dates[0]).pickup : pickup}
+                            place={multiDay ? getRoute(dates[0]).pickupPlace : pickupPlace}
                             onChange={(value, selected) => {
-                              setPickup(value)
-                              setPickupPlace(selected)
+                              if (multiDay) setRouteForDate(dates[0], {
+                                pickup: value, pickupPlace: selected,
+                              })
+                              else {
+                                setPickup(value)
+                                setPickupPlace(selected)
+                              }
                             }}
                           />
                           <AddressSearch
@@ -1076,11 +1114,16 @@ export default function Booking({
                             name="destination"
                             label="Destination"
                             placeholder="Enter destination"
-                                                        value={destination}
-                            place={destinationPlace}
+                            value={multiDay ? getRoute(dates[0]).destination : destination}
+                            place={multiDay ? getRoute(dates[0]).destinationPlace : destinationPlace}
                             onChange={(value, selected) => {
-                              setDestination(value)
-                              setDestinationPlace(selected)
+                              if (multiDay) setRouteForDate(dates[0], {
+                                destination: value, destinationPlace: selected,
+                              })
+                              else {
+                                setDestination(value)
+                                setDestinationPlace(selected)
+                              }
                             }}
                           />
                           <div className="field time-field">
@@ -1093,13 +1136,13 @@ export default function Booking({
                               name="pickup-time"
                               value={getTime(dates[0] || tomorrow())}
                               onChange={(t) => {
-                                setDefaultTime(t)
+                                if (!multiDay) setDefaultTime(t)
                                 setTimeForDate(dates[0] || tomorrow(), t)
                               }}
                               options={timeOptions}
                             />
                           </div>
-                          {service === 'airport' && (
+                          {getService(dates[0] || tomorrow()) === 'airport' && (
                             <label className="field">
                               <span>
                                 Flight number <small>optional</small>
@@ -1107,13 +1150,14 @@ export default function Booking({
                               <input
                                 name="flight"
                                 maxLength={30}
-                                value={flight}
-                                onChange={(e) => setFlight(e.target.value)}
+                                value={multiDay ? getRoute(dates[0]).flight : flight}
+                                onChange={(e) => {
+                                  if (multiDay) setRouteForDate(dates[0], { flight: e.target.value })
+                                  else setFlight(e.target.value)
+                                }}
                                 placeholder="e.g. KE 902"
                               />
                             </label>
-                          )}
-                            </>
                           )}
                         </div>
                       </div>
@@ -1134,6 +1178,7 @@ export default function Booking({
                               {dates.map((day, index) => {
                                 const ready = isRouteComplete(getRoute(day))
                                 const route = getRoute(day)
+                                const selectedService = catalog.services.find((item) => item.id === getService(day))
                                 return (
                                   <button
                                     type="button"
@@ -1156,7 +1201,8 @@ export default function Booking({
                                       </span>
                                     </span>
                                     <span className="field-note">
-                                      {getTime(day)} · {route.pickup || 'Pick-up'} → {route.destination || 'Destination'}
+                                      {selectedService?.name ?? 'Service'} · {getTime(day)}
+                                      {' · '}{route.pickup || 'Pick-up'} → {route.destination || 'Destination'}
                                     </span>
                                   </button>
                                 )
@@ -1167,6 +1213,22 @@ export default function Booking({
                                 <span className="field-label">
                                   Day {String(dates.indexOf(scheduleActiveDate) + 1).padStart(2, '0')} · {displayDate(scheduleActiveDate)}
                                 </span>
+                              </div>
+                              <div className="field">
+                                <span>Service</span>
+                                <GlassSelect
+                                  ariaLabel={`Service for ${displayDate(scheduleActiveDate)}`}
+                                  name={`service-${scheduleActiveDate}`}
+                                  value={getService(scheduleActiveDate)}
+                                  onChange={(next) => {
+                                    if (next === 'custom') onRequestCustom()
+                                    else setServiceForDate(scheduleActiveDate, next)
+                                  }}
+                                  options={[
+                                    ...bookableServices,
+                                    { value: 'custom', label: 'Custom', meta: 'Tailored quote' },
+                                  ]}
+                                />
                               </div>
                               <AddressSearch
                                 labelIcon={false}
@@ -1246,7 +1308,7 @@ export default function Booking({
                                   options={timeOptions}
                                 />
                               </div>
-                              {service === 'airport' && (
+                              {getService(scheduleActiveDate) === 'airport' && (
                                 <label className="field">
                                   <span>Flight number <small>optional</small></span>
                                   <input
@@ -1261,7 +1323,7 @@ export default function Booking({
                               <div className="booking-daily-copy">
                                 {confirmCopySchedule ? (
                                   <div className="selected-dates-summary">
-                                    <span>Copy this day's route, stops and time to all other dates? Existing plans will be replaced.</span>
+                                    <span>Copy this day's service, route, stops and time to all other dates? Existing plans will be replaced.</span>
                                     <button type="button" onClick={applyScheduleToAll}>Confirm</button>
                                     <button type="button" onClick={() => setConfirmCopySchedule(false)}>Cancel</button>
                                   </div>
@@ -1564,7 +1626,7 @@ export default function Booking({
                             <div key={day.date} className="summary-journey-item">
                               <div className="summary-journey-header">
                                 <span className="summary-journey-date">
-                                  Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time} KST
+                                  Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time} KST · {catalog.services.find((item) => item.id === day.service)?.name ?? 'Service'}
                                 </span>
                                 <span className="summary-journey-vehicle" title={vehicleName}>
                                   {shortVehicleName(day.vehicle)}
@@ -1603,15 +1665,16 @@ export default function Booking({
                             const v = catalog.vehicles.find(
                               (veh) => veh.id === day.vehicle,
                             )!
+                            const selectedService = catalog.services.find((item) => item.id === day.service)
                             const dayTotal =
-                              currentService.price + v.surcharge + extras
+                              (selectedService?.price ?? 0) + v.surcharge + extras
                             return (
                               <div key={day.date}>
                                 <span className="booking-vehicle-day-date" title={displayDate(day.date)}>
                                   Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time}
                                 </span>
                                 <span className="booking-vehicle-day-price">
-                                  <span title={v.name}>{shortVehicleName(day.vehicle)}</span> · {v.quoteRequired ? 'Quote' : money(dayTotal)}
+                                  <span title={v.name}>{shortVehicleName(day.vehicle)}</span> · {selectedService?.name ?? 'Service'} · {v.quoteRequired ? 'Quote' : money(dayTotal)}
                                 </span>
                               </div>
                             )
@@ -1620,13 +1683,14 @@ export default function Booking({
                       )}
                       <div>
                         <span>
-                          {step !== 2 && <Car size={14} />} {currentService.name} ({currentService.duration}h)
-                          {dates.length > 1 ? ` × ${dates.length} days` : ''}
+                          {step !== 2 && <Car size={14} />} {mixedServices
+                            ? 'Services · per day'
+                            : `${summaryService.name} (${summaryService.duration}h)${dates.length > 1 ? ` × ${dates.length} days` : ''}`}
                         </span>
                         <span>
                           {quoteRequired
                             ? 'Quote on request'
-                            : money(currentService.price * dates.length)}
+                            : money(serviceBaseTotal)}
                         </span>
                       </div>
                       {vehicleSurcharges > 0 && (

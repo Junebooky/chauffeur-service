@@ -28,7 +28,9 @@ test('Daily Schedule shows progress, one selected date, and a focused daily edit
   assert.match(booking, /\{ready \? 'Ready' : 'To complete'\}/)
   assert.doesNotMatch(booking, /Same schedule for all days/)
   assert.match(css, /\.booking-daily-progress \{/)
-  assert.match(css, /\.booking-daily-intro \{/)
+  assert.match(booking, /booking-first-day-note/)
+  assert.match(booking, /getService\(dates\[0\] \|\| tomorrow\(\)\)/)
+  assert.doesNotMatch(booking, /className="booking-daily-intro"/)
   assert.match(css, /\.booking-panel\.is-daily-schedule \.booking-fields \{\s*padding-block: 16px !important;/)
 })
 

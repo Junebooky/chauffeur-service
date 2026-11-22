@@ -10229,17 +10229,12 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 /* Multiple Days — individual daily routes and an optional stop sequence.
    Keep the existing subdued glass palette and a single scrolling panel. */
-.booking-daily-intro {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  min-height: 180px;
-  padding: clamp(18px, 2.5vw, 28px);
-  border: 1px solid rgba(239, 243, 249, 0.11);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.025);
+.booking-first-day-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(220, 227, 236, 0.68);
 }
-.booking-daily-intro .field-note { margin: 0; line-height: 1.6; }
 .booking-daily-progress {
   display: flex;
   flex-wrap: wrap;
@@ -10312,5 +10307,4 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 @media (max-width: 760px) {
   .booking-daily-progress { align-items: start; }
   .booking-daily-schedule-group { gap: 12px; }
-  .booking-daily-intro { min-height: 0; padding: 18px; }
 }

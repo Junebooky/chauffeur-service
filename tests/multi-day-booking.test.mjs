@@ -66,7 +66,7 @@ async function withApi(run) {
 
 test('new reservation UI offers two priced services plus Custom without By the Hour', () => {
   assert.match(appSource, /useState\('airport'\)/)
-  assert.match(bookingSource, /s\.id === 'airport' \|\| s\.id === 'day'/)
+  assert.match(bookingSource, /item\.id === 'airport' \|\| item\.id === 'day'/)
   assert.match(bookingSource, /\{ value: 'custom', label: 'Custom'/)
   assert.match(bookingSource, /if \(next === 'custom'\) onRequestCustom\(\)/)
   assert.match(appSource, /onRequestCustom=\{\(\) => setModal\('contact'\)\}/)
@@ -94,6 +94,12 @@ test('Multiple Days keeps the Glass controls and makes route and vehicle choices
 
   assert.match(bookingSource, /Copy this day to all/)
   assert.match(bookingSource, /setRoutesByDate/)
+  assert.match(bookingSource, /name=\{`service-\$\{scheduleActiveDate\}`\}/)
+  assert.match(bookingSource, /setServiceForDate\(scheduleActiveDate, next\)/)
+  assert.match(bookingSource, /getService\(scheduleActiveDate\) === 'airport'/)
+  assert.match(bookingSource, /value=\{multiDay \? getRoute\(dates\[0\]\)\.pickup : pickup\}/)
+  assert.match(bookingSource, /params\.set\('services', servicesKey\)/)
+  assert.match(bookingSource, /service: journeys\[0\]\.service/)
   assert.match(bookingSource, /name=\{`pickup-\$\{scheduleActiveDate\}`\}/)
   assert.match(bookingSource, /name=\{`destination-\$\{scheduleActiveDate\}`\}/)
   assert.match(bookingSource, /getRoute\(scheduleActiveDate\)\.stops\.map/)

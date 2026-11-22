@@ -86,9 +86,17 @@ export function createApp({
               .split(',')
               .map((s) => s.trim())
         : []
+      const servicesList = input.services
+        ? Array.isArray(input.services)
+          ? input.services
+          : String(input.services).split(',').map((item) => item.trim())
+        : []
+      if (servicesList.length && servicesList.length !== dateList.length)
+        throw new Error('Please select a service for every journey date.')
       return dateList.map((d, index) => {
         const t = timesList[index] || input.time
-        const slot = schedule({ ...input, date: d, time: t })
+        const dailyService = servicesList.length ? servicesList[index] : input.service
+        const slot = schedule({ ...input, date: d, time: t, service: dailyService })
         return { date: d, time: t, ...slot }
       })
     }
@@ -134,7 +142,9 @@ export function createApp({
       ).map((day) => ({
         date: day.date,
         time: day.time || d.time,
-        service: catalog.services.find((s) => s.id === d.service)?.name || d.service,
+        service: catalog.services.find((s) => s.id === (day.service || d.service))?.name ||
+          day.service || d.service,
+        duration: catalog.services.find((s) => s.id === (day.service || d.service))?.duration,
         vehicle: catalog.vehicles.find((v) => v.id === day.vehicle)?.name || day.vehicle,
         pickup: day.pickup || d.pickup,
         destination: day.destination || d.destination,
@@ -205,7 +215,7 @@ export function createApp({
       const b = req.body
       if (!b || typeof b !== 'object' || Array.isArray(b))
         throw new Error('Please enter your journey details.')
-      const { service } = schedule(b)
+      schedule(b)
       const submittedDays =
         b.journeys === undefined
           ? [{ date: b.date, vehicle: b.vehicle }]
@@ -220,7 +230,10 @@ export function createApp({
         if (!day || typeof day !== 'object' || Array.isArray(day))
           throw new Error('Please enter valid daily journey details.')
         const dayTime = day.time || b.time
-        const slot = schedule({ ...b, date: day.date, time: dayTime })
+        const slot = schedule({
+          ...b, date: day.date, time: dayTime,
+          service: day.service === undefined ? b.service : day.service,
+        })
         const selected = catalog.vehicles.find((v) => v.id === day.vehicle)
         if (!selected)
           throw new Error('Please select a valid vehicle for every day.')
@@ -228,7 +241,8 @@ export function createApp({
           index === 0 &&
           (day.date !== b.date ||
             day.vehicle !== b.vehicle ||
-            (day.time && b.time && day.time !== b.time))
+            (day.time && b.time && day.time !== b.time) ||
+            (day.service !== undefined && day.service !== b.service))
         )
           throw new Error(
             'Your first day must match the start of your journey.',
@@ -375,7 +389,7 @@ export function createApp({
         .filter((o) => b.options.includes(o.id))
         .reduce((sum, o) => sum + o.price, 0)
       const total = days.reduce(
-        (sum, day) => sum + service.price + day.vehicle.surcharge + extras,
+        (sum, day) => sum + day.service.price + day.vehicle.surcharge + extras,
         0,
       )
       const details = Object.fromEntries(
@@ -394,10 +408,11 @@ export function createApp({
         date: day.date,
         time: day.time,
         vehicle: day.vehicle.id,
+        service: day.service.id,
         ...dailyRoutes[index],
         total: day.vehicle.quoteRequired
           ? null
-          : service.price + day.vehicle.surcharge + extras,
+          : day.service.price + day.vehicle.surcharge + extras,
       }))
       details.quoteRequired = days.some((day) => day.vehicle.quoteRequired)
       details.taxIncluded = catalog.taxIncluded
