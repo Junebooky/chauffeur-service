@@ -66,3 +66,12 @@ test('Fleet dock and Specs keep a common Border Beam, now over three times slowe
   assert.match(fleet, /<BorderBeam duration="14s" \/>/)
   assert.match(css, /rotateBeam var\(--fleet-border-beam-duration\) linear infinite/)
 })
+
+test('Back keeps glass styling without a Border Beam; other reservation buttons keep it', () => {
+  const booking = load('src/Booking.tsx')
+  const button = load('src/components/ui/ReservationButton.tsx')
+  assert.match(booking, /className="booking-back-btn"\s*showBeam=\{false\}/)
+  assert.match(button, /showBeam = true/)
+  assert.match(button, /\{showBeam && <BookingCtaBeam \/>\}/)
+  assert.match(booking, /className=\{step === 2 \? 'booking-submit' : ''\}/)
+})

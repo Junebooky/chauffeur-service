@@ -739,7 +739,7 @@ export default function Booking({
         <div className="booking-glass-refraction-backdrop" ref={refractionBackdrop} aria-hidden="true" />
         {(glassOpen || result) && (
           <nav className="booking-outer-stepper" aria-label="Reservation steps">
-            {['Schedule', 'Vehicle', 'Your Details', 'Confirmation'].map((label, i, arr) => {
+            {['Schedule', 'Vehicle', 'Details', 'Confirmation'].map((label, i, arr) => {
               const displayStep = result ? 3 : step
               const isActive = displayStep === i
               const isComplete = i < displayStep
@@ -1355,8 +1355,8 @@ export default function Booking({
                           <div className="daily-schedule-configuration">
                             <div className="daily-schedule-header">
                               <div>
-                                <strong>How would you like to arrange your vehicles?</strong>
-                                <small>Choose one model for the whole trip, or a different one for each date.</small>
+                                <strong>Vehicle Selection</strong>
+                                <small>Use one vehicle for all days, or choose per day.</small>
                               </div>
                             </div>
                             <div className="day-mode-segmented" role="radiogroup" aria-label="Vehicle assignment">
@@ -1366,17 +1366,17 @@ export default function Booking({
                                   applyVehicleToAll(getVehicle(currentActiveDate))
                                   setVehicleMode('same')
                                 }}>
-                                Same vehicle for all days
+                                Same for All Days
                               </button>
                               <button type="button" role="radio" aria-checked={vehicleMode === 'daily'}
                                 className={`day-mode-pill ${vehicleMode === 'daily' ? 'active' : ''}`}
                                 onClick={() => setVehicleMode('daily')}>
-                                Choose per day
+                                Choose Per Day
                               </button>
                             </div>
                             {vehicleMode === 'same' ? (
                               <p className="field-note">
-                                Your showroom selection applies to all {dates.length} dates.
+                                Applies to all {dates.length} days.
                               </p>
                             ) : (
                               <div className="daily-schedule-cards" role="group" aria-label="Choose a day to assign a vehicle">
@@ -1395,7 +1395,7 @@ export default function Booking({
                                           <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
                                           <strong title={displayDate(d)}>{compactDate(d)}</strong>
                                         </span>
-                                        <span className="day-price"><strong>{money(currentService.price + car.surcharge + extras)}</strong></span>
+                                        <span className="day-price"><strong>{money((catalog.services.find((item) => item.id === getService(d))?.price ?? 0) + car.surcharge + extras)}</strong></span>
                                       </span>
                                       <span className="card-footer"><span className="active-hint">
                                         {getTime(d)} · {car.name} {isAvail === false ? '· Unavailable' : ''}
@@ -1410,8 +1410,8 @@ export default function Booking({
                         )}
                         <p className="field-section-title extras-title">
                           {dates.length > 1
-                            ? 'Optional additions · per day'
-                            : 'Optional additions'}
+                            ? 'Add-ons · Per Day'
+                            : 'Add-ons'}
                         </p>
                         <div className="extras">
                           {catalog.options.map((option) => (
@@ -1499,7 +1499,7 @@ export default function Booking({
                           </label>
                         </div>
                         <fieldset className="contact-methods">
-                          <legend>How would you prefer to be contacted?</legend>
+                          <legend>Preferred Contact Method</legend>
                           <div className="contact-method-grid">
                             {catalog.contactMethods.map((method) => (
                               <label
@@ -1590,9 +1590,7 @@ export default function Booking({
                             onChange={(e) => setConsent(e.target.checked)}
                           />
                           <span>
-                            I understand this is a reservation request subject to
-                            confirmation, and consent to my details being stored to
-                            arrange this journey.
+                            I consent to storing my details to arrange this reservation.
                           </span>
                         </label>
                         <button
@@ -1600,7 +1598,7 @@ export default function Booking({
                           className="privacy-inline"
                           onClick={showPrivacy}
                         >
-                          Read our reservation & privacy notice{' '}
+                          Reservation & Privacy Notice{' '}
                           <ArrowUpRight size={14} />
                         </button>
                       </div>
@@ -1654,7 +1652,7 @@ export default function Booking({
                         <div>
                           <span>
                             {multiDayMode === 'range'
-                              ? `Through ${displayDate(dates[dates.length - 1])}`
+                              ? `Until ${displayDate(dates[dates.length - 1])}`
                               : `${dates.length} scheduled dates`}
                           </span>
                           <span>{dates.length} days</span>
@@ -1696,7 +1694,7 @@ export default function Booking({
                       </div>
                       {vehicleSurcharges > 0 && (
                         <div>
-                          <span>Vehicle upgrades</span>
+                          <span>Vehicle Upgrade</span>
                           <span>{money(vehicleSurcharges)}</span>
                         </div>
                       )}
@@ -1716,7 +1714,7 @@ export default function Booking({
                       <div>
                         <span>Estimated total</span>
                         <small className="tax-notice">
-                          KRW · TAX excluded · approx. {moneyUsd(total, usdRate)} USD
+                          KRW · Tax excl. · ~{moneyUsd(total, usdRate)} USD
                         </small>
                       </div>
                       <strong className={quoteRequired ? 'quote-on-request' : ''}>
@@ -1745,7 +1743,7 @@ export default function Booking({
                         <>
                           <Check size={14} />{' '}
                           {dates.length > 1
-                            ? 'All daily slots open for a request'
+                            ? 'All dates available'
                             : 'Time slot open for a request'}
                         </>
                       ) : (
@@ -1791,6 +1789,7 @@ export default function Booking({
                 <ReservationButton
                   type="button"
                   className="booking-back-btn"
+                  showBeam={false}
                   disabled={sending}
                   onClick={() => {
                     if (step === 0) {
@@ -1825,18 +1824,18 @@ export default function Booking({
                   </>
                 ) : step === 1 ? (
                   <>
-                    Continue to Your Details <ArrowRight size={17} />
+                    Continue to Details <ArrowRight size={17} />
                   </>
                 ) : (
                   <>
-                    Request your journey <ArrowUpRight size={17} />
+                    Request Booking <ArrowUpRight size={17} />
                   </>
                 )}
               </ReservationButton>
             </div>
             {step >= 1 && (
               <p className="no-payment">
-                No upfront payment required · Subject to confirmation
+                No upfront payment · Subject to confirmation
               </p>
             )}
           </div>

@@ -99,14 +99,14 @@
   "options": [
     {
       "id": "englishDriver",
-      "name": "Fluent English Chauffeur",
-      "description": "Dedicated English-fluent VIP chauffeur for diplomatic & corporate delegations",
+      "name": "English-Speaking Chauffeur",
+      "description": "Dedicated VIP driver for international & corporate guests.",
       "price": 100000
     },
     {
       "id": "extraStop",
-      "name": "Additional Waypoint Stop",
-      "description": "Scheduled intermediate pick-up or meeting stop along your route",
+      "name": "Additional Stop",
+      "description": "Add a scheduled pickup or meeting stop along your route.",
       "price": 30000
     }
   ],

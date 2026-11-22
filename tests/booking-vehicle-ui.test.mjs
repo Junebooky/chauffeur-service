@@ -43,3 +43,9 @@ test('Vehicle Carousel displays only one pagination line in Booking', () => {
   assert.match(css, /\.booking-glass-stage\.is-expanded \.fleet-pagination>button\.active \{/)
   assert.match(css, /\.fleet-pagination button:after \{/)
 })
+
+test('fixed-width Vehicle pane allows vertical scroll but never horizontal scrollbar', () => {
+  assert.match(css, /\.booking-panel\.is-split-view \{\s*overflow-x: hidden !important;\s*overflow-y: auto !important;/)
+  assert.match(css, /\.booking-panel\.is-split-view \.journey-summary \{\s*overflow-x: clip !important;\s*overflow-y: visible !important;/)
+  assert.match(css, /\.booking-vehicle-day-summary \.booking-vehicle-day-price \{\s*white-space: normal !important;/)
+})

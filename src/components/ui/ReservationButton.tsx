@@ -2,7 +2,10 @@ import type { ButtonHTMLAttributes } from 'react'
 import { resetGlassPointer, trackGlassPointer } from '../../liquidGlass'
 import BookingCtaBeam from './BookingCtaBeam'
 
-type ReservationButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
+type ReservationButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  /** Keep the glass control while omitting decorative Border Beam for Back actions. */
+  showBeam?: boolean
+}
 
 /**
  * The same reservation CTA is used by Booking and Fleet Specs.
@@ -11,6 +14,7 @@ type ReservationButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
 export default function ReservationButton({
   children,
   className = '',
+  showBeam = true,
   type = 'button',
   onPointerMove,
   onPointerLeave,
@@ -31,7 +35,7 @@ export default function ReservationButton({
         onPointerLeave?.(event)
       }}
     >
-      <BookingCtaBeam />
+      {showBeam && <BookingCtaBeam />}
       <span className="booking-cta-pill-inner">{children}</span>
     </button>
   )

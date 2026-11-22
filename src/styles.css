@@ -10309,3 +10309,67 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   .booking-daily-progress { align-items: start; }
   .booking-daily-schedule-group { gap: 12px; }
 }
+
+/* Reservation Vehicle/Details: never expose horizontal scrolling for a fixed
+   glass card. Preserve vertical scrolling for longer lists and summaries. */
+@media (min-width: 961px) {
+  .booking-glass-stage.is-expanded .booking-panel.is-split-view {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-x: none;
+  }
+}
+.booking-glass-stage.is-expanded .booking-panel.is-split-view > *,
+.booking-glass-stage.is-expanded .booking-panel.is-split-view .journey-summary {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.booking-glass-stage.is-expanded .booking-panel.is-split-view .journey-summary {
+  overflow-x: hidden !important;
+}
+.booking-glass-stage.is-expanded .booking-vehicle-day-summary,
+.booking-glass-stage.is-expanded .booking-vehicle-day-summary > div {
+  min-width: 0;
+  max-width: 100%;
+}
+.booking-glass-stage.is-expanded .booking-vehicle-day-summary .booking-vehicle-day-price {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+@media (max-width: 960px) {
+  /* Mobile stacks the panels vertically rather than creating a nested
+     scroll container; only clip the unwanted horizontal dimension. */
+  #reservation.booking-screen.booking-glass-open .booking-glass-stage.is-expanded .booking-panel.is-split-view,
+  #reservation.booking-screen.booking-glass-open .booking-glass-stage.is-expanded .booking-panel.is-split-view .journey-summary {
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+}
+@media (max-width: 640px) {
+  .booking-glass-stage.is-expanded .booking-vehicle-day-summary .booking-vehicle-day-price {
+    white-space: normal !important;
+    text-align: right;
+  }
+}
+
+/* Details recap: vehicle name must occupy the same right-aligned column on
+   every day, even when the left date/service copy needs to wrap. */
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: start;
+  justify-content: space-between;
+  column-gap: 12px;
+}
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-date {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-vehicle {
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
+}

@@ -56,3 +56,15 @@ test('Back and request CTA are one row and share the translucent ReservationButt
   assert.match(button, /booking-cta-pill/)
   assert.match(button, /data-liquid-glass="control"/)
 })
+
+test('Details copy is compact and all vehicle names align at the right edge', () => {
+  assert.match(booking, /Preferred Contact Method/)
+  assert.match(booking, /I consent to storing my details to arrange this reservation\./)
+  assert.match(booking, /Reservation & Privacy Notice/)
+  assert.match(booking, /All dates available/)
+  assert.match(booking, /KRW · Tax excl\. · ~/)
+  assert.match(booking, /Vehicle Upgrade/)
+  assert.match(booking, /Request Booking/)
+  assert.match(css, /summary-journey-header \{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\) max-content;/)
+  assert.match(css, /summary-journey-vehicle \{\s*justify-self: end;/)
+})
