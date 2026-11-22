@@ -146,5 +146,30 @@
       "혜화역 4호선",
       "惠化站"
     ]
+  },
+  {
+    "id": "curated:gangnam-station",
+    "name": "Gangnam Station",
+    "address": "B396 Gangnam-daero, Gangnam-gu, Seoul, South Korea",
+    "latitude": 37.497823,
+    "longitude": 127.027746,
+    "aliases": [
+      "Gangnam Station",
+      "Gangnam Subway Station",
+      "Gangnam Metro Station",
+      "강남역",
+      "강남 지하철역",
+      "강남역 2호선",
+      "Estación de Gangnam",
+      "Estacion de Gangnam",
+      "Estação de Gangnam",
+      "Gare de Gangnam",
+      "Bahnhof Gangnam",
+      "江南駅",
+      "江南站",
+      "江南车站",
+      "江南車站",
+      "カンナム駅"
+    ]
   }
 ]

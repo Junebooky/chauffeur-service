@@ -74,11 +74,12 @@ test('new reservation UI offers two priced services plus Custom without By the H
   assert.equal(catalog.services.find((s) => s.id === 'day').name, 'Schedule Service')
 })
 
-test('Multiple Days keeps the existing Glass controls and allows route and vehicle exceptions', () => {
+test('Multiple Days keeps the Glass controls and makes route and vehicle choices per day', () => {
   assert.match(bookingSource, /aria-label="Daily Schedule"/)
   assert.match(bookingSource, /Continue to Daily Schedule/)
-  assert.match(bookingSource, /Same schedule for all days/)
-  assert.match(bookingSource, /Customize individual days/)
+  assert.match(bookingSource, /Your daily itinerary/)
+  assert.match(bookingSource, /Set the pick-up, schedule and time for each date/)
+  assert.match(bookingSource, /booking-daily-progress-count/)
   assert.match(bookingSource, /className="booking-daily-layout"/)
   assert.match(bookingSource, /dailyScheduleOpen/)
   assert.match(bookingSource, /booking-panel \$\{step === 0 \? \(dailyScheduleOpen/)
@@ -91,10 +92,13 @@ test('Multiple Days keeps the existing Glass controls and allows route and vehic
   assert.equal(carnival.name, 'Carnival Hi-Limousine')
   assert.equal(staria.name, 'Staria Limousine')
 
-  assert.match(bookingSource, /Copy Day 1 to all/)
+  assert.match(bookingSource, /Copy this day to all/)
   assert.match(bookingSource, /setRoutesByDate/)
   assert.match(bookingSource, /name=\{`pickup-\$\{scheduleActiveDate\}`\}/)
   assert.match(bookingSource, /name=\{`destination-\$\{scheduleActiveDate\}`\}/)
+  assert.match(bookingSource, /getRoute\(scheduleActiveDate\)\.stops\.map/)
+  assert.match(bookingSource, /Final Drop-off/)
+  assert.match(bookingSource, /isRouteComplete/)
   assert.match(bookingSource, /Same vehicle for all days/)
   assert.match(bookingSource, /Choose per day/)
   assert.match(bookingSource, /<VehicleCarousel/)

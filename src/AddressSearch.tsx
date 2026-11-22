@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, LoaderCircle, MapPin, Navigation, Search } from 'lucide-react'
+import { Check, LoaderCircle, MapPin, Navigation, Search, TrainFront } from 'lucide-react'
 
 export type Place = {
   id: string
@@ -10,8 +10,10 @@ export type Place = {
   longitude: number
   source: string
   selectionToken?: string
+  displayAddress?: string
+  isStation?: boolean
 }
-type Suggestion = Pick<Place, 'id' | 'name' | 'address'>
+type Suggestion = Pick<Place, 'id' | 'name' | 'address' | 'displayAddress' | 'isStation'>
 
 type Props = {
   name: string
@@ -293,7 +295,7 @@ export default function AddressSearch({
         className={`address-help ${place ? 'resolved' : ''}`}
       >
         {place
-          ? place.address
+          ? (place.displayAddress || place.address)
           : 'English, Korean or your own language · South Korea'}
       </p>
       {open &&
@@ -343,10 +345,12 @@ export default function AddressSearch({
                       if (!resolving) void select(result)
                     }}
                   >
-                    <MapPin size={14} />
+                    {result.isStation
+                      ? <TrainFront size={14} aria-hidden="true" />
+                      : <MapPin size={14} aria-hidden="true" />}
                     <span>
                       {result.name}
-                      <small>{result.address}</small>
+                      <small>{result.displayAddress || result.address}</small>
                     </span>
                   </div>
                 ))}

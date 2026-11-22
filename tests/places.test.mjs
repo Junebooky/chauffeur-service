@@ -232,3 +232,133 @@ test('혜화역 and exact curated Korean places are instant without waiting for 
     },
   )
 })
+
+test('station aliases in five languages resolve to the same verified Gangnam Station', () =>
+  service({}, async ({ post, selected }) => {
+    for (const query of [
+      'Gangnam Station', '강남역', 'Estación de Gangnam',
+      'Estacion de Gangnam', '江南駅', '江南站',
+    ]) {
+      const response = await post('/search', { query })
+      assert.equal(response.status, 200, query)
+      assert.equal(response.body.results[0].id, 'curated:gangnam-station', query)
+      assert.equal(response.body.results[0].name, 'Gangnam Station')
+      assert.equal(response.body.results[0].isStation, true)
+      assert.equal(response.body.results[0].displayAddress,
+        '396, Gangnam-daero, Gangnam-gu, Seoul')
+    }
+    const resolved = await post('/resolve', { id: 'curated:gangnam-station' })
+    assert.equal(resolved.status, 200)
+    assert.equal(resolved.body.address,
+      'B396 Gangnam-daero, Gangnam-gu, Seoul, South Korea')
+    assert.equal(resolved.body.displayAddress,
+      '396, Gangnam-daero, Gangnam-gu, Seoul')
+    assert.equal(selected({ id: resolved.body.id }).latitude, 37.497823)
+  }))
+
+test('Spanish station queries use Spanish language preference and canonical English station input', () => {
+  const inputs = []
+  return service({
+    apiKey: 'test-only-key',
+    fetcher: async (url, options) => {
+      if (!url.endsWith('places:autocomplete')) throw new Error('Unexpected API')
+      inputs.push(JSON.parse(options.body))
+      return { ok: true, json: async () => ({
+        suggestions: [{
+          placePrediction: {
+            placeId: 'seolleung-station',
+            types: ['subway_station'],
+            structuredFormat: {
+              mainText: { text: 'Seolleung Station' },
+              secondaryText: { text: 'Seoul, South Korea' },
+            },
+          },
+        }],
+      }) }
+    },
+  }, async ({ post }) => {
+    const response = await post('/search', { query: 'Estación de Seolleung' })
+    assert.equal(response.status, 200)
+    assert.equal(response.body.mode, 'google')
+    assert.equal(response.body.results[0].id, 'seolleung-station')
+    assert.equal(response.body.results[0].isStation, true)
+    assert.equal(inputs.length, 1)
+    assert.equal(inputs[0].input, 'Seolleung Station')
+    assert.equal(inputs[0].languageCode, 'es')
+    assert.deepEqual(inputs[0].includedRegionCodes, ['kr'])
+  })
+})
+
+test('ranks an official station ahead of exits, but respects an explicit exit search', () => {
+  const suggestions = [
+    { placePrediction: {
+      placeId: 'exit-one', types: ['point_of_interest'],
+      structuredFormat: { mainText: { text: 'Seolleung Station Exit 1' },
+        secondaryText: { text: 'Seoul' } },
+    } },
+    { placePrediction: {
+      placeId: 'shop', types: ['shopping_mall'],
+      structuredFormat: { mainText: { text: 'Seolleung Station Shopping Mall' },
+        secondaryText: { text: 'Seoul' } },
+    } },
+    { placePrediction: {
+      placeId: 'station', types: ['subway_station'],
+      structuredFormat: { mainText: { text: 'Seolleung Station' },
+        secondaryText: { text: 'Seoul' } },
+    } },
+    { placePrediction: {
+      placeId: 'exit-two', types: ['point_of_interest'],
+      structuredFormat: { mainText: { text: 'Seolleung Station Exit 2' },
+        secondaryText: { text: 'Seoul' } },
+    } },
+  ]
+  return service({
+    apiKey: 'test-only-key',
+    fetcher: async () => ({
+      ok: true, json: async () => ({ suggestions }),
+    }),
+  }, async ({ post }) => {
+    const station = await post('/search', { query: 'Seolleung Station' })
+    assert.equal(station.body.results[0].id, 'station')
+    assert.equal(station.body.results[1].id, 'exit-one')
+    const exit = await post('/search', { query: 'Seolleung Station Exit 2' })
+    assert.equal(exit.body.results[0].id, 'exit-two')
+    assert.equal(exit.body.results[1].id, 'exit-one')
+  })
+})
+
+test('station-only Google fallback restores a missing official station without losing its exits', () => {
+  const queries = []
+  return service({
+    apiKey: 'test-only-key',
+    fetcher: async (_url, options) => {
+      const payload = JSON.parse(options.body)
+      queries.push(payload)
+      const official = Boolean(payload.includedPrimaryTypes)
+      return { ok: true, json: async () => ({
+        suggestions: [official ? {
+          placePrediction: {
+            placeId: 'station', types: ['subway_station'],
+            structuredFormat: { mainText: { text: 'Seolleung Station' },
+              secondaryText: { text: 'Seoul' } },
+          },
+        } : {
+          placePrediction: {
+            placeId: 'exit-one', types: ['point_of_interest'],
+            structuredFormat: { mainText: { text: 'Seolleung Station Exit 1' },
+              secondaryText: { text: 'Seoul' } },
+          },
+        }],
+      }) }
+    },
+  }, async ({ post }) => {
+    const response = await post('/search', { query: 'Seolleung Station' })
+    assert.equal(response.status, 200)
+    assert.deepEqual(response.body.results.map((p) => p.id),
+      ['station', 'exit-one'])
+    assert.equal(queries.length, 2)
+    assert.deepEqual(queries[1].includedPrimaryTypes,
+      ['subway_station', 'train_station', 'light_rail_station', 'transit_station'])
+    assert.equal(queries[0].sessionToken, queries[1].sessionToken)
+  })
+})

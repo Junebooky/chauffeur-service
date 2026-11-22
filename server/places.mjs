@@ -2,18 +2,32 @@ import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
 import { fetch as proxyFetch, EnvHttpProxyAgent } from 'undici'
 import popular from './popular-places.json' with { type: 'json' }
+import {
+  normalizePlaceQuery,
+  stationSearchContext,
+  isStationPrediction,
+  rankStationSuggestions,
+  stationDisplayAddress,
+} from './station-search.mjs'
 
-const normalise = (value) =>
-  value
-    .normalize('NFKC')
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .toLocaleLowerCase()
-    .replace(/[^\p{L}\p{N}]/gu, '')
-const safePlace = ({ aliases, ...place }) => ({
-  ...place,
-  source: 'popular',
-  accuracy: 'building',
+const normalise = normalizePlaceQuery
+const safePlace = ({ aliases, ...place }) => {
+  const isStation = isStationPrediction(place)
+  return {
+    ...place,
+    source: 'popular',
+    accuracy: 'building',
+    isStation,
+    displayAddress: stationDisplayAddress(place.address, isStation),
+  }
+}
+const toSuggestion = (place) => ({
+  id: place.id,
+  name: place.name,
+  address: place.address,
+  isStation: isStationPrediction(place),
+  displayAddress: stationDisplayAddress(
+    place.address, isStationPrediction(place)),
 })
 const sessionValid = (value) =>
   typeof value === 'string' && /^[a-zA-Z0-9_-]{16,80}$/.test(value)
@@ -72,13 +86,15 @@ export function createPlaces({
       return res
         .status(400)
         .json({ error: 'Please enter a valid place or address.' })
+    const context = stationSearchContext(query)
     const q = normalise(query.trim())
-    // A confirmed curated match can respond immediately even when the live
-    // Google API is configured. This is especially useful for Hangul station
-    // names (e.g. 혜화역), which must not wait for Google network latency.
+    const normalizedStationInput = normalise(context.input)
+    // Verified exact matches are instant, even offline or without paid Google calls.
     const exactCurated = q.length >= 2
       ? popular.filter((place) =>
-          [place.name, ...place.aliases].some((alias) => normalise(alias) === q),
+          [place.name, ...place.aliases].some((alias) =>
+            normalise(alias) === q ||
+            (context.station && !context.exit && normalise(alias) === normalizedStationInput)),
         )
       : []
     if (!apiKey || q.length < 2 || exactCurated.length > 0) {
@@ -88,32 +104,32 @@ export function createPlaces({
             (place) =>
               !q ||
               [place.name, place.address, ...place.aliases].some((alias) =>
-                normalise(alias).includes(q),
+                normalise(alias).includes(q) ||
+                (context.station && !context.exit &&
+                  normalise(alias).includes(normalizedStationInput)),
               ),
           )
-      const limitedResults = results.slice(0, 6)
       return res.json({
         mode: 'popular',
-        results: limitedResults.map((p) => ({
-          id: p.id,
-          name: p.name,
-          address: p.address,
-        })),
+        results: results.slice(0, 6).map(toSuggestion),
         notice: apiKey
           ? null
           : 'Popular locations only. Full address search is not connected yet.',
       })
     }
     try {
-      const data = await google('places:autocomplete', {
+      const requestAutocomplete = (input, includedPrimaryTypes) => google('places:autocomplete', {
         method: 'POST',
+        headers: {
+          'X-Goog-FieldMask':
+            'suggestions.placePrediction.placeId,suggestions.placePrediction.structuredFormat,suggestions.placePrediction.text,suggestions.placePrediction.types',
+        },
         body: JSON.stringify({
-          input: query.trim(),
+          input,
           sessionToken,
-          // Prefer Korean names for Hangul queries while keeping English
-          // responses for other searches and English canonical place details.
-          languageCode: /\p{Script=Hangul}/u.test(query) ? 'ko' : 'en',
+          languageCode: context.languageCode,
           includedRegionCodes: ['kr'],
+          ...(includedPrimaryTypes ? { includedPrimaryTypes } : {}),
           locationBias: {
             circle: {
               center: { latitude: 37.5665, longitude: 126.978 },
@@ -122,24 +138,47 @@ export function createPlaces({
           },
         }),
       })
-      const results = (data.suggestions || [])
-        .flatMap((s) =>
-          s.placePrediction
-            ? [
-                {
-                  id: s.placePrediction.placeId,
-                  name:
-                    s.placePrediction.structuredFormat?.mainText?.text ||
-                    s.placePrediction.text?.text ||
-                    '',
-                  address:
-                    s.placePrediction.structuredFormat?.secondaryText?.text ||
-                    '',
-                },
-              ]
-            : [],
-        )
+      const asSuggestions = (data) => (data.suggestions || [])
+        .flatMap((s) => {
+          const prediction = s.placePrediction
+          if (!prediction?.placeId) return []
+          const name = prediction.structuredFormat?.mainText?.text ||
+            prediction.text?.text || ''
+          const address = prediction.structuredFormat?.secondaryText?.text || ''
+          const candidate = {
+            id: prediction.placeId, name, address,
+            types: prediction.types || [],
+          }
+          const isStation = isStationPrediction(candidate)
+          return [{
+            ...candidate, isStation,
+            displayAddress: stationDisplayAddress(address, isStation),
+          }]
+        })
+      const primary = asSuggestions(await requestAutocomplete(context.input))
+      let combined = primary
+      // One narrowly scoped fallback only when a station-specific search
+      // returned exits or nearby shops but no station itself.
+      if (context.station && !context.exit && q.length >= 5 &&
+          !primary.some(isStationPrediction)) {
+        try {
+          const stationOnly = asSuggestions(await requestAutocomplete(context.input, [
+            'subway_station', 'train_station', 'light_rail_station', 'transit_station',
+          ]))
+          combined = [...stationOnly, ...primary]
+        } catch {
+          // Keep the original predictions if station-only autocomplete fails.
+        }
+      }
+      const seen = new Set()
+      const results = rankStationSuggestions(combined, context)
+        .filter((suggestion) => {
+          if (seen.has(suggestion.id)) return false
+          seen.add(suggestion.id)
+          return true
+        })
         .slice(0, 5)
+        .map(({ types, ...suggestion }) => suggestion)
       res.json({ mode: 'google', results })
     } catch (error) {
       res
@@ -196,10 +235,14 @@ export function createPlaces({
         return res
           .status(400)
           .json({ error: 'Please choose a location in South Korea.' })
+      const name = data.displayName?.text || data.formattedAddress
+      const isStation = isStationPrediction({ name })
       const place = {
         id: data.id,
-        name: data.displayName?.text || data.formattedAddress,
+        name,
         address: data.formattedAddress,
+        displayAddress: stationDisplayAddress(data.formattedAddress, isStation),
+        isStation,
         latitude: data.location.latitude,
         longitude: data.location.longitude,
         source: 'google',
