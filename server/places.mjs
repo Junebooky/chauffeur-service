@@ -127,7 +127,7 @@ export function createPlaces({
         body: JSON.stringify({
           input,
           sessionToken,
-          languageCode: context.languageCode,
+          languageCode: 'en',
           includedRegionCodes: ['kr'],
           ...(includedPrimaryTypes ? { includedPrimaryTypes } : {}),
           locationBias: {

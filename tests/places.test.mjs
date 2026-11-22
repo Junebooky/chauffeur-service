@@ -114,7 +114,7 @@ test('live Google requests preserve Unicode, restrict Korea and bind resolved se
       assert.equal(sent.input, '서울 호텔')
       assert.deepEqual(sent.includedRegionCodes, ['kr'])
       assert.equal(sent.sessionToken, sessionToken)
-      assert.equal(sent.languageCode, 'ko')
+      assert.equal(sent.languageCode, 'en')
       const response = await post('/resolve', {
         id: predictions.body.results[0].id,
       })
@@ -169,7 +169,7 @@ test('rejects a resolved location outside the service country', () =>
   ))
 
 
-test('Google Autocomplete uses English for Latin queries and Korean for Hangul queries', () => {
+test('Google Autocomplete always requests English results for official English place names', () => {
   const submitted = []
   const fetcher = async (_url, options) => {
     submitted.push(JSON.parse(options.body))
@@ -183,7 +183,7 @@ test('Google Autocomplete uses English for Latin queries and Korean for Hangul q
       assert.equal((await post('/search', { query: 'Incheon 인천' })).status, 200)
     },
   ).then(() => {
-    assert.deepEqual(submitted.map((item) => item.languageCode), ['en', 'ko', 'ko'])
+    assert.deepEqual(submitted.map((item) => item.languageCode), ['en', 'en', 'en'])
     assert.deepEqual(submitted.map((item) => item.includedRegionCodes), [['kr'], ['kr'], ['kr']])
     assert.deepEqual(submitted.map((item) => item.input), [
       'Incheon Airport', '인천공항', 'Incheon 인천',
@@ -193,7 +193,7 @@ test('Google Autocomplete uses English for Latin queries and Korean for Hangul q
 
 
 test('Popular Locations favors two verified hotels and no longer lists Seoul Station', () =>
-  service({}, async ({ post, selected }) => {
+  service({ apiKey: 'test-only-key', fetcher: async () => ({ ok: true, json: async () => ({ suggestions: [] }) }) }, async ({ post, selected }) => {
     const opened = await post('/search', { query: '' })
     assert.equal(opened.status, 200)
     assert.equal(opened.body.mode, 'popular')
@@ -201,12 +201,24 @@ test('Popular Locations favors two verified hotels and no longer lists Seoul Sta
     assert.ok(!opened.body.results.some((p) => /Seoul Station/.test(p.name)))
     const josun = opened.body.results.find((p) => p.id === 'curated:josun-palace')
     const meridien = opened.body.results.find((p) => p.id === 'curated:le-meridien-myeongdong')
+    assert.equal(josun?.name, 'Josun Palace, Seoul Gangnam')
+    assert.equal(meridien?.name, 'Le Méridien Seoul, Myeongdong')
     assert.equal(josun?.address, '231 Teheran-ro, Gangnam-gu, Seoul, South Korea')
     assert.equal(meridien?.address, '38 Myeongdong 8na-gil, Jung-gu, Seoul, South Korea')
     assert.equal(selected({ id: josun.id }).latitude, 37.50338)
     assert.equal(selected({ id: meridien.id }).longitude, 126.98273)
-    assert.equal((await post('/search', { query: '조선팰리스' })).body.results[0].id, josun.id)
-    assert.equal((await post('/search', { query: '르메르디앙' })).body.results[0].id, meridien.id)
+    for (const q of ['조선팰리스', '조선 팰리스 호텔']) {
+      const r = await post('/search', { query: q })
+      assert.equal(r.body.mode, 'popular')
+      assert.equal(r.body.results[0].id, josun.id)
+      assert.equal(r.body.results[0].name, 'Josun Palace, Seoul Gangnam')
+    }
+    for (const q of ['르메르디앙', '르메르디앙 호텔', '르메리디앙 호텔']) {
+      const r = await post('/search', { query: q })
+      assert.equal(r.body.mode, 'popular')
+      assert.equal(r.body.results[0].id, meridien.id)
+      assert.equal(r.body.results[0].name, 'Le Méridien Seoul, Myeongdong')
+    }
   }))
 
 test('혜화역 and exact curated Korean places are instant without waiting for Google', () => {
@@ -256,7 +268,7 @@ test('station aliases in five languages resolve to the same verified Gangnam Sta
     assert.equal(selected({ id: resolved.body.id }).latitude, 37.497823)
   }))
 
-test('Spanish station queries use Spanish language preference and canonical English station input', () => {
+test('Spanish station queries translate station input and request English results', () => {
   const inputs = []
   return service({
     apiKey: 'test-only-key',
@@ -284,7 +296,7 @@ test('Spanish station queries use Spanish language preference and canonical Engl
     assert.equal(response.body.results[0].isStation, true)
     assert.equal(inputs.length, 1)
     assert.equal(inputs[0].input, 'Seolleung Station')
-    assert.equal(inputs[0].languageCode, 'es')
+    assert.equal(inputs[0].languageCode, 'en')
     assert.deepEqual(inputs[0].includedRegionCodes, ['kr'])
   })
 })

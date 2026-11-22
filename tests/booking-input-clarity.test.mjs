@@ -22,7 +22,7 @@ test('Korean IME search runs during composition and still debounces ordinary cha
   assert.match(address, /\? 130 : 250/)
   assert.match(address, /controller\.abort\(\)/)
   assert.match(address, /sessionToken: session\.current/)
-  assert.match(places, /languageCode: context\.languageCode/)
+  assert.match(places, /languageCode:\s*'en'/)
   assert.match(places, /includedRegionCodes: \['kr'\]/)
 })
 

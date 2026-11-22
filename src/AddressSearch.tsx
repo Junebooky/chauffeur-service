@@ -126,7 +126,7 @@ export default function AddressSearch({
       const below = viewportHeight - rect.bottom - 16
       const above = rect.top - 16
       const upwards = below < 180 && above > below
-      const maxHeight = Math.min(310, upwards ? above : below)
+      const maxHeight = Math.min(430, upwards ? above : below)
       setPosition({
         left: rect.left,
         width: rect.width,
