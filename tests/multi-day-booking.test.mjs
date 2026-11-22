@@ -106,7 +106,7 @@ test('Multiple Days keeps the Glass controls and makes route and vehicle choices
   assert.match(bookingSource, /<GlassSelect/)
   assert.match(bookingSource, /Choose at least two dates/)
   assert.doesNotMatch(bookingSource, /setDates\(\[first, nextDay\]\)/)
-  assert.match(bookingSource, /Korea time \(KST, UTC\+9\)/)
+  assert.match(bookingSource, /KST \(UTC\+9\)/)
   assert.match(bookingSource, /journeys\.map\(\(day, index\)/)
 })
 
