@@ -82,27 +82,78 @@ test('admin email template contains verified details and escapes untrusted HTML'
   assert.match(message.text, /tax excluded/i)
 })
 
-test('Resend adapter uses the configured admin recipient and sends HTML and plain text', async () => {
-  const calls = []
+test('Gmail SMTP uses secure Nodemailer transport and sends branded HTML plus text', async () => {
+  const transports = []
+  const deliveries = []
   const sender = createOperatorNotifier({
-    apiKey: 'test-provider-key',
-    from: 'CHAUFFEUR <reservations@example.com>',
-    fetcher: async (url, options) => {
-      calls.push({ url, options })
-      return { ok: true }
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    user: 'gotoward7@gmail.com',
+    appPassword: 'abcd efgh ijkl mnop',
+    createTransport: (config) => {
+      transports.push(config)
+      return {
+        sendMail: async (mail) => {
+          deliveries.push(mail)
+          return { accepted: [DEFAULT_OPERATOR_EMAIL], rejected: [] }
+        },
+      }
     },
   })
   assert.equal(sender.enabled, true)
   assert.equal(sender.to, DEFAULT_OPERATOR_EMAIL)
-  assert.equal(await sender.deliver({ reference: 'CH-1A2B3C4D', total: 200000, details }), true)
-  assert.equal(calls.length, 1)
-  assert.equal(calls[0].url, 'https://api.resend.com/emails')
-  assert.equal(calls[0].options.headers['Idempotency-Key'], 'chauffeur-booking-CH-1A2B3C4D')
-  const payload = JSON.parse(calls[0].options.body)
-  assert.deepEqual(payload.to, [DEFAULT_OPERATOR_EMAIL])
-  assert.equal(payload.reply_to, details.email)
-  assert.match(payload.html, /DAILY ITINERARY/)
-  assert.match(payload.text, /CH-1A2B3C4D/)
+  assert.equal(transports.length, 1)
+  assert.equal(transports[0].host, 'smtp.gmail.com')
+  assert.equal(transports[0].port, 465)
+  assert.equal(transports[0].secure, true)
+  assert.equal(transports[0].auth.user, DEFAULT_OPERATOR_EMAIL)
+  assert.equal(transports[0].auth.pass, 'abcdefghijklmnop')
+  assert.equal(await sender.deliver({
+    reference: 'CH-1A2B3C4D', total: 200000, details,
+  }), true)
+  assert.equal(deliveries.length, 1)
+  assert.deepEqual(deliveries[0].from, {
+    name: 'Chauffeur Service', address: 'gotoward7@gmail.com',
+  })
+  assert.equal(deliveries[0].to, DEFAULT_OPERATOR_EMAIL)
+  assert.equal(deliveries[0].replyTo, details.email)
+  assert.equal(deliveries[0].messageId, '<chauffeur.CH-1A2B3C4D@gmail.com>')
+  assert.match(deliveries[0].html, /DAILY ITINERARY/)
+  assert.match(deliveries[0].text, /CH-1A2B3C4D/)
+})
+
+test('missing SMTP credentials cannot attempt a network send', async () => {
+  let created = 0
+  const sender = createOperatorNotifier({
+    user: 'gotoward7@gmail.com',
+    appPassword: '',
+    createTransport: () => { created++; throw new Error('must not connect') },
+  })
+  assert.equal(sender.enabled, false)
+  assert.equal(created, 0)
+  assert.equal(await sender.deliver({
+    reference: 'CH-1A2B3C4D', total: 200000, details,
+  }), false)
+})
+
+test('Gmail SMTP recipient rejection is retried instead of marking a notification sent', async () => {
+  let count = 0
+  const sender = createOperatorNotifier({
+    user: 'gotoward7@gmail.com',
+    appPassword: 'abcdefghijklmnop',
+    createTransport: () => ({
+      sendMail: async () => {
+        count++
+        return { accepted: [], rejected: [DEFAULT_OPERATOR_EMAIL] }
+      },
+    }),
+  })
+  await assert.rejects(
+    sender.deliver({ reference: 'CH-1A2B3C4D', total: 200000, details }),
+    /did not accept the operator recipient/,
+  )
+  assert.equal(count, 1)
 })
 
 test('saved requests survive disabled email, then send once when operator mail is configured', async () => {
@@ -115,7 +166,7 @@ test('saved requests survive disabled email, then send once when operator mail i
       databasePath, now,
       placesOptions: { apiKey: '' },
       ratesOptions: { fetchRate: async () => 0.00075 },
-      notificationsOptions: { apiKey: '', from: '' },
+      notificationsOptions: { user: '', appPassword: '' },
     })
     const first = await startServer(firstApp)
     const saved = await first.post(reservation, key)

@@ -1,6 +1,7 @@
 // Operator notification for saved (pending) booking requests.
 // The admin email is private: only the server reads the recipient address.
 import catalog from '../src/catalog.json' with { type: 'json' }
+import nodemailer from 'nodemailer'
 
 export const DEFAULT_OPERATOR_EMAIL = 'gotoward7@gmail.com'
 
@@ -115,43 +116,65 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
 }
 
 export function createOperatorNotifier({
-  apiKey = process.env.RESEND_API_KEY || '',
-  from = process.env.RESEND_FROM_EMAIL || '',
+  host = process.env.SMTP_HOST || 'smtp.gmail.com',
+  port = Number(process.env.SMTP_PORT || 465),
+  secure = (process.env.SMTP_SECURE || 'true').toLowerCase() === 'true',
+  user = process.env.SMTP_USER || '',
+  appPassword = process.env.SMTP_APP_PASSWORD || '',
+  from = process.env.SMTP_FROM_EMAIL || user,
   to = process.env.BOOKING_NOTIFICATION_TO || DEFAULT_OPERATOR_EMAIL,
-  fetcher = fetch,
+  createTransport = nodemailer.createTransport,
   send,
 } = {}) {
-  // Provide send in tests for deterministic delivery without real email.
-  const enabled = Boolean(send || (apiKey && from && to))
+  // Google may display app passwords in groups of four. SMTP authentication
+  // uses the sixteen characters without the intervening spaces.
+  const password = String(appPassword).replace(/\s+/g, '')
+  const username = String(user).trim()
+  const sender = String(from).trim()
+  const recipient = String(to).trim()
+  const configured = Boolean(username && password && sender && recipient &&
+    Number.isInteger(port) && port > 0 && port <= 65535)
+  const enabled = Boolean(send || configured)
+
+  // No transport is constructed in a missing-credential environment.
+  const transport = configured && !send
+    ? createTransport({
+        host, port, secure,
+        requireTLS: !secure,
+        auth: { user: username, pass: password },
+        connectionTimeout: 9000,
+        greetingTimeout: 9000,
+        socketTimeout: 15000,
+      })
+    : null
+
   const deliver = async (request) => {
     if (!enabled) return false
     const email = buildOperatorEmail(request)
     if (send) {
-      await send({ to, ...email, reference: request.reference })
+      await send({ to: recipient, ...email, reference: request.reference })
       return true
     }
-    const response = await fetcher('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-        'Idempotency-Key': `chauffeur-booking-${request.reference}`,
-      },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        reply_to: email.replyTo,
-        subject: email.subject,
-        html: email.html,
-        text: email.text,
-      }),
-      signal: AbortSignal.timeout(9000),
+    // Keep Message-ID stable for best-effort duplicate suppression. SMTP
+    // cannot guarantee exactly-once delivery if a process crashes after send.
+    const domain = username.split('@')[1] || 'gmail.com'
+    const messageId = '<chauffeur.' +
+      String(request.reference).replace(/[^a-zA-Z0-9-]/g, '') + '@' + domain + '>'
+    const info = await transport.sendMail({
+      from: { name: 'Chauffeur Service', address: sender },
+      to: recipient,
+      replyTo: email.replyTo,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      messageId,
     })
-    if (!response.ok) {
-      await response.body?.cancel?.()
-      throw new Error('Operator email provider unavailable')
+    if (Array.isArray(info?.accepted) &&
+      !info.accepted.some((address) =>
+        String(address).toLowerCase() === recipient.toLowerCase())) {
+      throw new Error('Gmail SMTP did not accept the operator recipient.')
     }
     return true
   }
-  return { enabled, deliver, to }
+  return { enabled, deliver, to: recipient }
 }
