@@ -88,7 +88,7 @@ export default function PricingSection({
     <section
       id="services"
       aria-labelledby="services-title"
-      className="relative flex min-h-dvh w-full snap-start snap-always flex-col overflow-hidden bg-[#050608] px-[clamp(20px,4.5vw,84px)] pt-[calc(var(--header)+24px)] pb-14 antialiased select-none lg:h-dvh lg:justify-between lg:pb-[clamp(54px,10.4vh,120px)]"
+      className="relative flex min-h-dvh w-full snap-start snap-always flex-col overflow-hidden bg-[#050608] px-[clamp(20px,4.5vw,84px)] pt-[calc(var(--header)+24px)] pb-14 antialiased select-none lg:h-dvh lg:pb-0"
     >
       {/* Full-bleed architectural lighting background */}
       <img
@@ -102,7 +102,7 @@ export default function PricingSection({
       />
 
       {/* Content Wrapper */}
-      <div className="relative z-10 mx-auto flex h-full w-full max-w-[1380px] flex-col justify-between gap-9 lg:gap-8">
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-[1380px] flex-1 flex-col gap-9 lg:gap-0">
         {/* Section Header positioned higher up */}
         <div className="pl-1">
           <div className="mb-3.5 flex items-center gap-4">
@@ -126,7 +126,7 @@ export default function PricingSection({
         </div>
 
         {/* Three equally sized editorial cards; stacked on smaller screens. */}
-        <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-7 xl:gap-8">
+        <div className="grid w-full grid-cols-1 gap-5 lg:my-auto lg:grid-cols-3 lg:gap-7 xl:gap-8">
           {PRICING_PLANS.map((plan) => (
             <article
               key={plan.id}
