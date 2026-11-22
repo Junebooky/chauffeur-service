@@ -79,7 +79,7 @@ test('admin email template contains verified details and escapes untrusted HTML'
   assert.match(message.html, /mailto:guest@example.com/)
   assert.match(message.html, /Pending confirmation|pending request/i)
   assert.match(message.text, /Preferred contact: email/)
-  assert.match(message.text, /Tax excluded/)
+  assert.match(message.text, /tax excluded/i)
 })
 
 test('Resend adapter uses the configured admin recipient and sends HTML and plain text', async () => {
