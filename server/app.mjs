@@ -58,6 +58,11 @@ export function createApp({
   const rates = createRatesService({ now, ...ratesOptions })
 
   const notifier = createOperatorNotifier(notificationsOptions)
+  if (process.env.NODE_ENV === 'production' && !notifier.enabled) {
+    // Do not log addresses, passwords or guest details. Make missing SMTP
+    // setup observable; requests still save and remain in the SQLite outbox.
+    console.warn('Operator reservation email is disabled: SMTP credentials are not configured on this API server.')
+  }
   let sendingNotifications = false
   let stopped = false
 
@@ -89,7 +94,7 @@ export function createApp({
             SET status = 'sent', sent_at = ?, attempts = attempts + 1
             WHERE reservation_id = ? AND status = 'pending'`)
             .run(new Date(now()).toISOString(), item.reservation_id)
-        } catch {
+        } catch (error) {
           if (stopped) break
           const attempts = item.attempts + 1
           const delay = Math.min(3600000, 30000 * 2 ** Math.min(7, attempts - 1))
@@ -97,8 +102,11 @@ export function createApp({
             SET attempts = ?, next_attempt_at = ?
             WHERE reservation_id = ? AND status = 'pending'`)
             .run(attempts, now() + delay, item.reservation_id)
-          // Intentionally no guest PII or provider error details in logs.
-          console.error('Operator email delivery failed; will retry.')
+          // SMTP failure category is safe to log. Never log recipient, guest
+          // details, provider response text, or the secret app password.
+          const smtpCode = typeof error?.code === 'string' &&
+            /^E[A-Z_]+$/.test(error.code) ? error.code : 'UNKNOWN'
+          console.error(`Operator email delivery failed (${smtpCode}); will retry.`)
         }
       }
     } catch {

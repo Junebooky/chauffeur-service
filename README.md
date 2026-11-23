@@ -175,3 +175,18 @@ Server-side tests verify the Single Day query schema (`dates`, `times`, `service
 - The Schedule calendar has no redundant **Select Date** header. The quiet Custom email inquiry sits at the **bottom of the right-hand input column**, after the Flight number field when applicable.
 - A guest's **pending** booking request is not an inventory hold. Both `GET /api/availability` and `POST /api/reservations` check overlap against **confirmed** reservations only. This prevents testing and past unconfirmed inquiries from making all cars appear unavailable.
 - A **confirmed** request still blocks the same vehicle during its actual service window; other vehicles or non-overlapping times stay requestable. Since the current site has no operator confirmation UI or verified fleet inventory integration, availability is an indicative, local database-based result—not a real-time fleet guarantee.
+
+
+### Why a saved Confirmation may not produce an admin email
+
+The Confirmation screen means the **reservation API saved the request**, not that Gmail accepted or delivered its operator notification. Sending is asynchronous through the SQLite outbox. If SMTP is not configured on the **running API process**, email tasks remain `pending` even when the booking returns HTTP 201.
+
+To diagnose an individual booking in the **same API environment and persistent database** where the request was saved, run:
+
+```bash
+npm run email:status -- CH-1234ABCD
+```
+
+The command displays only the reservation state, queued/sent status, retry count, next retry time and whether SMTP credentials exist; it never prints the password or guest contact details. If email status is `pending`, check production server logs for `Operator email delivery failed (EAUTH|ECONNECTION|ETIMEDOUT|UNKNOWN)` and ensure the SMTP credentials are set. `sent` means that SMTP accepted the message, **not** that Gmail put it in Inbox; also check Spam, All Mail and any filters.
+
+In particular, a Vercel **Vite-only static frontend** does not start the Express server from `server/index.mjs`, does not read that server's SQLite database or send its mail outbox. The local Vite proxy to port 3001 is development-only. Set `SMTP_USER`, `SMTP_APP_PASSWORD`, `BOOKING_NOTIFICATION_TO` on the **real reservation API host**, not just the static website. A production API needs persistent storage and a worker/process capable of retrying mail tasks; do not treat a successful frontend deployment as proof of mail delivery. Never share an app password in chat, tests or Git.

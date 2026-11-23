@@ -971,7 +971,7 @@ export default function Booking({
                 </div>
                 <div className="booking-confirmation-heading">
                   <div>
-                    <p className="eyebrow">YOUR RESERVATION REQUEST</p>
+                    <p className="booking-confirmation-kicker">YOUR RESERVATION REQUEST</p>
                     <h3 ref={successHeading} tabIndex={-1}>Your journey, arranged.</h3>
                     <p>Your itinerary is saved and ready for our team to review.</p>
                   </div>
@@ -1000,7 +1000,6 @@ export default function Booking({
                 <div className="booking-confirmation-itinerary">
                   <div className="booking-confirmation-itinerary-heading">
                     <h4>Daily itinerary</h4>
-                    <span>KST (UTC+9)</span>
                   </div>
                   <div className="booking-confirmation-days">
                     {result.journeys.map((day, index) => (
@@ -1011,7 +1010,7 @@ export default function Booking({
                         </div>
                         <div className="booking-confirmation-day-info">
                           <div className="booking-confirmation-day-meta">
-                            <strong>{day.service} · {day.time}</strong>
+                            <strong>{day.service} · {day.time} KST (UTC+9)</strong>
                             <span>{day.vehicle}</span>
                           </div>
                           <div className="booking-confirmation-route">
