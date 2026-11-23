@@ -16,5 +16,8 @@
       "source": "/admin/live/",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": false
+  }
 }
