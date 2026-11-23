@@ -28,6 +28,7 @@ import { composeEmail } from './contact'
 import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import DisplayHeading from './components/ui/DisplayHeading'
+import SectionEyebrow from './components/ui/SectionEyebrow'
 import BookingCtaBeam from './components/ui/BookingCtaBeam'
 import ReservationButton from './components/ui/ReservationButton'
 import {
@@ -831,9 +832,7 @@ export default function Booking({
         <div className="booking-backdrop-overlay" />
       </div>
       <div className="section-topline">
-        <span className="eyebrow">
-          <span className="gold-line" /> YOUR NEXT CHAPTER
-        </span>
+        <SectionEyebrow>YOUR NEXT CHAPTER</SectionEyebrow>
         <span className="section-numeral">04 / RESERVATION</span>
       </div>
       <div className="section-heading booking-heading">

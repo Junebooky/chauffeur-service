@@ -9,6 +9,7 @@ import {
 import FleetInteriorGallery from './FleetInteriorGallery'
 import BorderBeam from './components/ui/BorderBeam'
 import DisplayHeading from './components/ui/DisplayHeading'
+import SectionEyebrow from './components/ui/SectionEyebrow'
 import ReservationButton from './components/ui/ReservationButton'
 
 export interface FleetSectionProps {
@@ -717,9 +718,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               <span>All Fleet</span>
             </button>
           ) : (
-            <span className="eyebrow">
-              <span className="fleet-eyebrow-bar" aria-hidden="true" /> EXCELLENCE, IN EVERY DETAIL
-            </span>
+            <SectionEyebrow>EXCELLENCE, IN EVERY DETAIL</SectionEyebrow>
           )}
         </div>
       </div>

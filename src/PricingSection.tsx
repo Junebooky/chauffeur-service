@@ -1,6 +1,7 @@
 import catalog from './catalog.json'
 import { money } from './utils'
 import { customQuoteEmail } from './contact'
+import SectionEyebrow from './components/ui/SectionEyebrow'
 
 type PricingSectionProps = {
   onSelectService: (serviceId: string) => void
@@ -109,14 +110,8 @@ export default function PricingSection({
       <div className="relative z-10 mx-auto flex h-full w-full max-w-[1380px] flex-1 flex-col gap-9 lg:gap-0">
         {/* Section Header positioned higher up */}
         <div className="pl-1">
-          <div className="mb-3.5 flex items-center gap-4">
-            <span className="!font-sans text-[11px] !font-normal tracking-[0.26em] text-[#e5e7eb]/90 uppercase">
-              PRICING PLANS
-            </span>
-            <span
-              aria-hidden="true"
-              className="h-px w-10 bg-[#e5e7eb]/65"
-            />
+          <div className="mb-3.5">
+            <SectionEyebrow linePosition="after">PRICING PLANS</SectionEyebrow>
           </div>
           <h2
             id="services-title"
