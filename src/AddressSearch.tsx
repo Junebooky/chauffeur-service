@@ -120,6 +120,8 @@ export default function AddressSearch({
         body: JSON.stringify({ query: value, sessionToken: session.current }),
       })
         .then(async (response) => {
+          if (!(response.headers.get('content-type') || '').includes('application/json'))
+            throw new Error('Address search is unavailable. Please try again.')
           const data = await response.json()
           if (!response.ok)
             throw new Error(data.error || 'Address search is unavailable.')
@@ -218,6 +220,8 @@ export default function AddressSearch({
           sessionToken: session.current,
         }),
       })
+      if (!(response.headers.get('content-type') || '').includes('application/json'))
+        throw new Error('Address confirmation is unavailable. Please try again.')
       const selected = await response.json()
       if (!response.ok)
         throw new Error(selected.error || 'We could not confirm this address.')

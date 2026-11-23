@@ -62,7 +62,7 @@ test('customer POST persists a real front-end-shaped booking via atomic Supabase
     throw Error('Unexpected DB request '+url)
   }
   const future=new Date(Date.now()+15*86400000).toISOString().slice(0,10)
-  const place={id:'sample-place',name:'Hotel',address:'Seoul, Republic of Korea',latitude:37.5,longitude:127,source:'popular'}
+  const place={id:'curated:four-seasons',name:'Four Seasons Hotel Seoul',address:'97 Saemunan-ro, Jongno-gu, Seoul, South Korea',latitude:37.5706,longitude:126.976,source:'popular'}
   try{
     const res=response()
     await booking({

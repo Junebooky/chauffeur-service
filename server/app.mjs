@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import catalog from '../src/catalog.json' with { type: 'json' }
 import { createPlaces } from './places.mjs'
+import { placesHandler } from './places-handler.mjs'
 import { createRatesService } from './rates.mjs'
 import { createOperatorNotifier } from './notifications.mjs'
 import { requestableDays } from './requestable-availability.mjs'
@@ -71,7 +72,13 @@ export function createApp({
   app.all('/api/admin-overview', (req, res) => { void liveOverview(req, res) })
 
   const places = createPlaces({ now, ...placesOptions })
-  app.use('/api/places', places.router)
+  if (hasDatabase() && process.env.CHAUFFEUR_USE_SQLITE !== 'true') {
+    // Match the stateless Vercel place APIs, including signed Google selections.
+    app.all('/api/places/search', (req, res) => { void placesHandler(req, res, 'search') })
+    app.all('/api/places/resolve', (req, res) => { void placesHandler(req, res, 'resolve') })
+  } else {
+    app.use('/api/places', places.router)
+  }
   const rates = createRatesService({ now, ...ratesOptions })
 
   const notifier = createOperatorNotifier(notificationsOptions)

@@ -1,5 +1,6 @@
 import catalog from '../src/catalog.json' with { type: 'json' }
 import { createHash } from 'node:crypto'
+import { validatePlaceSelection } from '../server/places-serverless.mjs'
 import { requestableDays } from '../server/requestable-availability.mjs'
 import { createOperatorNotifier } from '../server/notifications.mjs'
 import { db, ApiError, fail, hasDatabase, noCache, onlyString } from '../server/chauffeur-supabase.mjs'
@@ -7,8 +8,9 @@ import { db, ApiError, fail, hasDatabase, noCache, onlyString } from '../server/
 const asBody = req => typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 const lengthValid = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max
 const maxStops = 8
-const safePlace = value => value && typeof value === 'object' && !Array.isArray(value)
-  && lengthValid(value.address, 250) ? value : null
+// Never trust client-provided Google location details. Curated IDs are
+// canonicalized server-side; Google Places selections carry an HMAC proof.
+const safePlace = value => validatePlaceSelection(value)
 
 export default async function handler(req, res) {
   noCache(res)
