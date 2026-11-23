@@ -9,8 +9,61 @@ export type ExportItinerary = {
   reference: string; status: string; total: number | null;
   journeys: ExportDay[];
 }
-const W = 1240, H = 1754, PAGE_W = 595, PAGE_H = 842
+const W = 1240, H = 1754, HEADER_H = 375, PAGE_W = 595, PAGE_H = 842
 const olive = '#899766'
+const HEADER_BG_SRC = '/media/hero/bg_003.png'
+const BRAND_MARK_SRC = '/media/brand/chauffeur-mark.png'
+const DISPLAY_FONT_STACK = 'Pretendard, "Chauffeur Manrope", "Noto Sans KR", Arial, sans-serif'
+const BODY_FONT_STACK = 'Pretendard, "Chauffeur Manrope", Arial, "Noto Sans KR", sans-serif'
+
+type HeaderAssets = {
+  background: HTMLImageElement | null
+  mark: HTMLImageElement | null
+}
+
+type CanvasWithLetterSpacing = CanvasRenderingContext2D & {
+  letterSpacing?: string
+}
+
+let cachedAssetsPromise: Promise<HeaderAssets> | null = null
+
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    let settled = false
+    const finish = (value: HTMLImageElement | null) => {
+      if (settled) return
+      settled = true
+      resolve(value)
+    }
+    const timer = setTimeout(() => finish(null), 3000)
+    img.onload = () => { clearTimeout(timer); finish(img) }
+    img.onerror = () => { clearTimeout(timer); finish(null) }
+    img.src = src
+  })
+}
+
+async function ensureHeaderAssets(): Promise<HeaderAssets> {
+  if (!cachedAssetsPromise) {
+    const fontLoads: Promise<unknown>[] = []
+    if (typeof document !== 'undefined' && 'fonts' in document && document.fonts) {
+      fontLoads.push(
+        document.fonts.load('100 36px Pretendard').catch(() => undefined),
+        document.fonts.load('200 36px Pretendard').catch(() => undefined),
+        document.fonts.load('300 14px Pretendard').catch(() => undefined),
+        document.fonts.load('200 36px "Chauffeur Manrope"').catch(() => undefined),
+        document.fonts.load('300 14px "Chauffeur Manrope"').catch(() => undefined),
+      )
+    }
+    cachedAssetsPromise = Promise.all([
+      loadImage(HEADER_BG_SRC),
+      loadImage(BRAND_MARK_SRC),
+      ...fontLoads,
+    ]).then(([background, mark]) => ({ background, mark }))
+  }
+  return cachedAssetsPromise
+}
+
 const money = (n: number | null) => n === null
   ? 'Quote on request'
   : new Intl.NumberFormat('en-US', {
@@ -23,11 +76,23 @@ const prettyDate = (value: string) => {
     day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
   }).format(new Date(Date.UTC(p[0], p[1] - 1, p[2])))
 }
-const drawText = (ctx: CanvasRenderingContext2D, value: string, x: number,
-  y: number, size: number, color = '#1e2424', weight = 400) => {
+const drawText = (
+  ctx: CanvasRenderingContext2D,
+  value: string,
+  x: number,
+  y: number,
+  size: number,
+  color = '#1e2424',
+  weight = 400,
+  fontStack = BODY_FONT_STACK,
+  letterSpacing = '0px',
+) => {
+  const target = ctx as CanvasWithLetterSpacing
   ctx.fillStyle = color
-  ctx.font = weight + ' ' + size + 'px Arial, "Noto Sans KR", sans-serif'
+  ctx.font = weight + ' ' + size + 'px ' + fontStack
+  if ('letterSpacing' in target) target.letterSpacing = letterSpacing
   ctx.fillText(value, x, y)
+  if ('letterSpacing' in target) target.letterSpacing = '0px'
 }
 const shorten = (ctx: CanvasRenderingContext2D, value: string, max: number) => {
   if (ctx.measureText(value).width <= max) return value
@@ -37,16 +102,110 @@ const shorten = (ctx: CanvasRenderingContext2D, value: string, max: number) => {
   }
   return copy + '…'
 }
-function drawPage(data: ExportItinerary, days: ExportDay[], page: number, count: number) {
+function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets) {
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(0, 0, W, HEADER_H)
+  ctx.clip()
+
+  ctx.fillStyle = '#111316'
+  ctx.fillRect(0, 0, W, HEADER_H)
+
+  if (assets.background && assets.background.naturalWidth > 0 && assets.background.naturalHeight > 0) {
+    const bg = assets.background
+    const scale = Math.max(W / bg.naturalWidth, HEADER_H / bg.naturalHeight)
+    const drawW = bg.naturalWidth * scale
+    const drawH = bg.naturalHeight * scale
+    const drawX = (W - drawW) * 0.5
+    const drawY = (HEADER_H - drawH) * 0.62
+    ctx.globalAlpha = 0.44
+    ctx.drawImage(bg, drawX, drawY, drawW, drawH)
+    ctx.globalAlpha = 1
+  }
+
+  const horizontalScrim = ctx.createLinearGradient(0, 0, W, 0)
+  horizontalScrim.addColorStop(0, 'rgba(13, 15, 18, 0.84)')
+  horizontalScrim.addColorStop(0.55, 'rgba(13, 15, 18, 0.52)')
+  horizontalScrim.addColorStop(1, 'rgba(13, 15, 18, 0.3)')
+  ctx.fillStyle = horizontalScrim
+  ctx.fillRect(0, 0, W, HEADER_H)
+
+  const verticalScrim = ctx.createLinearGradient(0, 0, 0, HEADER_H)
+  verticalScrim.addColorStop(0, 'rgba(13, 15, 18, 0.34)')
+  verticalScrim.addColorStop(0.55, 'rgba(13, 15, 18, 0.08)')
+  verticalScrim.addColorStop(1, 'rgba(13, 15, 18, 0.42)')
+  ctx.fillStyle = verticalScrim
+  ctx.fillRect(0, 0, W, HEADER_H)
+
+  const markSize = 58
+  const markX = 100
+  const markY = 76
+  let brandTextX = 100
+  if (assets.mark && assets.mark.naturalWidth > 0 && assets.mark.naturalHeight > 0) {
+    ctx.drawImage(assets.mark, markX, markY, markSize, markSize)
+    brandTextX = markX + markSize + 18
+  }
+
+  drawText(
+    ctx,
+    'J Production',
+    brandTextX,
+    109,
+    36,
+    '#f4f5f7',
+    200,
+    DISPLAY_FONT_STACK,
+    '0.02em',
+  )
+  drawText(
+    ctx,
+    'Team of Premium Chauffeur Service',
+    brandTextX + 1,
+    133,
+    14,
+    'rgba(229, 233, 240, 0.78)',
+    300,
+    DISPLAY_FONT_STACK,
+    '0.06em',
+  )
+
+  drawText(
+    ctx,
+    'YOUR RESERVATION REQUEST',
+    100,
+    235,
+    21,
+    '#b2c39e',
+    600,
+    BODY_FONT_STACK,
+    '0.05em',
+  )
+  drawText(
+    ctx,
+    'Journey itinerary',
+    100,
+    304,
+    49,
+    '#ffffff',
+    200,
+    DISPLAY_FONT_STACK,
+    '-0.015em',
+  )
+  ctx.restore()
+}
+function drawPage(
+  data: ExportItinerary,
+  days: ExportDay[],
+  page: number,
+  count: number,
+  assets: HeaderAssets,
+) {
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Image export is not supported in this browser.')
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H)
-  ctx.fillStyle = '#191c1e'; ctx.fillRect(0, 0, W, 375)
-  drawText(ctx, 'CHAUFFEUR', 100, 124, 32, '#ffffff', 700)
-  drawText(ctx, 'YOUR RESERVATION REQUEST', 100, 235, 22, '#b2c39e', 600)
-  drawText(ctx, 'Journey itinerary', 100, 303, 49, '#ffffff', 400)
+  drawHeaderBanner(ctx, assets)
   ctx.strokeStyle = '#d9deda'
   ctx.beginPath(); ctx.moveTo(100, 465); ctx.lineTo(W - 100, 465); ctx.stroke()
   drawText(ctx, 'Reference', 100, 422, 23, '#727e78')
@@ -70,7 +229,7 @@ function drawPage(data: ExportItinerary, days: ExportDay[], page: number, count:
       ctx.beginPath(); ctx.moveTo(x - 15, 505); ctx.lineTo(x - 15, 635); ctx.stroke()
     }
     drawText(ctx, label, x, 545, 18, '#78847c', 600)
-    ctx.font = '600 24px Arial, "Noto Sans KR", sans-serif'
+    ctx.font = '600 24px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, value, 305), x, 595, 24, '#242c27', 600)
   })
   drawText(ctx, 'Daily itinerary', 100, 712, 31, '#222a26', 600)
@@ -83,24 +242,24 @@ function drawPage(data: ExportItinerary, days: ExportDay[], page: number, count:
       19, olive, 700)
     drawText(ctx, prettyDate(day.date), 100, y + 85, 19, '#758176')
     const x = 255
-    ctx.font = '600 24px Arial, "Noto Sans KR", sans-serif'
+    ctx.font = '600 24px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, day.service + ' · ' + day.time + ' KST', 540),
       x, y + 48, 24, '#252c28', 600)
     ctx.textAlign = 'right'
-    ctx.font = '400 20px Arial, "Noto Sans KR", sans-serif'
+    ctx.font = '400 20px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, day.vehicle, 310), W - 100, y + 48, 20, '#79817b')
     ctx.textAlign = 'left'
-    ctx.font = '500 23px Arial, "Noto Sans KR", sans-serif'
+    ctx.font = '500 23px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, day.pickupName || day.pickup, 390),
       x, y + 101, 23, '#252d28', 500)
     drawText(ctx, '→', 695, y + 101, 26, olive, 600)
     drawText(ctx, shorten(ctx, day.destinationName || day.destination, 370),
       750, y + 101, 23, '#252d28', 500)
-    ctx.font = '400 17px Arial, "Noto Sans KR", sans-serif'
+    ctx.font = '400 17px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, day.pickup + ' → ' + day.destination, 870),
       x, y + 144, 17, '#7e8981')
     if (day.stops?.length) {
-      ctx.font = '400 17px Arial, "Noto Sans KR", sans-serif'
+      ctx.font = '400 17px ' + BODY_FONT_STACK
       drawText(ctx, shorten(ctx, 'Via ' + day.stops.join(' · '), 870),
         x, y + 183, 17, '#7e8981')
     }
@@ -115,7 +274,7 @@ function drawPage(data: ExportItinerary, days: ExportDay[], page: number, count:
   ctx.fillStyle = '#f3f6f1'; ctx.fillRect(100, 1580, W - 200, 91)
   drawText(ctx, 'Reservation request saved · Awaiting confirmation · No payment taken',
     122, 1636, 20, '#59685b', 500)
-  drawText(ctx, 'CHAUFFEUR', 100, 1712, 18, '#59675f', 700)
+  drawText(ctx, 'J Production', 100, 1712, 18, '#59675f', 500, DISPLAY_FONT_STACK)
   ctx.textAlign = 'right'
   drawText(ctx, count > 1 ? 'Page ' + (page + 1) + ' of ' + count : 'KST (UTC+9)',
     W - 100, 1712, 18, '#8d968f')
@@ -126,8 +285,8 @@ const pageCount = (data: ExportItinerary) => {
   if (!data.journeys.length) throw new Error('No itinerary is available.')
   return Math.ceil(data.journeys.length / 3)
 }
-const renderPage = (data: ExportItinerary, i: number, count: number) =>
-  drawPage(data, data.journeys.slice(i * 3, i * 3 + 3), i, count)
+const renderPage = (data: ExportItinerary, i: number, count: number, assets: HeaderAssets) =>
+  drawPage(data, data.journeys.slice(i * 3, i * 3 + 3), i, count, assets)
 function save(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
@@ -141,7 +300,8 @@ function jpegData(canvas: HTMLCanvasElement) {
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
   return bytes
 }
-function pdfDocument(data: ExportItinerary) {
+async function pdfDocument(data: ExportItinerary) {
+  const assets = await ensureHeaderAssets()
   const encoder = new TextEncoder()
   const chunks: Uint8Array[] = []
   let byteLength = 0
@@ -158,7 +318,7 @@ function pdfDocument(data: ExportItinerary) {
   object(2, () => add('<< /Type /Pages /Count ' + count + ' /Kids [' +
     Array.from({ length: count }, (_, i) => (3 + 3 * i) + ' 0 R').join(' ') + '] >>'))
   for (let i = 0; i < count; i++) {
-    const canvas = renderPage(data, i, count)
+    const canvas = renderPage(data, i, count, assets)
     const page = 3 + i * 3, image = page + 1, content = page + 2
     object(page, () => add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' +
       PAGE_W + ' ' + PAGE_H + '] /Resources << /XObject << /Im1 ' + image +
@@ -184,13 +344,13 @@ function pdfDocument(data: ExportItinerary) {
     startXref + '\n%%EOF')
   return new Blob(chunks as BlobPart[], { type: 'application/pdf' })
 }
-export function exportItineraryPdf(data: ExportItinerary) {
-  save(pdfDocument(data), data.reference + '-itinerary.pdf')
+export async function exportItineraryPdf(data: ExportItinerary) {
+  save(await pdfDocument(data), data.reference + '-itinerary.pdf')
 }
 export async function exportItineraryPng(data: ExportItinerary) {
-  const count = pageCount(data)
+  const [assets, count] = [await ensureHeaderAssets(), pageCount(data)]
   for (let i = 0; i < count; i++) {
-    const canvas = renderPage(data, i, count)
+    const canvas = renderPage(data, i, count, assets)
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob((value) => value ? resolve(value) :
         reject(new Error('Could not create an itinerary image.')), 'image/png'))

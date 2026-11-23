@@ -811,11 +811,11 @@ export default function Booking({
       setSending(false)
     }
   }
-  const exportPdf = () => {
+  const exportPdf = async () => {
     if (!result) return
     try {
       setExportError('')
-      exportItineraryPdf(result)
+      await exportItineraryPdf(result)
     } catch {
       setExportError('Could not save the PDF. Please try again.')
     }
@@ -1031,7 +1031,7 @@ export default function Booking({
                 <div className="booking-confirmation-footer">
                   <p><strong>Request saved · Not yet confirmed.</strong> No payment has been taken.</p>
                   <div className="success-actions">
-                    <button type="button" className="booking-confirmation-export" onClick={exportPdf}>
+                    <button type="button" className="booking-confirmation-export" onClick={() => { void exportPdf() }}>
                       <FileDown size={16} aria-hidden="true" /> Export PDF
                     </button>
                     <button type="button" className="booking-confirmation-export" onClick={() => { void exportPng() }}>
