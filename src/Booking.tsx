@@ -34,7 +34,6 @@ import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
-import BookingCtaBeam from './components/ui/BookingCtaBeam'
 import ReservationButton from './components/ui/ReservationButton'
 import {
   DEFAULT_USD_RATE,
@@ -908,7 +907,12 @@ export default function Booking({
         >
           {!glassOpen && !result && (
             <>
-              <BookingCtaBeam />
+              <span className="booking-glass-beam-halo" aria-hidden="true">
+                <span className="booking-glass-beam-spinner" />
+              </span>
+              <span className="booking-glass-beam-ring" aria-hidden="true">
+                <span className="booking-glass-beam-spinner" />
+              </span>
               <div className="booking-optical-lens" aria-hidden="true">
                 <LiquidGlass
                   className="booking-optical-engine"
