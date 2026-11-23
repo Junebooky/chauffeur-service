@@ -27,7 +27,7 @@ test('Booking and Fleet Specs share the exact same reservation button', () => {
   assert.match(button, /trackGlassPointer\(event\)/)
   assert.match(button, /resetGlassPointer\(event\)/)
   assert.match(booking, /form="booking-request-form"/)
-  assert.match(booking, /step === 2 && !allAvailable/)
+  assert.match(booking, /step === 2 && \(checking \|\| !!unavailableDay/)
   assert.match(fleet, /handleReserve\(activeVehicle\.catalogId\)/)
 })
 

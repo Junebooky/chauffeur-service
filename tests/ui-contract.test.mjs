@@ -17,11 +17,12 @@ test('hero fallback and video poster refer to real public assets', () => {
   }
 })
 
-test('reservation submit requires confirmed availability state', () => {
+test('reservation requires verified availability for direct booking but offers an honest email fallback', () => {
   const booking = readFileSync(join(root, 'src/Booking.tsx'), 'utf8')
-  assert.match(booking, /step === 2 && !allAvailable/)
-  assert.match(booking, /Availability check required/)
+  assert.match(booking, /step === 2 && \(checking \|\| !!unavailableDay/)
+  assert.match(booking, /availabilityIssue\?\.kind !== 'unreachable'/)
   assert.match(booking, /Time slot open for a request/)
+  assert.match(booking, /Email Booking Enquiry/)
   assert.doesNotMatch(booking, /Available for instant request/)
 })
 

@@ -162,6 +162,14 @@ Vehicle selection uses the five current fleet images in `public/media/fleet/`. T
 3. Restart/redeploy the server after changing environment variables. The existing saved booking outbox attempts delivery when eligible. For local checks, use a disposable reservation with synthetic contact details and verify receipt in the administrator inbox.
 4. Gmail SMTP requires outbound TCP access to port 465. **Vercel deployment success is not an SMTP connectivity check**; if that runtime blocks mail ports or uses short-lived processes, switch to a persistent worker or a suitable email provider. Persistent database storage is still required.
 
+## Vehicle availability in Vite-only deployments
+
+The reservation UI requests `GET /api/availability`, the server endpoint defined in `server/app.mjs`. Vite's local development proxy works only while the Express server runs. A static-only Vercel/Vite deployment does **not** automatically start `server/index.mjs`; deploy a persistent reservation API (and database) separately or explicitly configure an API integration for fully online bookings.
+
+If the availability endpoint fails, times out, serves HTML or returns an incomplete response, Vehicle still allows clients to select a model and review Details. The UI **does not claim the vehicle is available**: it marks online availability unverified. On Details, a clearly labelled **Email Booking Enquiry** opens a guest-controlled mail draft (including their itinerary and contact details) to `gotoward7@gmail.com`. Guests must send the draft themselves; this fallback does not save a booking, trigger automatic administrator email, or display a misleading Confirmation screen. Explicit confirmed-booking conflicts and invalid journey dates remain blocking conditions. The usual **Request Booking** is enabled only when the API confirms all selected vehicle slots.
+
+Server-side tests verify the Single Day query schema (`dates`, `times`, `services` with one entry each), and UI tests cover stale response protection and outage handling. Before taking paid bookings in production, connect a persistent reservation backend and check `/api/health` and `/api/availability` on the actual site.
+
 ## Schedule form and pending versus confirmed vehicle availability
 
 - The Schedule calendar has no redundant **Select Date** header. The quiet Custom email inquiry sits at the **bottom of the right-hand input column**, after the Flight number field when applicable.

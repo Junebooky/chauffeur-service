@@ -304,6 +304,12 @@ export default function Booking({
     Record<string, Record<string, boolean>>
   >({})
   const [checking, setChecking] = useState(false)
+  const [verifiedAvailabilityKey, setVerifiedAvailabilityKey] = useState('')
+  const [availabilityIssue, setAvailabilityIssue] = useState<{
+    kind: 'invalid' | 'unreachable'
+    message: string
+  } | null>(null)
+  const [emailDraftOpened, setEmailDraftOpened] = useState(false)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [exportError, setExportError] = useState('')
@@ -489,17 +495,20 @@ export default function Booking({
   const mixedServices = new Set(journeys.map((day) => day.service)).size > 1
   const summaryService = catalog.services.find((item) => item.id === journeys[0]?.service) ?? currentService
 
-  const allAvailable =
-    journeys.length > 0 &&
-    journeys.every((day) => availability[day.date]?.[day.vehicle] === true)
-
-  const unavailableDay = journeys.find(
-    (day) => availability[day.date]?.[day.vehicle] === false,
-  )
-
   const datesKey = dates.join(',')
   const timesKey = dates.map((d) => getTime(d)).join(',')
   const servicesKey = dates.map((d) => getService(d)).join(',')
+  const availabilityKey = [datesKey, timesKey, servicesKey].join('|')
+  // Results are valid only for their exact date/time/service inputs; a former
+  // response must never be used for a newly edited single-day itinerary.
+  const availabilityCurrent = verifiedAvailabilityKey === availabilityKey
+  const allAvailable =
+    availabilityCurrent && journeys.length > 0 &&
+    journeys.every((day) => availability[day.date]?.[day.vehicle] === true)
+
+  const unavailableDay = availabilityCurrent ? journeys.find(
+    (day) => availability[day.date]?.[day.vehicle] === false,
+  ) : undefined
 
   // Removing a date also removes its unsent per-day overrides.
   useEffect(() => {
@@ -519,11 +528,26 @@ export default function Booking({
 
   useEffect(() => {
     const validTimeRe = /^([01]\d|2[0-3]):[0-5]\d$/
-    if (!dates.every((d) => validTimeRe.test(getTime(d)))) return
+    if (!dates.every((d) => validTimeRe.test(getTime(d)))) {
+      setAvailability({})
+      setAvailabilityIssue({
+        kind: 'invalid',
+        message: 'Choose a valid pickup time for every date.',
+      })
+      setChecking(false)
+      return
+    }
     const controller = new AbortController()
+    let timedOut = false
+    const timeout = window.setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, 10000)
     setChecking(true)
     setAvailability({})
-    setError('')
+    setVerifiedAvailabilityKey('')
+    setAvailabilityIssue(null)
+    setEmailDraftOpened(false)
     const params = new URLSearchParams()
     params.set('service', getService(dates[0] || tomorrow()))
     params.set('dates', dates.join(','))
@@ -531,17 +555,45 @@ export default function Booking({
     params.set('services', servicesKey)
     params.set('date', dates[0] || tomorrow())
     params.set('time', getTime(dates[0] || tomorrow()))
-    if (dates.length > 1) {
-      params.set('endDate', dates[dates.length - 1])
-    }
+    if (dates.length > 1) params.set('endDate', dates[dates.length - 1])
 
     fetch(`/api/availability?${params.toString()}`, {
       signal: controller.signal,
     })
       .then(async (response) => {
+        if (controller.signal.aborted) return
+        // A Vite-only static deployment may return HTML or 404 for /api.
+        // Neither means that a vehicle is booked: do not invent availability.
+        if (!(response.headers.get('content-type') || '').includes('application/json'))
+          throw new Error('The online reservation API is not connected.')
         const data = await response.json()
-        if (!response.ok)
-          throw new Error(data.error || 'Availability could not be checked.')
+        if (!response.ok) {
+          if (response.status === 400) {
+            setAvailabilityIssue({
+              kind: 'invalid',
+              message: typeof data?.error === 'string'
+                ? data.error : 'Please check the selected date and pickup time.',
+            })
+            return
+          }
+          throw new Error('The online reservation API is temporarily unavailable.')
+        }
+        if (!Array.isArray(data?.days) ||
+            data.days.length !== dates.length ||
+            data.days.some((day: { date?: string; vehicles?: unknown }) =>
+              !dates.includes(day.date || '') ||
+              !Array.isArray(day.vehicles) ||
+              !catalog.vehicles.every((vehicle) =>
+                (day.vehicles as { id: string; available: boolean }[]).some(
+                  (entry) => entry.id === vehicle.id &&
+                    typeof entry.available === 'boolean',
+                ),
+              ),
+            )) {
+          throw new Error('The reservation API returned an incomplete availability check.')
+        }
+        if (controller.signal.aborted) return
+        setVerifiedAvailabilityKey(availabilityKey)
         setAvailability(
           Object.fromEntries(
             data.days.map(
@@ -549,31 +601,35 @@ export default function Booking({
                 date: string
                 vehicles: { id: string; available: boolean }[]
               }) => [
-                  day.date,
-                  Object.fromEntries(
-                    day.vehicles.map((v) => [v.id, v.available]),
-                  ),
-                ],
+                day.date,
+                Object.fromEntries(day.vehicles.map((v) => [v.id, v.available])),
+              ],
             ),
           ),
         )
-        if (data?.usdRate && typeof data.usdRate === 'number') {
+        if (typeof data.usdRate === 'number' && Number.isFinite(data.usdRate))
           setUsdRate(data.usdRate)
-        }
       })
       .catch((error) => {
-        if (error.name !== 'AbortError')
-          setError(
-            error instanceof TypeError
-              ? 'We cannot reach the reservation service. Please try again shortly.'
-              : error.message,
-          )
+        if (controller.signal.aborted && !timedOut) return
+        setAvailabilityIssue({
+          kind: 'unreachable',
+          message: timedOut
+            ? 'The availability check timed out.'
+            : error instanceof TypeError
+              ? 'We cannot reach the reservation service.'
+              : 'The online reservation service is not available.',
+        })
       })
       .finally(() => {
-        if (!controller.signal.aborted) setChecking(false)
+        window.clearTimeout(timeout)
+        if (!controller.signal.aborted || timedOut) setChecking(false)
       })
-    return () => controller.abort()
-  }, [datesKey, timesKey, servicesKey, availabilityVersion])
+    return () => {
+      window.clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [availabilityKey, availabilityVersion])
   useEffect(() => {
     if (initialUsdRate) setUsdRate(initialUsdRate)
   }, [initialUsdRate])
@@ -616,17 +672,53 @@ export default function Booking({
       }
     }
     if (target > step && !form.current?.reportValidity()) return
-    if (target > step && step === 1 && !allAvailable) {
-      setError(
-        unavailableDay
-          ? `Please choose another vehicle or time for ${displayDate(unavailableDay.date)}.`
-          : 'Please wait for availability to be checked for every day, or retry.',
-      )
+    if (target > step && step === 1 && unavailableDay) {
+      setError(`Please choose another vehicle or time for ${displayDate(unavailableDay.date)}.`)
       return
     }
+    if (target > step && step === 1 && availabilityIssue?.kind === 'invalid') {
+      setError(availabilityIssue.message)
+      return
+    }
+    // If the API is unreachable, let guests review their details and use the
+    // clearly labelled email enquiry fallback. Never call this availability.
     setError('')
     setStep(target)
     requestAnimationFrame(() => heading.current?.focus())
+  }
+  const emailEnquiry = () => {
+    const itinerary = journeys.map((day, index) => [
+      `Day ${String(index + 1).padStart(2, '0')}: ${displayDate(day.date)} · ${day.time} KST`,
+      `Service: ${catalog.services.find((item) => item.id === day.service)?.name || day.service}`,
+      `Vehicle: ${catalog.vehicles.find((item) => item.id === day.vehicle)?.name || day.vehicle}`,
+      `Pickup: ${day.pickup}`,
+      ...day.stops.map((stop, i) => `Stop ${i + 1}: ${stop.location}`),
+      `Destination: ${day.destination}`,
+      ...(day.flight ? [`Flight: ${day.flight}`] : []),
+    ].join('\n')).join('\n\n')
+    const additions = catalog.options
+      .filter((option) => options.includes(option.id))
+      .map((option) => option.name).join(', ') || 'None'
+    const message = [
+      'Hello CHAUFFEUR,',
+      '',
+      'Please review my booking enquiry. I understand this is not confirmed.',
+      '',
+      `Name: ${name}`, `Email: ${email}`, `Phone: ${phone}`,
+      `Preferred contact: ${contactMethod}`,
+      ...(submittedMessengerContact ? [`Messenger: ${submittedMessengerContact}`] : []),
+      '',
+      'ITINERARY',
+      itinerary,
+      '',
+      `Add-ons: ${additions}`,
+      `Estimated total (tax excluded): ${quoteRequired ? 'Quote on request' : money(total)}`,
+      '',
+      'Please confirm availability and follow up with me.',
+    ].join('\n')
+    setError('')
+    setEmailDraftOpened(true)
+    window.location.href = composeEmail('CHAUFFEUR · Booking enquiry', message)
   }
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -635,6 +727,10 @@ export default function Booking({
       return
     }
     if (sending) return
+    if (!allAvailable && availabilityIssue?.kind === 'unreachable') {
+      emailEnquiry()
+      return
+    }
     setSending(true)
     setError('')
     const controller = new AbortController()
@@ -667,6 +763,8 @@ export default function Booking({
           consent,
         }),
       })
+      if (!(response.headers.get('content-type') || '').includes('application/json'))
+        throw new TypeError('Reservation API response was not JSON.')
       const data = await response.json()
       if (!response.ok) {
         if (response.status === 409) {
@@ -687,6 +785,12 @@ export default function Booking({
         })),
       })
     } catch (error) {
+      if (error instanceof TypeError) {
+        setAvailabilityIssue({
+          kind: 'unreachable',
+          message: 'The online reservation API is unavailable. You can email your enquiry instead.',
+        })
+      }
       setError(
         error instanceof Error && error.name === 'AbortError'
           ? 'The request timed out. Please retry; your request will not be duplicated.'
@@ -1661,6 +1765,19 @@ export default function Booking({
                           Reservation & Privacy Notice{' '}
                           <ArrowUpRight size={14} />
                         </button>
+                        {availabilityIssue?.kind === 'unreachable' && (
+                          <p className="booking-email-fallback-note" role="status">
+                            Online booking is unavailable. You can prepare an email
+                            enquiry instead; it will not be saved or sent until
+                            you send it from your email app.
+                          </p>
+                        )}
+                        {emailDraftOpened && (
+                          <p className="booking-email-fallback-note" role="status">
+                            Your email app should open with a draft. Please send it from your
+                            email app. No booking has been confirmed or saved online.
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1806,12 +1923,30 @@ export default function Booking({
                             ? 'All dates available'
                             : 'Time slot open for a request'}
                         </>
+                      ) : availabilityIssue?.kind === 'unreachable' ? (
+                        <>
+                          <Clock3 size={14} /> Availability not verified online.
+                          You can continue to Details and email your enquiry.
+                        </>
+                      ) : availabilityIssue?.kind === 'invalid' ? (
+                        <>
+                          <X size={14} /> {availabilityIssue.message}
+                        </>
                       ) : (
                         <>
-                          <Clock3 size={14} /> Availability check required
+                          <Clock3 size={14} /> Checking availability is required before sending a request.
                         </>
                       )}
                     </p>
+                    {availabilityIssue && (
+                      <button
+                        type="button"
+                        className="booking-availability-retry"
+                        onClick={() => setAvailabilityVersion((v) => v + 1)}
+                      >
+                        Recheck availability
+                      </button>
+                    )}
                     {error && (
                       <div className="form-error" role="alert">
                         {error}
@@ -1869,8 +2004,8 @@ export default function Booking({
                 className={step === 2 ? 'booking-submit' : ''}
                 disabled={
                   sending ||
-                  (step > 0 && checking) ||
-                  (step === 2 && !allAvailable)
+                  (step === 2 && (checking || !!unavailableDay ||
+                    (!allAvailable && availabilityIssue?.kind !== 'unreachable')))
                 }
               >
                 {sending ? (
@@ -1885,6 +2020,10 @@ export default function Booking({
                 ) : step === 1 ? (
                   <>
                     Continue to Details <ArrowRight size={17} />
+                  </>
+                ) : availabilityIssue?.kind === 'unreachable' ? (
+                  <>
+                    Email Booking Enquiry <ArrowUpRight size={17} />
                   </>
                 ) : (
                   <>
