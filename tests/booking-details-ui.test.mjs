@@ -23,6 +23,7 @@ test('Your Details uses an internationally friendly full name field and quiet su
 
 test('messenger contact can be an ID or an explicitly selected reachable phone number', () => {
   assert.match(booking, /usePhoneForMessenger/)
+  assert.match(booking, /\['whatsapp', 'line', 'kakao', 'wechat'\]\.includes\(contactMethod\)/)
   assert.match(booking, /name="use-phone-for-messenger"/)
   assert.match(booking, /Use the phone number above for \{contactApp\}/)
   assert.match(booking, /ID or phone number/)
@@ -67,6 +68,10 @@ test('Details copy is compact and all vehicle names align at the right edge', ()
   assert.match(booking, /Request Booking/)
   assert.match(css, /\.booking-glass-stage\.is-expanded \.privacy-inline \{\s*color: rgba\(206, 214, 226, 0\.56\) !important;/)
   assert.match(css, /\.booking-glass-stage\.is-expanded \.journey-summary\.is-details-summary \{\s*padding-top: 62px !important;/)
+  assert.match(css, /\.booking-glass-stage\.is-expanded \.journey-summary\.is-details-summary \.summary-journey-item \{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\);\s*justify-items: stretch;\s*width: 100%;/)
   assert.match(css, /summary-journey-header \{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\) max-content;/)
   assert.match(css, /summary-journey-vehicle \{\s*justify-self: end;/)
+  assert.match(booking, /service-tone service-tone-/)
+  assert.match(css, /\.booking-screen \.service-tone\.service-tone-airport \{\s*color: #9ec5e8 !important;/)
+  assert.match(css, /\.booking-screen \.service-tone\.service-tone-day \{\s*color: #dfbe8a !important;/)
 })

@@ -10084,6 +10084,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
    squeezing date, route and model into the same horizontal row. */
 .booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-route-recap {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0;
   min-width: 0;
   margin: 4px 0 22px !important;
@@ -10093,6 +10094,9 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 
 .booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-item {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: stretch;
+  width: 100%;
   gap: 7px;
   padding: 13px 0;
   min-width: 0;
@@ -10471,9 +10475,22 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 .booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
+  width: 100%;
   align-items: start;
   justify-content: space-between;
   column-gap: 12px;
+}
+
+.booking-screen .service-tone {
+  font-weight: 500;
+}
+
+.booking-screen .service-tone.service-tone-airport {
+  color: #9ec5e8 !important;
+}
+
+.booking-screen .service-tone.service-tone-day {
+  color: #dfbe8a !important;
 }
 .booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-date {
   min-width: 0;

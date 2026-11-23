@@ -347,7 +347,7 @@ export default function Booking({
   const emailReady = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   const phoneReady = /^\+?[\d\s().-]{7,40}$/.test(phone.trim()) &&
     phone.replace(/\D/g, '').length >= 7
-  const usesMessengerPhone = ['line', 'kakao', 'wechat'].includes(contactMethod) && usePhoneForMessenger
+  const usesMessengerPhone = ['whatsapp', 'line', 'kakao', 'wechat'].includes(contactMethod) && usePhoneForMessenger
   const submittedMessengerContact = usesMessengerPhone ? phone.trim() : messengerContact.trim()
   const contactApp = catalog.contactMethods.find((method) => method.id === contactMethod)?.name ?? 'Messenger'
 
@@ -1374,7 +1374,9 @@ export default function Booking({
                                     </span>
                                     <span className="field-note booking-day-card-summary">
                                       <span className="booking-day-card-meta">
-                                        {selectedService?.name ?? 'Service'} · {getTime(day)}
+                                        <span className={`service-tone service-tone-${getService(day)}`}>
+                                          {selectedService?.name ?? 'Service'}
+                                        </span> · {getTime(day)}
                                       </span>
                                       <span className="booking-day-card-route">
                                         {route.pickup || 'Pickup Location'} → {route.destination || 'Destination'}
@@ -1568,6 +1570,7 @@ export default function Booking({
                                 {dates.map((d, index) => {
                                   const selected = getVehicle(d)
                                   const car = catalog.vehicles.find((item) => item.id === selected)!
+                                  const selectedService = catalog.services.find((item) => item.id === getService(d))
                                   const isActive = currentActiveDate === d
                                   return (
                                     <button key={d} type="button"
@@ -1579,10 +1582,12 @@ export default function Booking({
                                           <span className="badge">Day {String(index + 1).padStart(2, '0')}</span>
                                           <strong title={displayDate(d)}>{compactDate(d)}</strong>
                                         </span>
-                                        <span className="day-price"><strong>{money((catalog.services.find((item) => item.id === getService(d))?.price ?? 0) + car.surcharge + extras)}</strong></span>
+                                        <span className="day-price"><strong>{money((selectedService?.price ?? 0) + car.surcharge + extras)}</strong></span>
                                       </span>
                                       <span className="card-footer"><span className="active-hint">
-                                        {getTime(d)} · {car.name}
+                                        <span className={`service-tone service-tone-${getService(d)}`}>
+                                          {selectedService?.name ?? 'Service'}
+                                        </span> · {getTime(d)} · {car.name}
                                         <small>{getRoute(d).pickup || 'Pick-up'} → {getRoute(d).destination || 'Destination'}</small>
                                       </span></span>
                                     </button>
@@ -1717,7 +1722,7 @@ export default function Booking({
                           </div>
                           {!['email', 'phone'].includes(contactMethod) && (
                             <div className="messenger-preference">
-                              {['line', 'kakao', 'wechat'].includes(contactMethod) && (
+                              {['whatsapp', 'line', 'kakao', 'wechat'].includes(contactMethod) && (
                                 <label className="messenger-use-phone">
                                   <input
                                     type="checkbox"
@@ -1830,7 +1835,10 @@ export default function Booking({
                             <div key={day.date} className="summary-journey-item">
                               <div className="summary-journey-header">
                                 <span className="summary-journey-date">
-                                  Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time} KST · {catalog.services.find((item) => item.id === day.service)?.name ?? 'Service'}
+                                  Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time} KST ·{' '}
+                                  <span className={`service-tone service-tone-${day.service}`}>
+                                    {catalog.services.find((item) => item.id === day.service)?.name ?? 'Service'}
+                                  </span>
                                 </span>
                                 <span className="summary-journey-vehicle" title={vehicleName}>
                                   {shortVehicleName(day.vehicle)}
@@ -1878,7 +1886,10 @@ export default function Booking({
                                   Day {String(index + 1).padStart(2, '0')} · {compactDate(day.date)} · {day.time}
                                 </span>
                                 <span className="booking-vehicle-day-price">
-                                  <span title={v.name}>{shortVehicleName(day.vehicle)}</span> · {selectedService?.name ?? 'Service'} · {v.quoteRequired ? 'Quote' : money(dayTotal)}
+                                  <span title={v.name}>{shortVehicleName(day.vehicle)}</span> ·{' '}
+                                  <span className={`service-tone service-tone-${day.service}`}>
+                                    {selectedService?.name ?? 'Service'}
+                                  </span> · {v.quoteRequired ? 'Quote' : money(dayTotal)}
                                 </span>
                               </div>
                             )
