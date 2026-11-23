@@ -21,7 +21,7 @@ test('reservation requires verified availability for direct booking but offers a
   const booking = readFileSync(join(root, 'src/Booking.tsx'), 'utf8')
   assert.match(booking, /step === 2 && \(checking \|\|/)
   assert.match(booking, /availabilityIssue\?\.kind !== 'unreachable'/)
-  assert.match(booking, /Time slot open for a request/)
+  assert.match(booking, /Vehicle request accepted for review/)
   assert.match(booking, /Email Booking Enquiry/)
   assert.doesNotMatch(booking, /Available for instant request/)
 })

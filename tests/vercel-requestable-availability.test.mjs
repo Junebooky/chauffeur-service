@@ -46,6 +46,7 @@ test('requestability validates future date, clock time and service, not fixed fl
   const date = isoInDays(10)
   assert.equal(requestableDays({ date, time: '23:00', service: 'airport' }).length, 1)
   assert.equal(callVercel('GET', '?date=2020-01-01&time=10%3A00&service=airport').statusCode, 400)
+  assert.equal(callVercel('GET', '?date=2026-11-10&endDate=2026-11-31&time=10%3A00&service=airport').statusCode, 400)
   assert.equal(callVercel('GET', '?date=' + date + '&time=25%3A00&service=airport').statusCode, 400)
   assert.equal(callVercel('GET', '?date=' + date + '&time=23%3A00&service=invalid').statusCode, 400)
   assert.equal(callVercel('POST').statusCode, 405)

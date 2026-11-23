@@ -14,6 +14,15 @@ export function requestableDays(query, now = () => Date.now()) {
   const dates = rawDates || [str(query.date)].filter(Boolean)
   const endDate = str(query.endDate)
   if (!rawDates && endDate && endDate !== dates[0]) {
+    // JS Date.parse can silently normalize invalid dates like November 31.
+    const canonicalKstDay = (date) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false
+      const timestamp = Date.parse(date + 'T00:00:00+09:00')
+      return Number.isFinite(timestamp) &&
+        new Date(timestamp + 9 * 3600000).toISOString().slice(0, 10) === date
+    }
+    if (!canonicalKstDay(dates[0]) || !canonicalKstDay(endDate))
+      throw new Error('Please select a valid date.')
     const start = Date.parse(dates[0] + 'T00:00:00+09:00')
     const end = Date.parse(endDate + 'T00:00:00+09:00')
     if (!Number.isFinite(start) || !Number.isFinite(end) || end < start)
