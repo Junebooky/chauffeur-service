@@ -43,8 +43,8 @@ test('Single Day uses an exact one-date/one-time/one-service availability query'
   }
 })
 
-test('Vehicle only blocks explicit confirmed conflicts or invalid dates, not an unreachable API', () => {
-  assert.match(booking, /step === 1 && unavailableDay/)
+test('Vehicle never blocks on vehicle shortage and only guards invalid dates/times', () => {
+  assert.doesNotMatch(booking, /Please choose another vehicle or time for/)
   assert.match(booking, /step === 1 && availabilityIssue\?\.kind === 'invalid'/)
   assert.doesNotMatch(booking, /step === 1 && !allAvailable/)
   assert.doesNotMatch(booking, /Please wait for availability to be checked for every day, or retry/)

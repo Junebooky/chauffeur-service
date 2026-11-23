@@ -28,6 +28,7 @@ import { composeEmail } from './contact'
 import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import DisplayHeading from './components/ui/DisplayHeading'
+import BookingCtaBeam from './components/ui/BookingCtaBeam'
 import ReservationButton from './components/ui/ReservationButton'
 import {
   DEFAULT_USD_RATE,
@@ -504,11 +505,7 @@ export default function Booking({
   const availabilityCurrent = verifiedAvailabilityKey === availabilityKey
   const allAvailable =
     availabilityCurrent && journeys.length > 0 &&
-    journeys.every((day) => availability[day.date]?.[day.vehicle] === true)
-
-  const unavailableDay = availabilityCurrent ? journeys.find(
-    (day) => availability[day.date]?.[day.vehicle] === false,
-  ) : undefined
+    journeys.every((day) => availability[day.date]?.[day.vehicle] !== undefined)
 
   // Removing a date also removes its unsent per-day overrides.
   useEffect(() => {
@@ -672,10 +669,6 @@ export default function Booking({
       }
     }
     if (target > step && !form.current?.reportValidity()) return
-    if (target > step && step === 1 && unavailableDay) {
-      setError(`Please choose another vehicle or time for ${displayDate(unavailableDay.date)}.`)
-      return
-    }
     if (target > step && step === 1 && availabilityIssue?.kind === 'invalid') {
       setError(availabilityIssue.message)
       return
@@ -893,12 +886,7 @@ export default function Booking({
         >
           {!glassOpen && !result && (
             <>
-              <span className="booking-glass-beam-halo" aria-hidden="true">
-                <span className="booking-glass-beam-spinner" />
-              </span>
-              <span className="booking-glass-beam-ring" aria-hidden="true">
-                <span className="booking-glass-beam-spinner" />
-              </span>
+              <BookingCtaBeam />
               <div className="booking-optical-lens" aria-hidden="true">
                 <LiquidGlass
                   className="booking-optical-engine"
@@ -1389,77 +1377,87 @@ export default function Booking({
                                   options={bookableServices}
                                 />
                               </div>
-                              <AddressSearch
-                                labelIcon={false}
-
-                                recentPlaces={recentTripPlaces}
-                                name={`pickup-${scheduleActiveDate}`}
-                                label="Pickup Location"
-                                placeholder="Enter pickup location"
-                                value={getRoute(scheduleActiveDate).pickup}
-                                place={getRoute(scheduleActiveDate).pickupPlace}
-                                                                onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
-                                  pickup: value, pickupPlace: place,
-                                })}
-                              />
-                              <div className="booking-daily-schedule-group">
-                                <div className="booking-daily-schedule-heading">
-                                  <span className="field-section-title">Schedule</span>
-                                  <small>Optional stops · final drop-off</small>
-                                </div>
+                              <div className="booking-daily-route-flow">
+                                <AddressSearch
+                                  labelIcon={false}
+                                  recentPlaces={recentTripPlaces}
+                                  name={`pickup-${scheduleActiveDate}`}
+                                  label="Pickup Location"
+                                  placeholder="Enter pickup location"
+                                  value={getRoute(scheduleActiveDate).pickup}
+                                  place={getRoute(scheduleActiveDate).pickupPlace}
+                                  onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
+                                    pickup: value, pickupPlace: place,
+                                  })}
+                                />
                                 {getRoute(scheduleActiveDate).stops.map((stop, index) => (
-                                  <div className="booking-daily-stop" key={index}>
-                                    <AddressSearch
-                                labelIcon={false}
-
-                                recentPlaces={recentTripPlaces}
-                                      name={`stop-${scheduleActiveDate}-${index}`}
-                                      label={`Stop ${index + 1}`}
-                                      placeholder="Add a stop to this day"
-                                      value={stop.location}
-                                      place={stop.place}
-                                                                            onChange={(value, place) => {
-                                        const stops = getRoute(scheduleActiveDate).stops.map((item, i) =>
-                                          i === index ? { location: value, place } : item)
-                                        setRouteForDate(scheduleActiveDate, { stops })
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      className="booking-daily-remove-stop"
-                                      aria-label={`Remove stop ${index + 1}`}
-                                      onClick={() => setRouteForDate(scheduleActiveDate, {
-                                        stops: getRoute(scheduleActiveDate).stops.filter((_, i) => i !== index),
-                                      })}
-                                    >
-                                      Remove
-                                    </button>
+                                  <div className="booking-daily-stop-leg" key={index}>
+                                    <div className="booking-route-connector is-compact" aria-hidden="true">
+                                      <span className="booking-route-stem" />
+                                      <svg className="booking-route-chevron" width="10" height="7" viewBox="0 0 10 7" fill="none" focusable="false">
+                                        <path d="M1 1.25L5 5.5L9 1.25" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                    </div>
+                                    <div className="booking-daily-stop">
+                                      <AddressSearch
+                                        labelIcon={false}
+                                        recentPlaces={recentTripPlaces}
+                                        name={`stop-${scheduleActiveDate}-${index}`}
+                                        label={`Stop ${index + 1}`}
+                                        placeholder="Add a stop to this day"
+                                        value={stop.location}
+                                        place={stop.place}
+                                        onChange={(value, place) => {
+                                          const stops = getRoute(scheduleActiveDate).stops.map((item, i) =>
+                                            i === index ? { location: value, place } : item)
+                                          setRouteForDate(scheduleActiveDate, { stops })
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        className="booking-daily-remove-stop"
+                                        aria-label={`Remove stop ${index + 1}`}
+                                        onClick={() => setRouteForDate(scheduleActiveDate, {
+                                          stops: getRoute(scheduleActiveDate).stops.filter((_, i) => i !== index),
+                                        })}
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
                                   </div>
                                 ))}
-                                {getRoute(scheduleActiveDate).stops.length < 8 && (
-                                  <button
-                                    type="button"
-                                    className="apply-all-btn booking-daily-add-stop"
-                                    onClick={() => setRouteForDate(scheduleActiveDate, {
-                                      stops: [...getRoute(scheduleActiveDate).stops, { location: '', place: null }],
-                                    })}
-                                  >
-                                    Add stop
-                                  </button>
-                                )}
-                              <AddressSearch
-                                labelIcon={false}
-
-                                recentPlaces={recentTripPlaces}
-                                name={`destination-${scheduleActiveDate}`}
-                                label="Destination"
-                                placeholder="Enter destination"
-                                value={getRoute(scheduleActiveDate).destination}
-                                place={getRoute(scheduleActiveDate).destinationPlace}
-                                                                onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
-                                  destination: value, destinationPlace: place,
-                                })}
-                              />
+                                <div className={`booking-route-connector ${getRoute(scheduleActiveDate).stops.length < 8 ? 'has-action' : 'is-compact'}`}>
+                                  <span className="booking-route-stem" aria-hidden="true" />
+                                  {getRoute(scheduleActiveDate).stops.length < 8 && (
+                                    <button
+                                      type="button"
+                                      className="apply-all-btn booking-daily-add-stop"
+                                      onClick={() => setRouteForDate(scheduleActiveDate, {
+                                        stops: [...getRoute(scheduleActiveDate).stops, { location: '', place: null }],
+                                      })}
+                                    >
+                                      <Plus size={13} aria-hidden="true" /> Add Stop
+                                    </button>
+                                  )}
+                                  <span className="booking-route-arrow" aria-hidden="true">
+                                    {getRoute(scheduleActiveDate).stops.length < 8 && <span className="booking-route-stem" />}
+                                    <svg className="booking-route-chevron" width="10" height="7" viewBox="0 0 10 7" fill="none" focusable="false">
+                                      <path d="M1 1.25L5 5.5L9 1.25" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </span>
+                                </div>
+                                <AddressSearch
+                                  labelIcon={false}
+                                  recentPlaces={recentTripPlaces}
+                                  name={`destination-${scheduleActiveDate}`}
+                                  label="Destination"
+                                  placeholder="Enter destination"
+                                  value={getRoute(scheduleActiveDate).destination}
+                                  place={getRoute(scheduleActiveDate).destinationPlace}
+                                  onChange={(value, place) => setRouteForDate(scheduleActiveDate, {
+                                    destination: value, destinationPlace: place,
+                                  })}
+                                />
                               </div>
                               <div className="field time-field">
                                 <span className="booking-time-label">
@@ -1548,7 +1546,6 @@ export default function Booking({
                                   const selected = getVehicle(d)
                                   const car = catalog.vehicles.find((item) => item.id === selected)!
                                   const isActive = currentActiveDate === d
-                                  const isAvail = availability[d]?.[selected]
                                   return (
                                     <button key={d} type="button"
                                       className={`daily-journey-card w-full text-left ${isActive ? 'active-day-card' : ''}`}
@@ -1562,7 +1559,7 @@ export default function Booking({
                                         <span className="day-price"><strong>{money((catalog.services.find((item) => item.id === getService(d))?.price ?? 0) + car.surcharge + extras)}</strong></span>
                                       </span>
                                       <span className="card-footer"><span className="active-hint">
-                                        {getTime(d)} · {car.name} {isAvail === false ? '· Unavailable' : ''}
+                                        {getTime(d)} · {car.name}
                                         <small>{getRoute(d).pickup || 'Pick-up'} → {getRoute(d).destination || 'Destination'}</small>
                                       </span></span>
                                     </button>
@@ -1788,7 +1785,7 @@ export default function Booking({
                       <VehicleCarousel
                         value={activeVehicle}
                         onChange={changeVehicle}
-                        availability={availability[currentActiveDate] || {}}
+                        availability={{}}
                         ariaLabel={multiDay && vehicleMode === 'daily'
                           ? `Choose a vehicle for Day ${dates.indexOf(currentActiveDate) + 1}, ${displayDate(currentActiveDate)}`
                           : 'Interactive vehicle selection'}
@@ -1909,13 +1906,6 @@ export default function Booking({
                           <LoaderCircle size={14} className="spin" /> Checking your{' '}
                           {dates.length > 1 ? 'dates…' : 'date…'}
                         </>
-                      ) : unavailableDay ? (
-                        <>
-                          <X size={14} />{' '}
-                          {dates.length > 1
-                            ? `Vehicle unavailable on ${displayDate(unavailableDay.date)}`
-                            : 'Choose another vehicle or time'}
-                        </>
                       ) : allAvailable ? (
                         <>
                           <Check size={14} />{' '}
@@ -2004,7 +1994,7 @@ export default function Booking({
                 className={step === 2 ? 'booking-submit' : ''}
                 disabled={
                   sending ||
-                  (step === 2 && (checking || !!unavailableDay ||
+                  (step === 2 && (checking ||
                     (!allAvailable && availabilityIssue?.kind !== 'unreachable')))
                 }
               >

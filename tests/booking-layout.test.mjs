@@ -87,6 +87,16 @@ test('Schedule omits the redundant date heading and places custom inquiry after 
   assert.match(css, /\.booking-panel\.is-schedule-only \.schedule-date-col \{\s*padding-top: 33px;/)
 })
 
+test('Daily Schedule connects Pickup Location and Destination with a dashed arrow and inline Add Stop', () => {
+  assert.match(booking, /className="booking-daily-route-flow"/)
+  assert.match(booking, /className="booking-route-stem"/)
+  assert.match(booking, /className="booking-route-chevron"/)
+  assert.match(booking, /<Plus size=\{13\} aria-hidden="true" \/> Add Stop/)
+  assert.doesNotMatch(booking, /booking-daily-schedule-heading/)
+  assert.doesNotMatch(booking, /Optional stops · final drop-off/)
+  assert.match(css, /\.booking-route-stem\s*\{[^}]*border-left:\s*1\.5px dashed/)
+})
+
 test('changing a Vehicle clears an outdated availability message', () => {
   assert.match(booking, /const changeVehicle = \(vId: string\) => \{/)
   assert.match(booking, /previous\.startsWith\('Please choose another vehicle or time'\) \? '' : previous/)

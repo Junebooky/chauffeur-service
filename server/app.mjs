@@ -188,12 +188,6 @@ export function createApp({
       })
     return days
   }
-  // A pending booking is an enquiry, not a held vehicle. Only an operator-
-  // confirmed booking blocks a slot, so test/pending requests never make
-  // all showroom vehicles appear unavailable to later guests.
-  const occupied = db.prepare(
-    "SELECT r.id FROM reservation_legs l JOIN reservations r ON r.id = l.reservation_id WHERE l.vehicle_id = ? AND r.status = 'confirmed' AND l.starts_at < ? AND l.ends_at > ? LIMIT 1",
-  )
   const publicBooking = (row) => {
     const d = JSON.parse(row.details)
     return {
@@ -242,12 +236,12 @@ export function createApp({
   app.get('/api/availability', async (req, res) => {
     try {
       const days = requestedDays(req.query).map(
-        ({ date, time, startsAt, endsAt }) => ({
+        ({ date, time }) => ({
           date,
           time,
           vehicles: catalog.vehicles.map((v) => ({
             id: v.id,
-            available: !occupied.get(v.id, endsAt, startsAt),
+            available: true,
           })),
         }),
       )
@@ -497,15 +491,6 @@ export function createApp({
       const reference = `CH-${randomUUID().slice(0, 8).toUpperCase()}`
       db.exec('BEGIN IMMEDIATE')
       try {
-        const conflict = days.find((day) =>
-          occupied.get(day.vehicle.id, day.endsAt, day.startsAt),
-        )
-        if (conflict) {
-          db.exec('ROLLBACK')
-          return res.status(409).json({
-            error: `${conflict.vehicle.name} is already requested on ${conflict.date} at that time. Please choose another vehicle or time.`,
-          })
-        }
         db.prepare(
           'INSERT INTO reservations (id, idempotency_key, vehicle_id, starts_at, ends_at, total, details, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         ).run(

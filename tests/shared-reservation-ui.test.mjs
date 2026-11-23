@@ -27,8 +27,17 @@ test('Booking and Fleet Specs share the exact same reservation button', () => {
   assert.match(button, /trackGlassPointer\(event\)/)
   assert.match(button, /resetGlassPointer\(event\)/)
   assert.match(booking, /form="booking-request-form"/)
-  assert.match(booking, /step === 2 && \(checking \|\| !!unavailableDay/)
+  assert.match(booking, /step === 2 && \(checking \|\|/)
   assert.match(fleet, /handleReserve\(activeVehicle\.catalogId\)/)
+})
+
+test('Ready to reserve idle button reuses shared 1px symmetric BookingCtaBeam without blurred halo', () => {
+  const booking = load('src/Booking.tsx')
+  const start = booking.indexOf('{!glassOpen && !result && (')
+  const end = booking.indexOf('{(glassOpen || result) && (', start)
+  const idleBlock = booking.slice(start, end)
+  assert.match(idleBlock, /<BookingCtaBeam \/>/)
+  assert.doesNotMatch(idleBlock, /booking-glass-beam-halo/)
 })
 
 test('the Specs name shares the Booking display heading and thin font weight', () => {

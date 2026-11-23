@@ -10285,24 +10285,45 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: rgba(231, 236, 243, 0.78);
   padding-top: 4px;
 }
-.booking-daily-schedule-group {
-  display: grid;
-  gap: 14px;
-  min-width: 0;
-  padding: 16px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-.booking-daily-schedule-heading {
+.booking-daily-route-flow {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
 }
-.booking-daily-schedule-heading small {
-  color: rgba(215, 221, 229, 0.58);
-  font-size: 11px;
-  letter-spacing: 0.01em;
+.booking-daily-route-flow .address-field {
+  margin-bottom: 0 !important;
+}
+.booking-daily-stop-leg {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.booking-route-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 0;
+}
+.booking-route-stem {
+  display: block;
+  width: 0;
+  height: 15px;
+  border-left: 1.5px dashed rgba(212, 220, 232, 0.34);
+}
+.booking-route-connector.is-compact .booking-route-stem {
+  height: 18px;
+}
+.booking-route-arrow {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0;
+}
+.booking-route-chevron {
+  display: block;
+  margin-top: -1px;
+  color: rgba(212, 220, 232, 0.56);
 }
 .booking-daily-stop {
   position: relative;
@@ -10334,14 +10355,27 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   width: fit-content;
   min-height: 32px;
+  margin: 4px 0;
+  padding: 5px 14px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: rgba(235, 240, 248, 0.92) !important;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.booking-daily-add-stop:hover,
+.booking-daily-add-stop:focus-visible {
+  border-color: rgba(255, 255, 255, 0.52) !important;
+  background: rgba(255, 255, 255, 0.11) !important;
+  color: #ffffff !important;
 }
 .booking-daily-day-list .daily-journey-card { text-align: left; }
 @media (max-width: 760px) {
   .booking-daily-progress { align-items: start; }
-  .booking-daily-schedule-group { gap: 12px; }
 }
 
 /* Reservation Vehicle/Details: never expose horizontal scrolling for a fixed

@@ -116,7 +116,7 @@ test('simultaneous pending requests may overlap without hard holds', () =>
     assert.deepEqual(results.map((r) => r.status).sort(), [201, 201])
   }))
 
-test('confirmed bookings block their exact vehicle and overlapping time only', async () => {
+test('confirmed bookings never block fleet vehicles from accepting new reservation requests', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'chauffeur-confirmed-single-'))
   const databasePath = join(dir, 'bookings.sqlite')
   try {
@@ -136,10 +136,10 @@ test('confirmed bookings block their exact vehicle and overlapping time only', a
       db.prepare('UPDATE reservations SET status = ? WHERE id = ?')
         .run('confirmed', saved.data.reference)
       db.close()
-      assert.equal((await check('12:00')).find((v) => v.id === 'staria').available, false)
+      assert.equal((await check('12:00')).find((v) => v.id === 'staria').available, true)
       assert.equal((await check('12:00')).find((v) => v.id === 'g90').available, true)
       assert.equal((await check('14:00')).find((v) => v.id === 'staria').available, true)
-      assert.equal((await post({ ...valid, time: '12:00' })).status, 409)
+      assert.equal((await post({ ...valid, time: '12:00' })).status, 201)
       assert.equal((await post({ ...valid, time: '14:00' })).status, 201)
       assert.equal((await post({ ...valid, vehicle: 'g90' })).status, 201)
     }, databasePath)
@@ -453,7 +453,7 @@ test('prices every daily vehicle and extra without treating pending requests as 
     assert.equal((await post({ ...valid, time: '18:00' })).status, 201)
   }))
 
-test('an operator-confirmed later-day booking rejects that leg without holding earlier days', async () => {
+test('multi-day reservation requests always succeed even when a confirmed booking exists on a later day', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'chauffeur-confirmed-multi-'))
   const databasePath = join(dir, 'bookings.sqlite')
   try {
@@ -465,13 +465,12 @@ test('an operator-confirmed later-day booking rejects that leg without holding e
       db.prepare('UPDATE reservations SET status = ? WHERE id = ?')
         .run('confirmed', saved.data.reference)
       db.close()
-      const rejected = await post(twoDays)
-      assert.equal(rejected.status, 409)
-      assert.match(rejected.data.error, /2026-11-11/)
+      const accepted = await post(twoDays)
+      assert.equal(accepted.status, 201)
       const available = await fetch(
-        `${base}/api/availability?date=2026-11-10&time=10:00&service=hourly`,
+        `${base}/api/availability?date=2026-11-11&time=10:00&service=hourly`,
       ).then((response) => response.json())
-      assert.equal(available.vehicles.find((v) => v.id === 'staria').available, true)
+      assert.equal(available.vehicles.find((v) => v.id === 'g90').available, true)
       assert.equal((await post(valid)).status, 201)
     }, databasePath)
   } finally {
