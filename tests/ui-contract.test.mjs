@@ -134,3 +134,13 @@ test('reservation step 1 orders Flight number last, supports editable time, and 
   assert.doesNotMatch(booking, /YOUR JOURNEY, AT A GLANCE/)
 })
 
+
+test('fleet cards show clear and consistent vehicle descriptions', () => {
+  const fleet = readFileSync(join(root, 'src/FleetSection.tsx'), 'utf8')
+  assert.match(fleet, /name: 'Genesis G90',\s*subName: 'Flagship Sedan'/)
+  assert.match(fleet, /name: 'Carnival',\s*subName: 'Hi-Limousine'/)
+  assert.match(fleet, /name: 'Staria',\s*subName: 'Limousine'/)
+  assert.match(fleet, /name: 'Mercedes-Benz Sprinter',\s*subName: 'Executive Van'/)
+  assert.match(fleet, /classBadge: 'EXECUTIVE HIGH-ROOF VAN'/)
+  assert.doesNotMatch(fleet, /VIP Protocol|VIP PROTOCOL/)
+})
