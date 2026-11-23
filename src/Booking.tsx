@@ -323,6 +323,7 @@ export default function Booking({
   >({})
   const [checking, setChecking] = useState(false)
   const [verifiedAvailabilityKey, setVerifiedAvailabilityKey] = useState('')
+  const [bookingSubmissionReady, setBookingSubmissionReady] = useState(false)
   const [availabilityIssue, setAvailabilityIssue] = useState<{
     kind: 'invalid' | 'unreachable'
     message: string
@@ -547,6 +548,7 @@ export default function Booking({
     const validTimeRe = /^([01]\d|2[0-3]):[0-5]\d$/
     if (!dates.every((d) => validTimeRe.test(getTime(d)))) {
       setAvailability({})
+      setBookingSubmissionReady(false)
       setAvailabilityIssue({
         kind: 'invalid',
         message: 'Choose a valid pickup time for every date.',
@@ -563,6 +565,7 @@ export default function Booking({
     setChecking(true)
     setAvailability({})
     setVerifiedAvailabilityKey('')
+    setBookingSubmissionReady(false)
     setAvailabilityIssue(null)
     setEmailDraftOpened(false)
     const params = new URLSearchParams()
@@ -610,6 +613,8 @@ export default function Booking({
           throw new Error('The reservation API returned an incomplete availability check.')
         }
         if (controller.signal.aborted) return
+        // Requestability alone never proves the booking persistence API is online.
+        setBookingSubmissionReady(data.bookingSubmissionReady === true)
         setVerifiedAvailabilityKey(availabilityKey)
         setAvailability(
           Object.fromEntries(
@@ -739,7 +744,7 @@ export default function Booking({
       return
     }
     if (sending) return
-    if (!allAvailable && availabilityIssue?.kind === 'unreachable') {
+    if (!bookingSubmissionReady || !allAvailable) {
       emailEnquiry()
       return
     }
@@ -1801,11 +1806,12 @@ export default function Booking({
                           Reservation & Privacy Notice{' '}
                           <ArrowUpRight size={14} />
                         </button>
-                        {availabilityIssue?.kind === 'unreachable' && (
+                        {(availabilityIssue?.kind === 'unreachable' ||
+                          (allAvailable && !bookingSubmissionReady)) && (
                           <p className="booking-email-fallback-note" role="status">
-                            Online booking is unavailable. You can prepare an email
-                            enquiry instead; it will not be saved or sent until
-                            you send it from your email app.
+                            All vehicle types are open for enquiries. Online booking storage
+                            is not connected, so this opens an email draft instead;
+                            it will not be saved or sent until you send it from your email app.
                           </p>
                         )}
                         {emailDraftOpened && (
@@ -1959,8 +1965,8 @@ export default function Booking({
                         <>
                           <Check size={14} />{' '}
                           {dates.length > 1
-                            ? 'All dates available'
-                            : 'Time slot open for a request'}
+                            ? 'All dates open for requests'
+                            : 'Vehicle request accepted for review'}
                         </>
                       ) : availabilityIssue?.kind === 'unreachable' ? (
                         <>
@@ -2060,7 +2066,7 @@ export default function Booking({
                   <>
                     Continue to Details <ArrowRight size={17} />
                   </>
-                ) : availabilityIssue?.kind === 'unreachable' ? (
+                ) : !bookingSubmissionReady || availabilityIssue?.kind === 'unreachable' ? (
                   <>
                     Email Booking Enquiry <ArrowUpRight size={17} />
                   </>

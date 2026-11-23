@@ -59,7 +59,7 @@ The reservation invitation now uses `simple-liquid-glass@5.6.0` for a rounded re
 
 ## What reservations do
 
-`POST /api/reservations` validates the request, calculates known prices from the server-side catalog, checks conflicts against **confirmed** reservations for each daily vehicle class in a SQLite transaction, and persists a **pending** request. Pending requests are enquiries and do not reserve the vehicle. If any confirmed daily slot conflicts, no part of the new request is saved. An idempotency key makes retrying the same submission safe. Dates require at least two hours' notice and cannot be more than a year ahead. Times use **Asia/Seoul (UTC+9)**.
+`POST /api/reservations` validates the request, calculates known prices from the server-side catalog and persists a **pending** request in SQLite. Chauffeur accepts requests for vehicle *types*, not specific license plates: overlapping pending or confirmed bookings do **not** prevent new enquiries. Individual vehicle and chauffeur assignment happens only through operator review. An idempotency key makes retrying the same submission safe. Dates require at least two hours' notice and cannot be more than a year ahead. Times use **Asia/Seoul (UTC+9)**.
 
 Multi-day payloads include `journeys: [{ date: "YYYY-MM-DD", vehicle: "vehicle-id" }, ...]` (up to 366 consecutive dates), with top-level `date` and `vehicle` matching the first day. Legacy single-day payloads remain supported. `contactMethod` defaults to `email`; `messengerContact` holds the optional WhatsApp number or required messenger ID. Responses contain daily vehicle names and estimates without returning contact details.
 
@@ -67,7 +67,7 @@ Daily inventory is stored in `reservation_legs`, linked to the parent request. S
 
 Successful submissions display a reference and offer a downloadable **tentative** calendar event. No payment is taken. There is no public endpoint that lists stored personal details. Request rate limiting is local to the server process.
 
-**This is not a connected commercial booking operation.** Operator delivery, email/SMS, payment, driver assignment, fleet-provider availability, cancellation, and booking confirmation are not connected. The UI states this before and after submission. Availability reflects **confirmed** reservations in this database, not pending enquiries, and assumes one unit per vehicle class. Until operator confirmation and real fleet-provider inventory are connected, it is not a guarantee that a vehicle can be dispatched. Prices are illustrative; vehicle images and models are representative. Use sample contact details while evaluating.
+**This is not a connected commercial booking operation.** Operator delivery, email/SMS, payment, driver assignment, fleet-provider availability, cancellation, and booking confirmation are not connected. The UI states this before and after submission. The availability response means **open for booking enquiries**, not a guaranteed assigned vehicle. It deliberately does not enforce any fixed per-model inventory or license plate. Assignment is only guaranteed after explicit operator confirmation. Prices are illustrative; vehicle images and models are representative. Use sample contact details while evaluating.
 
 Before live operations, connect an operator workflow and notification provider, establish actual inventory and cancellation/retention policies, and deploy the database on persistent storage. Do not expose the local database file through a static host.
 
@@ -76,7 +76,7 @@ Before live operations, connect an operator workflow and notification provider, 
 | Endpoint                                                          | Purpose                                                           |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
 | `GET /api/health`                                                 | Verify that the API and SQLite database respond                   |
-| `GET /api/availability?date=YYYY-MM-DD&endDate=YYYY-MM-DD&time=HH:MM&service=hourly` | Check each vehicle class for each date; `endDate` is optional |
+| `GET /api/availability?date=YYYY-MM-DD&endDate=YYYY-MM-DD&time=HH:MM&service=hourly` | Validate request dates/times and report every model open for enquiries; `endDate` optional |
 | `POST /api/reservations`                                          | Save a pending request; requires an `Idempotency-Key` header      |
 
 The catalog, option prices, and vehicle surcharge live in `src/catalog.json`; both the frontend and API use this file. The database is created at `.data/reservations.sqlite` and is ignored by Git. Do not commit personal data or `.env` files.
@@ -164,17 +164,17 @@ Vehicle selection uses the five current fleet images in `public/media/fleet/`. T
 
 ## Vehicle availability in Vite-only deployments
 
-The reservation UI requests `GET /api/availability`, the server endpoint defined in `server/app.mjs`. Vite's local development proxy works only while the Express server runs. A static-only Vercel/Vite deployment does **not** automatically start `server/index.mjs`; deploy a persistent reservation API (and database) separately or explicitly configure an API integration for fully online bookings.
+The reservation UI requests `GET /api/availability`, implemented both in Express (`server/app.mjs`) and as a Vercel Function (`api/availability.js`), using shared date/time validation (`server/requestable-availability.mjs`). Every model returns `available: true` by policy, meaning **requestable** rather than physically assigned. The Express response sets `bookingSubmissionReady: true`; the static Vercel function sets `bookingSubmissionReady: false` because the booking database/API is not yet connected. Vite's local proxy is development-only.
 
-If the availability endpoint fails, times out, serves HTML or returns an incomplete response, Vehicle still allows clients to select a model and review Details. The UI **does not claim the vehicle is available**: it marks online availability unverified. On Details, a clearly labelled **Email Booking Enquiry** opens a guest-controlled mail draft (including their itinerary and contact details) to `gotoward7@gmail.com`. Guests must send the draft themselves; this fallback does not save a booking, trigger automatic administrator email, or display a misleading Confirmation screen. Explicit confirmed-booking conflicts and invalid journey dates remain blocking conditions. The usual **Request Booking** is enabled only when the API confirms all selected vehicle slots.
+If the availability endpoint fails, times out, serves HTML or returns an incomplete response, Vehicle still allows clients to select a model and review Details. The UI **does not claim the vehicle is available**: it marks online availability unverified. On Details, a clearly labelled **Email Booking Enquiry** opens a guest-controlled mail draft (including their itinerary and contact details) to `gotoward7@gmail.com`. Guests must send the draft themselves; this fallback does not save a booking, trigger automatic administrator email, or display a misleading Confirmation screen. Invalid date/time/service selections remain blocking; overlapping bookings do not block new enquiries. The **Request Booking** action is shown only when the API explicitly supports persistence (`bookingSubmissionReady: true`). On the current Vite-only Vercel deployment, the CTA instead offers an **Email Booking Enquiry**, clearly stating that the user must send their email draft and that no booking is saved online.
 
 Server-side tests verify the Single Day query schema (`dates`, `times`, `services` with one entry each), and UI tests cover stale response protection and outage handling. Before taking paid bookings in production, connect a persistent reservation backend and check `/api/health` and `/api/availability` on the actual site.
 
 ## Schedule form and pending versus confirmed vehicle availability
 
 - The Schedule calendar has no redundant **Select Date** header. The quiet Custom email inquiry sits at the **bottom of the right-hand input column**, after the Flight number field when applicable.
-- A guest's **pending** booking request is not an inventory hold. Both `GET /api/availability` and `POST /api/reservations` check overlap against **confirmed** reservations only. This prevents testing and past unconfirmed inquiries from making all cars appear unavailable.
-- A **confirmed** request still blocks the same vehicle during its actual service window; other vehicles or non-overlapping times stay requestable. Since the current site has no operator confirmation UI or verified fleet inventory integration, availability is an indicative, local database-based result—not a real-time fleet guarantee.
+- Both pending and confirmed reservations are **not fixed per-plate inventory holds**. All five catalog models remain requestable for each valid schedule. The customer request is pending until an operator actually sources and assigns an appropriate vehicle.
+- A **confirmed** request does not block new requests for the same vehicle model: the operator may source additional suitable vehicles. Requestability never guarantees dispatch, and admins must verify vendor, specific vehicle and chauffeur before changing an individual booking to confirmed.
 
 
 ### Why a saved Confirmation may not produce an admin email

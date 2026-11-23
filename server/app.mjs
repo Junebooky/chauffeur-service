@@ -7,6 +7,7 @@ import catalog from '../src/catalog.json' with { type: 'json' }
 import { createPlaces } from './places.mjs'
 import { createRatesService } from './rates.mjs'
 import { createOperatorNotifier } from './notifications.mjs'
+import { requestableDays } from './requestable-availability.mjs'
 
 export function createApp({
   databasePath = resolve('.data/reservations.sqlite'),
@@ -243,20 +244,15 @@ export function createApp({
   })
   app.get('/api/availability', async (req, res) => {
     try {
-      const days = requestedDays(req.query).map(
-        ({ date, time }) => ({
-          date,
-          time,
-          vehicles: catalog.vehicles.map((v) => ({
-            id: v.id,
-            available: true,
-          })),
-        }),
-      )
+      // Requestability is independent of fixed vehicle license plates or
+      // overlapping reservations. Assignment is confirmed by an operator.
+      const days = requestableDays(req.query, now)
       res.json({
         usdRate: (await rates.getRate()).rate,
         vehicles: days[0].vehicles,
         days,
+        inventoryPolicy: 'request-only',
+        bookingSubmissionReady: true,
       })
     } catch (error) {
       res.status(400).json({ error: error.message })
