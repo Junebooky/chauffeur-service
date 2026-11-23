@@ -9940,7 +9940,7 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .booking-daily-copy {
-  padding-top: 4px;
+  padding: 4px 0 40px;
 }
 
 .booking-daily-next-note {

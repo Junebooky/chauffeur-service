@@ -97,10 +97,18 @@ const emptyDayRoute = (): DayRoute => ({
   pickup: '', destination: '', pickupPlace: null, destinationPlace: null,
   flight: '', stops: [],
 })
+const hasDistinctRoutePoint = (route: DayRoute) =>
+  Boolean(
+    route.pickupPlace &&
+    route.destinationPlace &&
+    (route.pickupPlace.id !== route.destinationPlace.id ||
+      route.stops.some((stop) => stop.place && stop.place.id !== route.pickupPlace?.id)),
+  )
 const isRouteComplete = (route: DayRoute) =>
-  Boolean(route.pickupPlace && route.destinationPlace &&
-    route.pickupPlace.id !== route.destinationPlace.id &&
-    route.stops.every((stop) => stop.location.trim() && stop.place))
+  Boolean(
+    hasDistinctRoutePoint(route) &&
+    route.stops.every((stop) => stop.location.trim() && stop.place),
+  )
 
 type Props = {
   service: string
@@ -674,10 +682,12 @@ export default function Booking({
       }
       const invalid = journeys.find((day) => !isRouteComplete(day))
       if (invalid) {
-        const message = !invalid.pickupPlace || !invalid.destinationPlace ||
-          invalid.pickupPlace.id === invalid.destinationPlace.id
-          ? 'Choose different pick-up and final drop-off locations'
-          : 'Select a valid location for every scheduled stop'
+        const stopsValid = invalid.stops.every((stop) => stop.location.trim() && stop.place)
+        const message = !invalid.pickupPlace || !invalid.destinationPlace
+          ? 'Choose pick-up and final drop-off locations'
+          : !stopsValid
+            ? 'Select a valid location for every scheduled stop'
+            : 'Choose a different drop-off or add a stop at another location'
         setError(`${message} for ${displayDate(invalid.date)}.`)
         if (multiDay) setEditingDate(invalid.date)
         return

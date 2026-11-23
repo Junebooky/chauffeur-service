@@ -332,19 +332,6 @@ export function createApp({
           'Please include each journey date once, in chronological order.',
         )
       const vehicle = days[0].vehicle
-      const firstInput = submittedDays[0]
-      // Prefer first-day locations when a request supplies independent daily routes.
-      // Legacy clients can still submit the shared top-level route.
-      const pickupPlace = places.selected(
-        Object.hasOwn(firstInput, 'pickupPlace') ? firstInput.pickupPlace : b.pickupPlace,
-      )
-      const destinationPlace = places.selected(
-        Object.hasOwn(firstInput, 'destinationPlace') ? firstInput.destinationPlace : b.destinationPlace,
-      )
-      if (pickupPlace.id === destinationPlace.id)
-        throw new Error(
-          'Please choose a destination different from your pickup location.',
-        )
       // Each date can override the shared route; verify all locations using
       // the original selected-place tokens before persisting the reservation.
       const dailyRoutes = submittedDays.map((inputDay) => {
@@ -360,8 +347,6 @@ export function createApp({
         const dayDestination = places.selected(
           Object.hasOwn(inputDay, 'destinationPlace') ? inputDay.destinationPlace : b.destinationPlace,
         )
-        if (dayPickup.id === dayDestination.id)
-          throw new Error('Each day needs a different pick-up and destination.')
         const dayFlight = inputDay.flight === undefined ? b.flight : inputDay.flight
         if (dayFlight && (typeof dayFlight !== 'string' || dayFlight.length > 30))
           throw new Error('Please enter a valid daily flight number.')
@@ -376,6 +361,13 @@ export function createApp({
           const selected = places.selected(stop.place)
           return { location: selected.address, place: selected }
         })
+        const hasDifferentStop = stops.some((stop) => stop.place.id !== dayPickup.id)
+        if (dayPickup.id === dayDestination.id && !hasDifferentStop)
+          throw new Error(
+            submittedDays.length > 1
+              ? 'Each day needs a different pick-up and destination, or a stop at another location.'
+              : 'Please choose a destination different from your pickup location.',
+          )
         return {
           pickup: dayPickup.address,
           destination: dayDestination.address,
@@ -385,6 +377,8 @@ export function createApp({
           stops,
         }
       })
+      const pickupPlace = dailyRoutes[0].pickupPlace
+      const destinationPlace = dailyRoutes[0].destinationPlace
       for (const [field, label, max] of [
         ['name', 'name', 100],
         ['email', 'email address', 180],
