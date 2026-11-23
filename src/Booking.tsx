@@ -1040,11 +1040,11 @@ export default function Booking({
                 <div className="booking-confirmation-footer">
                   <p><strong>Request saved · Not yet confirmed.</strong> No payment has been taken.</p>
                   <div className="success-actions">
-                    <button type="button" className="booking-confirmation-export" onClick={() => { void exportPdf() }}>
-                      <FileDown size={16} aria-hidden="true" /> Export PDF
+                    <button type="button" className="booking-confirmation-export" aria-label="Download PDF" onClick={() => { void exportPdf() }}>
+                      <FileDown size={16} aria-hidden="true" /> PDF
                     </button>
-                    <button type="button" className="booking-confirmation-export" onClick={() => { void exportPng() }}>
-                      <Image size={16} aria-hidden="true" /> Export PNG
+                    <button type="button" className="booking-confirmation-export" aria-label="Download PNG" onClick={() => { void exportPng() }}>
+                      <Image size={16} aria-hidden="true" /> PNG
                     </button>
                     <a className="booking-confirmation-email"
                       href={composeEmail('CHAUFFEUR · ' + result.reference,

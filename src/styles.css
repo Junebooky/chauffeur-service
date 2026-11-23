@@ -10515,6 +10515,9 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   overflow-y: auto !important;
   background: transparent !important;
 }
+#reservation.booking-screen .booking-glass-stage.is-expanded .booking-success > * {
+  flex-shrink: 0;
+}
 .booking-confirmation-header,
 .booking-confirmation-status,
 .booking-confirmation-heading,
@@ -10578,8 +10581,12 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   color: rgba(175, 187, 200, 0.72);
 }
 .booking-confirmation-reference strong {
-  color: #f3f5f7; font-size: 16px; font-weight: 500;
-  letter-spacing: 0.045em; white-space: nowrap;
+  color: #f3f5f7;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 200;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 .booking-confirmation-stats {
   display: grid;
@@ -10732,8 +10739,10 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   }
   .booking-confirmation-stats { grid-template-columns: minmax(0, 1fr); }
   .booking-confirmation-stats > div {
-    min-height: 83px;
-    padding: 12px 16px;
+    min-height: 82px;
+    padding: 14px 16px;
+    grid-template-rows: auto;
+    align-content: center;
   }
   .booking-confirmation-stats > div + div {
     border-left: 0;

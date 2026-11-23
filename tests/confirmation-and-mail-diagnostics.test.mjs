@@ -14,8 +14,10 @@ const server = read('server/app.mjs')
 
 test('Confirmation has three equal columns with matching label/value baselines', () => {
   assert.match(css, /\.booking-confirmation-stats \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/s)
+  assert.match(css, /#reservation\.booking-screen \.booking-glass-stage\.is-expanded \.booking-success > \* \{\s*flex-shrink: 0;\s*\}/s)
   assert.match(css, /\.booking-confirmation-stats > div \{[^}]*grid-template-rows: 15px minmax\(20px, auto\) 13px/s)
   assert.match(css, /\.booking-confirmation-stats > div \{[^}]*min-height: 94px/s)
+  assert.match(css, /\.booking-confirmation-reference strong \{[^}]*font-weight: 200;/s)
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.booking-confirmation-stats \{ grid-template-columns: minmax\(0, 1fr\); \}/)
   assert.match(css, /\.booking-confirmation-stats > div \+ div \{[^}]*border-left: 1px/s)
   assert.match(booking, /className="booking-confirmation-stats"/)

@@ -1,7 +1,12 @@
 // Operator notification for saved (pending) booking requests.
 // The admin email is private: only the server reads the recipient address.
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import catalog from '../src/catalog.json' with { type: 'json' }
 import nodemailer from 'nodemailer'
+
+const EMAIL_HEADER_BG_PATH = resolve(import.meta.dirname, 'assets/email-header-bg.jpg')
+const EMAIL_HEADER_CID = 'chauffeur-email-header'
 
 export const DEFAULT_OPERATOR_EMAIL = 'gotoward7@gmail.com'
 
@@ -66,7 +71,7 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
     `${readableMoney(day.total)}`
   ).join('\n\n')
   const text = [
-    'CHAUFFEUR — New reservation request',
+    'J Production · Team of Premium Chauffeur Service — New reservation request',
     'Reference: ' + reference,
     'Status: ' + status + ' (awaiting confirmation)',
     '', 'GUEST',
@@ -80,14 +85,27 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
     'Estimated total, tax excluded: ' + readableMoney(total),
     '', 'This is a pending request. No booking has been confirmed or payment taken.',
   ].filter((line) => line !== undefined).join('\n')
+  const attachments = existsSync(EMAIL_HEADER_BG_PATH)
+    ? [{
+        filename: 'j-production-header.jpg',
+        path: EMAIL_HEADER_BG_PATH,
+        cid: EMAIL_HEADER_CID,
+        contentDisposition: 'inline',
+      }]
+    : []
+  const headerBanner = attachments.length
+    ? `<img src="cid:${EMAIL_HEADER_CID}" width="640" alt="J Production — Team of Premium Chauffeur Service" style="display:block;width:100%;max-width:640px;height:auto;border:0">`
+    : `<div style="padding:26px 36px 0"><div style="font-size:20px;font-weight:200;color:#f4f5f7;letter-spacing:0.02em">J Production</div><div style="margin-top:4px;font-size:10px;letter-spacing:1.2px;color:#c4cbd4">Team of Premium Chauffeur Service</div></div>`
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:24px 12px;background:#f0f2ef;font-family:Arial,Helvetica,sans-serif;color:#202723">
+<body style="margin:0;padding:24px 12px;background:#f0f2ef;font-family:'Helvetica Neue',Arial,Helvetica,sans-serif;color:#202723">
 <table role="presentation" align="center" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;background:#ffffff;border:1px solid #e1e5df;border-collapse:collapse">
-<tr><td style="background:#171b1d;color:#ffffff;padding:30px 36px">
-  <div style="font-size:13px;letter-spacing:3px;font-weight:700">CHAUFFEUR</div>
-  <div style="margin-top:22px;font-size:10px;letter-spacing:2px;color:#b8c6a6">NEW RESERVATION REQUEST</div>
-  <div style="margin-top:8px;font-size:27px;font-weight:400">A new journey awaits.</div>
-  <div style="margin-top:17px;font-size:12px;color:#d5dcd5">Reference <strong style="color:#ffffff">${escapeHtml(reference)}</strong> &nbsp;·&nbsp; Pending confirmation</div>
+<tr><td style="background:#171b1d;color:#ffffff;padding:0">
+  ${headerBanner}
+  <div style="padding:10px 36px 30px">
+    <div style="font-size:10px;letter-spacing:2px;color:#b8c6a6">NEW RESERVATION REQUEST</div>
+    <div style="margin-top:8px;font-size:27px;font-weight:200;letter-spacing:-0.01em">A new journey awaits.</div>
+    <div style="margin-top:16px;font-size:12px;color:#d5dcd5">Reference <strong style="color:#ffffff;font-weight:400;letter-spacing:0.04em">${escapeHtml(reference)}</strong> &nbsp;·&nbsp; Pending confirmation</div>
+  </div>
 </td></tr>
 <tr><td style="padding:28px 36px 31px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
@@ -110,9 +128,9 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
     <td bgcolor="#1d2320" style="padding:13px 20px"><a href="${escapeHtml(safeMailto(email, reference))}" style="color:#ffffff;text-decoration:none;font-size:12px;font-weight:bold">Reply to guest →</a></td>
   </tr></table>
 </td></tr>
-<tr><td style="background:#f7f8f6;border-top:1px solid #e5e7e2;padding:16px 36px;font-size:10px;color:#8b938d">CHAUFFEUR · Reservation notification · ${escapeHtml(reference)}<br>Please treat guest contact information as confidential.</td></tr>
+<tr><td style="background:#f7f8f6;border-top:1px solid #e5e7e2;padding:16px 36px;font-size:10px;color:#8b938d">J Production · Team of Premium Chauffeur Service · ${escapeHtml(reference)}<br>Please treat guest contact information as confidential.</td></tr>
 </table></body></html>`
-  return { subject, html, text, replyTo: email }
+  return { subject, html, text, replyTo: email, attachments }
 }
 
 export function createOperatorNotifier({
@@ -167,6 +185,7 @@ export function createOperatorNotifier({
       subject: email.subject,
       html: email.html,
       text: email.text,
+      attachments: email.attachments,
       messageId,
     })
     if (Array.isArray(info?.accepted) &&
