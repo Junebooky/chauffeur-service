@@ -51,16 +51,24 @@ export default async function handler(req,res) {
       throw new ApiError(400,'Invalid request body.')
     const action=b.action
     let data
-    if(action==='status') {
+    if(action==='status' || action==='advance') {
       roleCheck(staff.role,writeRoles)
       const id=requireId(b.reservation_id)
-      if(!allowedStatuses.has(b.status)) throw new ApiError(400,'Invalid reservation status.')
-      data=await db('reservations?id=eq.'+id,{method:'PATCH',prefer:'return=representation',
-        body:{status:b.status, updated_at:new Date().toISOString(),
-          ...(b.status==='confirmed'?{confirmed_at:new Date().toISOString()}:{}),
-          ...(b.status==='cancelled'?{cancelled_at:new Date().toISOString()}:{})}})
-      if(!data?.length) throw new ApiError(404,'Reservation not found.')
-      await event(staff.id,id,'reservation.status_changed',{status:b.status})
+      if(!allowedStatuses.has(b.status)||!allowedStatuses.has(b.expected_status))
+        throw new ApiError(400,'예약 상태를 다시 확인해 주세요.')
+      data=await db('rpc/advance_reservation_v1',{
+        method:'POST',
+        body:{
+          p_reservation_id:id,p_expected_status:b.expected_status,
+          p_next_status:b.status,p_actor_user_id:staff.id
+        }
+      })
+      if(!data?.ok) {
+        if(data?.reason==='not_found') throw new ApiError(404,'예약을 찾을 수 없어요.')
+        if(data?.reason==='stale') throw new ApiError(409,'다른 변경 사항이 있어요. 새로고침 후 다시 시도해 주세요.')
+        if(data?.reason==='invalid_transition') throw new ApiError(409,'지금 상태에서는 이 작업을 진행할 수 없어요.')
+        throw new ApiError(403,'예약을 변경할 권한이 없어요.')
+      }
     } else if(action==='supplier') {
       roleCheck(staff.role,writeRoles)
       if(!onlyString(b.company_name,150)) throw new ApiError(400,'Enter a supplier name.')

@@ -1,0 +1,68 @@
+/* Chauffeur Korean operations: brand-consistent dark surfaces, reassuring short copy. */
+.admin-ko{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;letter-spacing:-.012em}
+.admin-ko .admin-ko-mark{width:34px;height:34px;border:1px solid #858d98;border-radius:10px;display:grid;place-items:center;font-family:serif;font-size:22px;font-weight:400;line-height:1;letter-spacing:0;color:#e8eaee}
+.admin-ko .admin-heading{align-items:center;gap:18px;margin-bottom:28px}
+.admin-ko .admin-heading h1{font-size:clamp(29px,3.1vw,44px);font-weight:450;letter-spacing:-.065em;line-height:1.25}
+.admin-ko .admin-heading p{font-size:12px;line-height:1.9}
+.admin-ko .admin-sidebar .admin-logo{letter-spacing:.12em}
+.admin-ko .admin-sidebar button{letter-spacing:-.02em}
+.admin-ko .admin-stats>div{background:#181b20;border-color:#303640;border-radius:15px;min-height:106px}
+.admin-ko .admin-stats>div strong{font-size:28px;font-weight:500}
+.admin-ko .admin-panel-heading h2{font-size:15px;letter-spacing:-.02em;font-weight:600}
+.admin-ko .admin-panel-heading{min-height:78px;height:auto}
+.admin-ko .admin-detail{border-radius:15px}
+.admin-ko .admin-booking-list .admin-booking{min-height:86px;align-items:center}
+.admin-ko .admin-booking strong{font-size:13px;letter-spacing:0}
+.admin-ko .admin-booking span{font-size:12px}
+.admin-ko .admin-booking small{font-size:10px;color:#8b949e}
+.admin-ko .admin-status{font-size:10px!important;padding:5px 9px;border-radius:7px}
+.admin-ko .admin-primary{background:#e3e6ea;color:#13161b;min-height:43px;font-size:12px;font-weight:650;border-radius:10px;transition:background .15s ease,transform .15s ease;text-decoration:none}
+.admin-ko .admin-primary:hover:not(:disabled){background:#fff;transform:translateY(-1px)}
+.admin-ko .admin-secondary{border-color:#505963;border-radius:9px;min-height:39px}
+.admin-ko .admin-ko-full{width:100%;margin:16px 0 7px}
+.admin-ko .admin-ko-main-cta{min-width:148px;flex:none}
+.admin-ko .admin-section{padding:22px 0}
+.admin-ko .admin-section h3{font-size:13px;font-weight:650;margin:0 0 15px}
+.admin-ko .admin-info-grid small{font-size:10px;letter-spacing:0;color:#8e98a5}
+.admin-ko .admin-info-grid strong{font-size:12px;line-height:1.65;font-weight:500}
+.admin-ko .admin-live-banner{margin:0 0 22px;background:#171b20;border-color:#303640}
+.admin-ko .admin-live-banner strong{font-size:12px}
+.admin-ko .admin-live-banner span:not(.admin-live-dot){font-size:11px}
+.admin-ko .admin-live-timeline{padding:7px 0}
+.admin-ko .admin-live-stage strong{font-size:12px}
+.admin-ko .admin-live-stage small{font-size:10px;line-height:1.7}
+.admin-ko .admin-ko-step{background:#1d2229;border:1px solid #37414d;border-radius:13px;padding:18px 19px;margin:15px 0 23px}
+.admin-ko .admin-ko-step h3{font-size:15px;margin:0 0 10px;line-height:1.6}
+.admin-ko .admin-ko-step p{color:#b3bdc8;line-height:1.9;margin:0;font-size:11px}
+.admin-ko .admin-ko-caption{display:flex;gap:5px;align-items:center;color:#9ba4af!important;font-size:11px;line-height:1.8}
+.admin-ko .admin-ko-caption strong{color:#e5e8ec}
+.admin-ko .admin-ko-eyebrow{display:block;font-size:10px;font-weight:550;color:#a8b3bf;margin-bottom:8px}
+.admin-ko .admin-ko-actions{display:grid;gap:9px;margin-top:18px}
+.admin-ko .admin-ko-actions button{font:inherit;display:flex;align-items:center;justify-content:center;gap:9px;border-radius:9px;border:1px solid #4a5560;min-height:39px;font-size:12px;transition:filter .16s ease;background:#2b333d;color:#e1e6ea}
+.admin-ko .admin-ko-actions button:hover:not(:disabled){filter:brightness(1.16)}
+.admin-ko .admin-ko-actions .admin-action-primary{background:#e5e8ec;color:#12161b;border-color:#e5e8ec;font-weight:650;min-height:44px;order:-1}
+.admin-ko .admin-ko-actions .admin-action-danger{background:transparent;color:#d19fa3;border-color:transparent;font-size:11px}
+.admin-ko .admin-ko-day{padding:20px 0;border-top:1px solid #313740}
+.admin-ko .admin-ko-day:first-of-type{border-top:0}
+.admin-ko .admin-ko-day h4{font-size:12px;font-weight:650;color:#ebedf1;margin:12px 0}
+.admin-ko .admin-ko-route{display:flex;gap:9px;align-items:center;color:#b3bdc9;font-size:11px;line-height:1.9;overflow-wrap:anywhere}
+.admin-ko .admin-ko-route svg{flex:none;color:#8c96a1}
+.admin-ko .admin-ko-assign-label{display:flex;justify-content:space-between;gap:10px;align-items:center;border-radius:8px;padding:10px 12px;background:#22272e;margin-top:14px;color:#acb5c0;font-size:10px}
+.admin-ko .admin-text-link{color:#e3e7ee;background:transparent;border:0;text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:11px;padding:4px 0;cursor:pointer}
+.admin-ko .admin-ko-assign-form{margin:14px 0;padding:13px;border:1px solid #39434e;border-radius:9px;display:grid;gap:12px}
+.admin-ko .admin-ko-assign-form>p{color:#aab3bf;font-size:11px}
+.admin-ko .admin-ko-payment-list{margin:12px 0;display:grid;gap:5px}
+.admin-ko .admin-ko-payment-list>div{display:flex;justify-content:space-between;gap:10px;padding:8px 11px;background:#22272e;border-radius:7px;font-size:11px}
+.admin-ko .admin-ko-payment-form{border-top:1px solid #343b43;padding-top:17px;display:grid;gap:12px}
+.admin-ko .admin-ko-payment-form .admin-secondary{justify-self:stretch}
+.admin-ko .admin-login-card{max-width:460px;padding:36px;border-radius:18px}
+.admin-ko .admin-login-card h1{font-size:33px;font-weight:450;letter-spacing:-.05em}
+.admin-ko .admin-login-card p{line-height:1.85}
+.admin-ko .admin-login-card .admin-logo{margin-bottom:46px}
+.admin-ko .admin-login .admin-text-link{display:block;margin-top:20px}
+.admin-ko .admin-login .admin-back{display:flex;align-items:center;gap:8px}
+.admin-ko .admin-code-entry{border-top:1px solid #343b43;padding-top:14px}
+.admin-ko .admin-banner button{color:inherit;background:transparent;border:0;font-size:11px}
+.admin-ko .admin-live-footer{margin-top:24px}
+@media(max-width:1100px){.admin-ko .admin-heading h1{font-size:32px}.admin-ko .admin-board{grid-template-columns:minmax(260px,.88fr) minmax(340px,1.12fr)}}
+@media(max-width:850px){.admin-ko .admin-board{grid-template-columns:1fr}.admin-ko .admin-content{padding:24px 16px}.admin-ko .admin-heading{flex-wrap:wrap}.admin-ko .admin-heading h1{font-size:31px}.admin-ko .admin-ko-main-cta{min-width:100%}.admin-ko .admin-sidebar .admin-logo{margin-right:auto}}

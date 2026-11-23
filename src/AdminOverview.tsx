@@ -1,163 +1,115 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowRight, CalendarDays, Check, ClipboardList, Clock3, CreditCard, Database, RefreshCw, Search, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, ClipboardList, CreditCard, Database, RefreshCw, Search, ShieldCheck, Truck } from 'lucide-react'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
+import { bookingStatusKo, serviceKo, vehicleKo, dateKo } from './admin-locale'
+import Admin from './Admin'
 import './admin.css'
 import './admin-overview.css'
+import './admin-korean.css'
 
-type Stage = 'requested' | 'reviewing' | 'quoted' | 'awaiting_deposit' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'declined'
-type LiveRow = {
-  number: number
-  maskedReference: string
-  status: Stage
-  createdAt: string
-  dayCount: number
-  assignmentCount: number
-  paymentRecorded: boolean
-  service: string | null
-  fleet: string | null
+type Entry = {
+  number:number;maskedReference:string;status:string;createdAt:string;
+  dayCount:number;assignmentCount:number;paymentRecorded:boolean;
+  service:string|null;fleet:string|null
 }
 type Board = {
-  scope: string
-  updatedAt: string
-  metrics: { requests: number; new: number; sourcing: number; awaitingPayment: number; confirmed: number }
-  reservations: LiveRow[]
+  scope:string;updatedAt:string;
+  metrics:{requests:number;new:number;sourcing:number;awaitingPayment:number;confirmed:number};
+  reservations:Entry[]
 }
-const statusLabel = (value: string) => value.replaceAll('_',' ').replace(/\b\w/g,s=>s.toUpperCase())
-const when = (value: string) => new Intl.DateTimeFormat('en-GB', {
-  day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit',
-  timeZone:'Asia/Seoul',
-}).format(new Date(value))
-const friendlyService = (service: string | null) =>
-  service === 'airport' ? 'Pick-up Service'
-  : service === 'day' ? 'Schedule Service'
-  : service === 'hourly' ? 'Hourly Charter' : 'Journey request'
-const stageNames = ['Request received','Vehicle & driver assignment','Payment verification','Booking confirmed']
-const completedStages = (row: LiveRow) => {
-  let stages = 1
-  if (row.assignmentCount > 0) stages = 2
-  if (row.paymentRecorded) stages = 3
-  if (['confirmed','in_progress','completed'].includes(row.status)) stages = 4
-  return stages
+const steps=[
+  {name:'요청 접수',hint:'고객이 예약을 보냈어요.'},
+  {name:'예약 승인',hint:'관리자가 진행 여부를 결정해요.'},
+  {name:'배차 준비',hint:'실제 차량과 기사는 나중에 준비해요.'},
+  {name:'서비스 진행',hint:'예약된 일정대로 서비스를 제공해요.'}
+]
+const stageIndex=(item:Entry)=>{
+  if(['completed','in_progress'].includes(item.status)) return 4
+  if(item.status==='confirmed') return item.assignmentCount>0?3:2
+  if(['reviewing','quoted','awaiting_deposit'].includes(item.status))return 1
+  if(item.status==='cancelled'||item.status==='declined')return 0
+  return 0
 }
-export default function AdminOverview() {
-  const [board, setBoard] = useState<Board|null>(null)
-  const [error,setError] = useState('')
-  const [busy,setBusy] = useState(false)
-  const [selected,setSelected] = useState<number|null>(null)
-  const [search,setSearch] = useState('')
-  const [filter,setFilter] = useState('all')
-  const refresh = useCallback(async (silent = false) => {
-    if (!silent) setBusy(true)
-    try {
-      const response = await fetch('/api/admin-overview', {
-        method:'GET', headers: { Accept:'application/json' }, cache:'no-store',
-      })
-      const data = await response.json()
-      if (!response.ok || !Array.isArray(data.reservations))
-        throw new Error(data.error || 'Could not load live reservations.')
-      setBoard(data as Board)
-      setError('')
-      setSelected(previous => previous && data.reservations.some((r:LiveRow)=>r.number===previous) ?
-        previous : data.reservations[0]?.number ?? null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load live reservations.')
-    } finally { setBusy(false) }
-  }, [])
-  useEffect(() => {
+export default function AdminOverview(){
+  const [manage,setManage]=useState(false)
+  const [board,setBoard]=useState<Board|null>(null)
+  const [error,setError]=useState('')
+  const [busy,setBusy]=useState(false)
+  const [selected,setSelected]=useState<number|null>(null)
+  const [search,setSearch]=useState('')
+  const [filter,setFilter]=useState('all')
+  const refresh=useCallback(async(silent=false)=>{
+    if(!silent)setBusy(true)
+    try{
+      const response=await fetch('/api/admin-overview',{method:'GET',headers:{Accept:'application/json'},cache:'no-store'})
+      const data=await response.json()
+      if(!response.ok||!Array.isArray(data.reservations))throw new Error(data.error||'예약 정보를 불러올 수 없어요.')
+      setBoard(data as Board);setError('')
+      setSelected(prev=>prev!==null&&data.reservations.some((r:Entry)=>r.number===prev)
+        ? prev : data.reservations[0]?.number??null)
+    }catch(err){setError(err instanceof Error?err.message:'예약 정보를 불러오지 못했어요.')}
+    finally{setBusy(false)}
+  },[])
+  useEffect(()=>{
     void refresh()
-    const interval = window.setInterval(() => { if (!document.hidden) void refresh(true) },30000)
-    return () => window.clearInterval(interval)
+    const timer=window.setInterval(()=>{if(!document.hidden)void refresh(true)},30000)
+    return ()=>window.clearInterval(timer)
   },[refresh])
-  const rows = board?.reservations || []
-  const filtered = useMemo(() => rows.filter(row =>
-    (filter === 'all' || row.status === filter) &&
-    [row.maskedReference, friendlyService(row.service), row.fleet || ''].some(s=>
-      s.toLowerCase().includes(search.toLowerCase()))
-  ),[rows,search,filter])
-  const current = rows.find(row => row.number === selected) ?? null
-  const stats = [
-    { label:'Recent requests', value: board?.metrics.requests ?? 0 },
-    { label:'New requests', value: board?.metrics.new ?? 0 },
-    { label:'Sourcing', value: board?.metrics.sourcing ?? 0 },
-    { label:'Awaiting payment', value: board?.metrics.awaitingPayment ?? 0 },
-  ]
-  return <div className="admin-root admin-overview">
+  const rows=board?.reservations||[]
+  const filtered=useMemo(()=>rows.filter(row=>
+    (filter==='all'||row.status===filter)&&[row.maskedReference,serviceKo(row.service),vehicleKo(row.fleet)].some(s=>s.toLowerCase().includes(search.toLowerCase()))
+  ),[rows,filter,search])
+  const current=rows.find(row=>row.number===selected)||null
+  if(manage)return <Admin/>
+  const stats=[
+    ['새 예약',board?.metrics.new??0],
+    ['확인 중',board?.metrics.sourcing??0],
+    ['입금 대기',board?.metrics.awaitingPayment??0],
+    ['확정된 예약',board?.metrics.confirmed??0]
+  ] as const
+  return <div className="admin-root admin-overview admin-ko">
     <aside className="admin-sidebar">
-      <div className="admin-logo"><span className="admin-brand-mark">J</span><span>CHAUFFEUR <small>OPERATIONS</small></span></div>
-      <p className="admin-sidebar-eyebrow">WORKSPACE</p>
-      <a className="admin-nav-item selected" href="/admin"><ClipboardList size={16}/> Reservations</a>
-      <a className="admin-nav-item" href="/admin/live"><Truck size={16}/> Dispatch & payments <ArrowRight size={13}/></a>
-      <div className="admin-sidebar-bottom">
-        <span><ShieldCheck size={14}/> Live summary · read only</span>
-        <a href="/admin/live">Private operations <ArrowRight size={13}/></a>
-        <a href="/">Customer website <ArrowRight size={13}/></a>
-      </div>
+      <div className="admin-logo"><span className="admin-ko-mark">J</span><span>CHAUFFEUR <small>OPERATIONS</small></span></div>
+      <p className="admin-sidebar-eyebrow">운영 현황</p>
+      <button className="selected" type="button"><ClipboardList size={16}/> 예약 현황</button>
+      <button type="button" onClick={()=>setManage(true)}><Truck size={16}/> 예약 처리하기 <ArrowRight size={12}/></button>
+      <div className="admin-sidebar-bottom"><span><ShieldCheck size={14}/> 예약 현황은 안전하게 표시돼요</span><a href="/">고객 예약 페이지 <ArrowRight size={13}/></a></div>
     </aside>
     <main className="admin-main">
-      <header className="admin-topbar"><span>CHAUFFEUR / OPERATIONS</span><button onClick={()=>void refresh()} disabled={busy}><RefreshCw size={14}/> Refresh data</button></header>
+      <header className="admin-topbar"><span>CHAUFFEUR / 예약 현황</span><button onClick={()=>void refresh()} disabled={busy}><RefreshCw size={14}/> 새로고침</button></header>
       <div className="admin-content">
-        <div className="admin-live-banner"><Database size={16}/><div><strong>Live Supabase reservations</strong>
-          <span>New customer booking requests appear here automatically. This public view hides guest information, exact itineraries and payment amounts.</span>
-        </div><span className="admin-live-dot" aria-label="Live database"/></div>
-        {error && <div className="admin-error admin-banner" role="alert">{error}<button onClick={()=>void refresh()}>Retry</button></div>}
-        <div className="admin-heading"><div><SectionEyebrow>THE OPERATIONS DESK</SectionEyebrow>
-          <DisplayHeading as="h1">Reservations.</DisplayHeading>
-          <p>Actual customer requests, from first submission through confirmation.</p></div>
-          <div className="admin-heading-side"><span className="admin-count">Live data</span><small>{board ? 'Updated ' + when(board.updatedAt) : 'Connecting to database'}</small></div>
-        </div>
-        <div className="admin-stats">{stats.map(s=><div key={s.label}><span>{s.label}</span><strong>{s.value}</strong></div>)}</div>
+        {error&&<div className="admin-error admin-banner" role="alert">{error}<button onClick={()=>void refresh()}>다시 시도</button></div>}
+        <div className="admin-heading"><div><SectionEyebrow>예약 관리</SectionEyebrow><DisplayHeading as="h1">예약이 한눈에 보여요.</DisplayHeading><p>고객의 예약 요청과 진행 상황을 확인하고, 필요한 업무를 바로 처리해 보세요.</p></div>
+          <button type="button" className="admin-primary admin-ko-main-cta" onClick={()=>setManage(true)}>예약 처리하기 <ArrowRight size={15}/></button></div>
+        <div className="admin-stats">{stats.map(([name,n])=><div key={name}><span>{name}</span><strong>{n}</strong></div>)}</div>
+        <div className="admin-live-banner"><Database size={16}/><div><strong>Supabase 실시간 예약 현황</strong><span>실제 예약 데이터를 바탕으로 표시돼요. 고객 연락처와 자세한 일정은 관리자 확인 후 볼 수 있어요.</span></div><span className="admin-live-dot"/></div>
         <div className="admin-board">
           <section className="admin-list">
-            <div className="admin-panel-heading"><h2>Booking requests</h2><span>Latest 100</span></div>
-            <div className="admin-filters">
-              <div className="admin-search"><Search size={15}/><input aria-label="Search reservations" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Reference, vehicle or service"/></div>
-              <div className="admin-select-wrap"><select aria-label="Filter by status" value={filter} onChange={e=>setFilter(e.target.value)}>
-                <option value="all">All statuses</option>
-                {['requested','reviewing','quoted','awaiting_deposit','confirmed','in_progress','completed','cancelled','declined'].map(x=><option value={x} key={x}>{statusLabel(x)}</option>)}
-              </select></div>
-            </div>
-            {!board && !error ? <div className="admin-empty"><RefreshCw size={19} className="admin-spin"/> Connecting to live reservations…</div>
-              : filtered.length===0 ? <div className="admin-empty"><CalendarDays size={26}/>
-                <strong>{rows.length===0 ? 'No bookings have been received yet.' : 'No bookings match this filter.'}</strong>
-                <span>{rows.length===0 ? 'When a guest completes a reservation on the customer website, it will appear here automatically.' : 'Try a different search or status.'}</span>
-                {rows.length===0 && <a href="/">Go to customer booking <ArrowRight size={13}/></a>}
-              </div>
-              : <div className="admin-booking-list">{filtered.map(row=><button key={row.number}
-                  className={'admin-booking '+(current?.number===row.number?'active':'')} onClick={()=>setSelected(row.number)}>
-                <div><strong>{row.maskedReference}</strong><span>{friendlyService(row.service)}</span><small>{row.dayCount} journey day{row.dayCount===1?'':'s'}</small></div>
-                <div className="admin-booking-right"><span className={'admin-status '+row.status}>{statusLabel(row.status)}</span><small>{when(row.createdAt)}</small></div>
-              </button>)}</div>}
+            <div className="admin-panel-heading"><h2>들어온 예약</h2><span>최근 100건</span></div>
+            <div className="admin-filters"><div className="admin-search"><Search size={15}/><input aria-label="예약 검색" placeholder="예약번호나 서비스로 검색" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="admin-select-wrap"><select aria-label="예약 상태" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">전체 상태</option>{Object.entries(bookingStatusKo).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div></div>
+            {!board&&!error?<div className="admin-empty">예약 정보를 가져오고 있어요…</div>
+            :filtered.length===0?<div className="admin-empty"><CalendarDays size={24}/><strong>{rows.length?'조건에 맞는 예약이 없어요.':'아직 들어온 예약이 없어요.'}</strong><span>{rows.length?'검색어를 바꿔 보세요.':'고객이 예약을 보내면 이곳에 바로 나타나요.'}</span></div>
+            :<div className="admin-booking-list">{filtered.map(r=><button key={r.number} className={'admin-booking '+(r.number===selected?'active':'')} onClick={()=>setSelected(r.number)}><div><strong>{r.maskedReference}</strong><span>{serviceKo(r.service)}</span><small>{r.dayCount}일 일정</small></div><div className="admin-booking-right"><span className={'admin-status '+r.status}>{bookingStatusKo[r.status]||r.status}</span><small>{dateKo(r.createdAt)}</small></div></button>)}</div>}
           </section>
           <section className="admin-detail">
-            {!current?<div className="admin-empty"><ClipboardList size={24}/><strong>No reservation selected</strong><span>Real booking activity will appear here when requests arrive.</span></div>:<>
-              <div className="admin-panel-heading"><div><span className="admin-eyebrow">LIVE RESERVATION / REDACTED</span><h2>{current.maskedReference}</h2></div><span className={'admin-status '+current.status}>{statusLabel(current.status)}</span></div>
+            {!current?<div className="admin-empty"><ClipboardList size={24}/><strong>예약을 선택해 주세요.</strong><span>새 예약이 들어오면 바로 처리할 수 있어요.</span></div>:<>
+              <div className="admin-panel-heading"><div><span className="admin-eyebrow">예약 진행 현황</span><h2>{current.maskedReference}</h2></div><span className={'admin-status '+current.status}>{bookingStatusKo[current.status]||current.status}</span></div>
               <div className="admin-detail-scroll">
-                <div className="admin-section"><h3>Journey overview</h3><div className="admin-info-grid">
-                  <div><small>SERVICE</small><strong>{friendlyService(current.service)}</strong></div>
-                  <div><small>VEHICLE CLASS</small><strong>{statusLabel(current.fleet||'Unspecified')}</strong></div>
-                  <div><small>JOURNEY DAYS</small><strong>{current.dayCount}</strong></div>
-                  <div><small>REQUEST RECEIVED</small><strong>{when(current.createdAt)}</strong></div>
-                </div></div>
-                <div className="admin-section"><h3>Operations progress</h3>
-                  <div className="admin-live-timeline">{stageNames.map((stage,index)=>{
-                    const isCompleted = index < completedStages(current)
-                    return <div className={'admin-live-stage '+(isCompleted?'done':'')} key={stage}>
-                      <span className="admin-live-node">{isCompleted?<Check size={12}/>:index+1}</span>
-                      <div><strong>{stage}</strong><small>{index===0?'Recorded in Supabase'
-                        :index===1?current.assignmentCount+'/'+current.dayCount+' day(s) assigned'
-                        :index===2?(current.paymentRecorded?'Payment confirmed':'Awaiting verified payment')
-                        :index===3?statusLabel(current.status):''}</small></div>
-                    </div>
-                  })}</div>
-                </div>
-                <div className="admin-section"><h3><Clock3 size={15}/> Status</h3><p className="admin-live-note">This view is updated from actual reservation records. Customer contact details, exact trip routes and any changes are available only in the private operations workspace.</p></div>
-                <a className="admin-primary admin-live-action" href="/admin/live">Open private operations <ArrowRight size={15}/></a>
+                <section className="admin-section"><h3>예약 정보</h3><div className="admin-info-grid"><div><small>서비스</small><strong>{serviceKo(current.service)}</strong></div><div><small>차량 유형</small><strong>{vehicleKo(current.fleet)}</strong></div><div><small>이동 일정</small><strong>총 {current.dayCount}일</strong></div><div><small>접수 시간</small><strong>{dateKo(current.createdAt)}</strong></div></div></section>
+                <section className="admin-section"><h3>현재 진행 단계</h3><div className="admin-live-timeline">{steps.map((step,i)=>{
+                  const done=i<=stageIndex(current)
+                  return <div className={'admin-live-stage '+(done?'done':'')} key={step.name}><span className="admin-live-node">{done?<Check size={12}/>:i+1}</span><div><strong>{step.name}</strong><small>{step.hint}</small></div></div>
+                })}</div></section>
+                <section className="admin-section admin-ko-step"><h3>다음 단계로 진행할까요?</h3><p>고객 정보 확인부터 예약 승인까지 할 수 있어요. <strong>차량과 기사는 아직 정해지지 않아도 괜찮아요.</strong></p>
+                  <button type="button" className="admin-primary admin-ko-full" onClick={()=>setManage(true)}>이 예약 처리하기 <ArrowRight size={15}/></button>
+                  <p className="admin-ko-caption"><ShieldCheck size={12}/> 실제 예약을 변경할 때는 관리자 인증이 필요해요.</p>
+                </section>
               </div>
             </>}
           </section>
         </div>
-        <div className="admin-live-footer"><CreditCard size={15}/> Booking requests are stored by the customer booking API. Dispatch and payments are recorded in the protected operations console.</div>
+        <div className="admin-live-footer"><CreditCard size={15}/> 고객 정보는 공개되지 않아요. 승인과 결제 기록은 관리자 인증 후 안전하게 저장돼요.</div>
       </div>
     </main>
   </div>
