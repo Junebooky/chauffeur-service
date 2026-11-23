@@ -97,16 +97,10 @@ const emptyDayRoute = (): DayRoute => ({
   pickup: '', destination: '', pickupPlace: null, destinationPlace: null,
   flight: '', stops: [],
 })
-const hasDistinctRoutePoint = (route: DayRoute) =>
+const isRouteComplete = (route: DayRoute) =>
   Boolean(
     route.pickupPlace &&
     route.destinationPlace &&
-    (route.pickupPlace.id !== route.destinationPlace.id ||
-      route.stops.some((stop) => stop.place && stop.place.id !== route.pickupPlace?.id)),
-  )
-const isRouteComplete = (route: DayRoute) =>
-  Boolean(
-    hasDistinctRoutePoint(route) &&
     route.stops.every((stop) => stop.location.trim() && stop.place),
   )
 
@@ -508,6 +502,16 @@ export default function Booking({
       sum + catalog.vehicles.find((v) => v.id === day.vehicle)!.surcharge,
     0,
   )
+  const upgradedVehicleCounts = new Map<string, number>()
+  for (const day of journeys) {
+    const v = catalog.vehicles.find((item) => item.id === day.vehicle)
+    if (v && v.surcharge > 0) {
+      upgradedVehicleCounts.set(v.name, (upgradedVehicleCounts.get(v.name) ?? 0) + 1)
+    }
+  }
+  const upgradedVehicleSummary = Array.from(upgradedVehicleCounts.entries())
+    .map(([label, count]) => (count > 1 ? `${label} × ${count}` : label))
+    .join(', ')
 
   const serviceBaseTotal = journeys.reduce((sum, day) =>
     sum + (catalog.services.find((item) => item.id === day.service)?.price ?? 0), 0)
@@ -670,7 +674,7 @@ export default function Booking({
       }
       if (multiDay && !dailyScheduleOpen) {
         if (!isRouteComplete(getRoute(dates[0]))) {
-          setError('Choose different pickup and destination locations for the first date before continuing.')
+          setError('Choose pickup and destination locations for the first date before continuing.')
           return
         }
         if (!form.current?.reportValidity()) return
@@ -682,12 +686,9 @@ export default function Booking({
       }
       const invalid = journeys.find((day) => !isRouteComplete(day))
       if (invalid) {
-        const stopsValid = invalid.stops.every((stop) => stop.location.trim() && stop.place)
         const message = !invalid.pickupPlace || !invalid.destinationPlace
           ? 'Choose pick-up and final drop-off locations'
-          : !stopsValid
-            ? 'Select a valid location for every scheduled stop'
-            : 'Choose a different drop-off or add a stop at another location'
+          : 'Select a valid location for every scheduled stop'
         setError(`${message} for ${displayDate(invalid.date)}.`)
         if (multiDay) setEditingDate(invalid.date)
         return
@@ -1898,7 +1899,11 @@ export default function Booking({
                       </div>
                       {vehicleSurcharges > 0 && (
                         <div>
-                          <span>Vehicle Upgrade</span>
+                          <span>
+                            {upgradedVehicleSummary
+                              ? `Vehicle Upgrade (${upgradedVehicleSummary})`
+                              : 'Vehicle Upgrade'}
+                          </span>
                           <span>{money(vehicleSurcharges)}</span>
                         </div>
                       )}

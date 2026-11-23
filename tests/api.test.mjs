@@ -215,7 +215,7 @@ test('does not expose stored personal details through a listing endpoint', () =>
     assert.ok(!text.includes(valid.email))
   }))
 
-test('requires resolved route locations and rejects a pickup equal to the destination', () =>
+test('requires resolved route locations while allowing identical pickup and destination', () =>
   withServer(async ({ post }) => {
     for (const patch of [
       { pickupPlace: null },
@@ -226,9 +226,13 @@ test('requires resolved route locations and rejects a pickup equal to the destin
           longitude: 127,
         },
       },
-      { destinationPlace: { id: 'curated:icn-t2' } },
     ])
       assert.equal((await post({ ...valid, ...patch })).status, 400)
+
+    assert.equal(
+      (await post({ ...valid, destinationPlace: { id: 'curated:icn-t2' } })).status,
+      201,
+    )
   }))
 
 test('stores canonical addresses and coordinates, ignoring client coordinate tampering', async () => {

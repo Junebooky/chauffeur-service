@@ -135,11 +135,12 @@ test('server preserves independent daily pick-up, destination and vehicle in res
     assert.deepEqual(replay.data, first.data)
   }))
 
-test('server rejects unresolved or identical locations on an edited day, but allows round trips with a distinct stop', () =>
+test('server rejects unresolved locations on an edited day while allowing identical pickup and destination', () =>
   withApi(async (post) => {
     const same = structuredClone(original)
+    same.journeys[1].destination = 'Grand Hyatt Seoul'
     same.journeys[1].destinationPlace = { id: 'curated:grand-hyatt' }
-    assert.equal((await post(same)).status, 400)
+    assert.equal((await post(same)).status, 201)
 
     const roundTrip = structuredClone(original)
     roundTrip.journeys[1].destination = 'Grand Hyatt Seoul'
@@ -159,7 +160,7 @@ test('server rejects unresolved or identical locations on an edited day, but all
     invalid.journeys[1].destination = ''
     assert.equal((await post(invalid)).status, 400)
 
-    assert.match(bookingSource, /hasDistinctRoutePoint/)
+    assert.doesNotMatch(bookingSource, /pickupPlace\.id !== route\.destinationPlace\.id/)
   }))
 
 test('Vehicle Selection and booking controls use concise labels while preserving daily assignment', () => {

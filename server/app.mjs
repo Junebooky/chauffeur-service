@@ -361,13 +361,6 @@ export function createApp({
           const selected = places.selected(stop.place)
           return { location: selected.address, place: selected }
         })
-        const hasDifferentStop = stops.some((stop) => stop.place.id !== dayPickup.id)
-        if (dayPickup.id === dayDestination.id && !hasDifferentStop)
-          throw new Error(
-            submittedDays.length > 1
-              ? 'Each day needs a different pick-up and destination, or a stop at another location.'
-              : 'Please choose a destination different from your pickup location.',
-          )
         return {
           pickup: dayPickup.address,
           destination: dayDestination.address,

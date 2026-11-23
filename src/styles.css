@@ -9260,6 +9260,15 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   margin-top: 8px !important;
 }
 
+.booking-glass-stage.is-expanded .privacy-inline {
+  color: rgba(206, 214, 226, 0.56) !important;
+  transition: color 0.2s ease;
+}
+
+.booking-glass-stage.is-expanded .privacy-inline:hover {
+  color: rgba(235, 240, 248, 0.84) !important;
+}
+
 .booking-glass-stage.is-expanded .journey-summary {
   background: rgba(10, 12, 16, 0.38) !important;
   border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -10062,6 +10071,13 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   margin: 0;
   font-size: 12px;
   line-height: 1.55;
+}
+
+/* Reserve space below the floating top-right close button on desktop Details view. */
+@media (min-width: 961px) {
+  .booking-glass-stage.is-expanded .journey-summary.is-details-summary {
+    padding-top: 62px !important;
+  }
 }
 
 /* Narrow summary: show a short vehicle label and a full-width route without
