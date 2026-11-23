@@ -394,14 +394,6 @@ export default function Booking({
   const setVehicleForDate = (d: string, vId: string) => {
     setVehiclesByDate((prev) => ({ ...prev, [d]: vId }))
   }
-  const applyVehicleToAll = (vId: string) => {
-    const updated: Record<string, string> = {}
-    dates.forEach((d) => {
-      updated[d] = vId
-    })
-    setVehiclesByDate(updated)
-    setVehicle(vId)
-  }
 
   const activeVehicle = getVehicle(currentActiveDate)
   const changeVehicle = (vId: string) => {
@@ -409,7 +401,8 @@ export default function Booking({
     setError((previous) =>
       previous.startsWith('Please choose another vehicle or time') ? '' : previous)
     if (!multiDay || vehicleMode === 'same') {
-      applyVehicleToAll(vId)
+      // Keep any per-day vehicle selections intact if the guest toggles modes.
+      setVehicle(vId)
     } else {
       setVehicleForDate(currentActiveDate, vId)
     }
@@ -1549,15 +1542,25 @@ export default function Booking({
                             <div className="day-mode-segmented" role="radiogroup" aria-label="Vehicle assignment">
                               <button type="button" role="radio" aria-checked={vehicleMode === 'same'}
                                 className={`day-mode-pill ${vehicleMode === 'same' ? 'active' : ''}`}
-                                onClick={() => {
-                                  applyVehicleToAll(getVehicle(currentActiveDate))
-                                  setVehicleMode('same')
-                                }}>
+                                onClick={() => setVehicleMode('same')}>
                                 Same for All Days
                               </button>
                               <button type="button" role="radio" aria-checked={vehicleMode === 'daily'}
                                 className={`day-mode-pill ${vehicleMode === 'daily' ? 'active' : ''}`}
-                                onClick={() => setVehicleMode('daily')}>
+                                onClick={() => {
+                                  setVehiclesByDate((prev) => {
+                                    const next = { ...prev }
+                                    let changed = false
+                                    for (const d of dates) {
+                                      if (!next[d]) {
+                                        next[d] = vehicle
+                                        changed = true
+                                      }
+                                    }
+                                    return changed ? next : prev
+                                  })
+                                  setVehicleMode('daily')
+                                }}>
                                 Choose Per Day
                               </button>
                             </div>
