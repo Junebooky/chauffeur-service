@@ -1,7 +1,7 @@
 // Server-only Supabase access for the shared dating project.
 // Never import this module from src/, or expose the service role to the browser.
 const serverUrl = () => (process.env.SUPABASE_URL || '').replace(/\/$/, '')
-const serverKey = () => process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || ''
+const serverKey = () => process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 const publishableKey = () => process.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
 export const hasDatabase = () => Boolean(serverUrl() && serverKey())
 
@@ -14,7 +14,9 @@ export async function db(path, { method = 'GET', body, prefer } = {}) {
     method,
     headers: {
       apikey: serverKey(),
-      Authorization: 'Bearer ' + serverKey(),
+      // Modern sb_secret_ keys are opaque API keys, not JWTs. Legacy keys
+      // still require a service_role Bearer token. Never send a secret to the browser.
+      ...(serverKey().startsWith('sb_secret_') ? {} : { Authorization: 'Bearer ' + serverKey() }),
       [method === 'GET' || method === 'HEAD' ? 'Accept-Profile' : 'Content-Profile']: 'chauffeur',
       'Content-Type': 'application/json',
       ...(prefer ? { Prefer: prefer } : {}),

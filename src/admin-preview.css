@@ -1,9 +1,0 @@
-.admin-preview .admin-preview-logo{width:34px;height:34px;display:grid;place-items:center;border:1px solid #b1b5bd;border-radius:10px;color:#e2e5e9;font-size:22px;font-weight:350;letter-spacing:0;line-height:1}
-.admin-preview .admin-topbar{gap:12px}.admin-preview-chip{font-size:10px;letter-spacing:.09em;color:#c0c6ce;border:1px solid #40454c;border-radius:20px;padding:7px 10px}
-.admin-preview-banner{display:flex;gap:13px;align-items:flex-start;padding:15px 19px;margin-bottom:31px;border:1px solid #41464f;border-radius:10px;background:#1c2026;color:#bcc3cd}
-.admin-preview-banner svg{flex:none;margin-top:2px}.admin-preview-banner div{display:grid;gap:5px}.admin-preview-banner strong{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#eaedf1}.admin-preview-banner span{font-size:11px;line-height:1.7;color:#b5bdc7}
-.admin-preview .admin-booking small{color:#8a929d;font-size:10px}.admin-preview .admin-status{display:inline-flex;justify-content:center}
-.admin-preview-payment{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}.admin-preview-payment>span{font-size:11px;color:#959da8}
-.admin-preview-payments{max-width:980px}.admin-preview-payment-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #343a42;padding:17px 0;gap:12px}.admin-preview-payment-row>div{display:grid;gap:5px}.admin-preview-payment-row>div:nth-child(2){justify-items:end}.admin-preview-payment-row strong{font-size:12px;font-weight:500}.admin-preview-payment-row small{font-size:11px;color:#a0a7b0}.admin-preview-payment-form{max-width:380px}
-.admin-preview .admin-banner button{color:inherit;background:none;border:0;font-size:11px}
-@media(max-width:600px){.admin-preview .admin-preview-chip{font-size:9px;padding:5px 8px}.admin-preview .admin-topbar{font-size:9px}.admin-preview-banner{margin-bottom:22px}.admin-preview-payment-row{flex-wrap:wrap}}

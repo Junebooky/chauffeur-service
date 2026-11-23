@@ -1,4 +1,5 @@
 import { requestableDays } from '../server/requestable-availability.mjs'
+import { hasDatabase } from '../server/chauffeur-supabase.mjs'
 import { DEFAULT_USD_RATE } from '../server/rates.mjs'
 
 /**
@@ -23,7 +24,7 @@ export default function handler(req, res) {
       vehicles: days[0].vehicles,
       days,
       inventoryPolicy: 'request-only',
-      bookingSubmissionReady: Boolean(process.env.SUPABASE_URL && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)),
+      bookingSubmissionReady: hasDatabase(),
     })
   } catch (error) {
     return res.status(400).json({

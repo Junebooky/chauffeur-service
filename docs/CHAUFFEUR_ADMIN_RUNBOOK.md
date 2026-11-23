@@ -1,14 +1,12 @@
-# Chauffeur Operations Console
+# Chauffeur live operations
 
-- Admin route: `/admin` on the existing Vite site (email and password via Supabase Auth).
-- Project: Supabase `dating` (`rvaowhriekibxtcpyalu`), dedicated `chauffeur` schema.
-- Existing verified operator email account is registered as `owner` in `chauffeur.staff_members`.
-- Vercel Production contains `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, and **server-only** `SUPABASE_SERVICE_ROLE_KEY`.
-- Public submission: `POST /api/reservations` -> server-side validation -> `chauffeur.create_booking_request_v1` atomic RPC -> outbox/email.
-- Operations: `GET/POST /api/admin` checks Supabase Auth token and active Chauffeur staff membership on every request.
-- Inventory policy: vehicles are requested by **class**, never hard-reserved by license plate. Operator confirms supply later.
-- Admin screens: booking list, status, multi-day itineraries, suppliers, drivers, assignments, manual payment records.
-- Password login avoids changing project-global Auth redirect URLs used by other services.
-- Custom schema Data API config preserves `public, cockpit, crewlink, planner` and adds `chauffeur`; anon cannot read the tables.
-- Production secret is currently the **legacy** service role key previously supplied by the user; create a per-service `sb_secret_` key in Supabase API Keys, swap the Vercel server env, then rotate old keys only after checking all shared apps.
-- After code changes, verify `npm ci && npm run check && npm test && npm run build`, then smoke-test a real `/api/availability` request, a test booking, and admin login. No real test customer booking is seeded by migration.
+- Customer booking page submits to \`POST /api/reservations\`. Uses the shared Supabase project \`dating\`, isolated \`chauffeur\` schema.
+- \`/admin\` is a **live reservation board**, not a sample demo. To honor the request for no page sign-in, it serves only masked references and non-personal operational progress through \`GET /api/admin-overview\`.
+- \`/admin/live\` is the private, authenticated workspace for actual guest details, date-specific routes, supplier and driver assignment, reservation status, and payment records. \`GET/POST /api/admin\` enforces Supabase Auth + active \`chauffeur.staff_members\`.
+- Available vehicle classes are requestable, never hard-assigned by license plate; operators handle sourcing after request.
+- \`SUPABASE_URL\` and \`SUPABASE_SECRET_KEY\` (or legacy \`SUPABASE_SERVICE_ROLE_KEY\`) are server-only; \`VITE_SUPABASE_URL\` and \`VITE_SUPABASE_PUBLISHABLE_KEY\` are used for Supabase Auth on the private page.
+- Local \`npm run dev\` uses the same Supabase-backed APIs when these server env vars are configured. When absent, local SQLite mode remains available for legacy tests; set \`CHAUFFEUR_USE_SQLITE=true\` to force offline mode.
+- The newer \`sb_secret_...\` API key is **opaque**, so use it as \`apikey\`, not a JWT Bearer token. A legacy \`service_role\` JWT remains a server-only fallback. New env values on Vercel do not take effect until redeployment.
+- \`GET /api/availability\` returns \`bookingSubmissionReady: true\` only when database credentials are configured.
+- Run \`npm run check && npm test && npm run build\` and smoke-test \`GET /api/admin-overview\` in production.
+- Real customer records are not inserted by migrations/tests.

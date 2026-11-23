@@ -8,6 +8,11 @@ import { createPlaces } from './places.mjs'
 import { createRatesService } from './rates.mjs'
 import { createOperatorNotifier } from './notifications.mjs'
 import { requestableDays } from './requestable-availability.mjs'
+import { hasDatabase } from './chauffeur-supabase.mjs'
+import liveBooking from '../api/reservations.js'
+import liveAvailability from '../api/availability.js'
+import liveAdmin from '../api/admin.js'
+import liveOverview from '../api/admin-overview.js'
 
 export function createApp({
   databasePath = resolve('.data/reservations.sqlite'),
@@ -54,6 +59,17 @@ export function createApp({
     res.set('Cache-Control', 'no-store')
     next()
   })
+  // When Supabase is configured, local Vite + Express must use the SAME
+  // persistent booking and operations APIs as Vercel production.
+  // Existing SQLite mode remains available for offline tests and legacy dev.
+  if (hasDatabase() && process.env.CHAUFFEUR_USE_SQLITE !== 'true') {
+    app.all('/api/availability', (req, res) => liveAvailability(req, res))
+    app.all('/api/reservations', (req, res) => { void liveBooking(req, res) })
+    app.all('/api/admin', (req, res) => { void liveAdmin(req, res) })
+  }
+  // This public summary never contains personal customer details.
+  app.all('/api/admin-overview', (req, res) => { void liveOverview(req, res) })
+
   const places = createPlaces({ now, ...placesOptions })
   app.use('/api/places', places.router)
   const rates = createRatesService({ now, ...ratesOptions })
