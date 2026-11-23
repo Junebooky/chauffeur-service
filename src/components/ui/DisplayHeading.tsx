@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from 'react'
 
 type DisplayHeadingProps = HTMLAttributes<HTMLHeadingElement> & {
-  as?: 'h2' | 'h3'
+  as?: 'h1' | 'h2' | 'h3'
 }
 
 /**
@@ -15,6 +15,9 @@ export default function DisplayHeading({
 }: DisplayHeadingProps) {
   const classes = ['chauffeur-display-heading', className].filter(Boolean).join(' ')
 
+  if (as === 'h1') {
+    return <h1 {...props} className={classes}>{children}</h1>
+  }
   if (as === 'h3') {
     return (
       <h3 {...props} className={classes}>
