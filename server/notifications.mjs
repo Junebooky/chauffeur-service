@@ -1,12 +1,15 @@
 // Operator notification for saved (pending) booking requests.
 // The admin email is private: only the server reads the recipient address.
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import catalog from '../src/catalog.json' with { type: 'json' }
 import nodemailer from 'nodemailer'
 
 const EMAIL_HEADER_BG_PATH = resolve(import.meta.dirname, 'assets/email-header-bg.jpg')
 const EMAIL_HEADER_CID = 'chauffeur-email-header'
+const EMAIL_HEADER_BUFFER = existsSync(EMAIL_HEADER_BG_PATH)
+  ? readFileSync(EMAIL_HEADER_BG_PATH)
+  : null
 
 export const DEFAULT_OPERATOR_EMAIL = 'gotoward7@gmail.com'
 
@@ -85,16 +88,17 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
     'Estimated total, tax excluded: ' + readableMoney(total),
     '', 'This is a pending request. No booking has been confirmed or payment taken.',
   ].filter((line) => line !== undefined).join('\n')
-  const attachments = existsSync(EMAIL_HEADER_BG_PATH)
+  const attachments = EMAIL_HEADER_BUFFER
     ? [{
         filename: 'j-production-header.jpg',
-        path: EMAIL_HEADER_BG_PATH,
+        content: EMAIL_HEADER_BUFFER,
+        contentType: 'image/jpeg',
         cid: EMAIL_HEADER_CID,
         contentDisposition: 'inline',
       }]
     : []
   const headerBanner = attachments.length
-    ? `<img src="cid:${EMAIL_HEADER_CID}" width="640" alt="J Production — Team of Premium Chauffeur Service" style="display:block;width:100%;max-width:640px;height:auto;border:0">`
+    ? `<img src="cid:${EMAIL_HEADER_CID}" width="640" height="130" alt="J Production — Team of Premium Chauffeur Service" style="display:block;width:100%;max-width:640px;height:auto;aspect-ratio:640/130;background:#171b1d;color:#171b1d;border:0">`
     : `<div style="padding:26px 36px 0"><div style="font-size:20px;font-weight:200;color:#f4f5f7;letter-spacing:0.02em">J Production</div><div style="margin-top:4px;font-size:10px;letter-spacing:1.2px;color:#c4cbd4">Team of Premium Chauffeur Service</div></div>`
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:24px 12px;background:#f0f2ef;font-family:'Helvetica Neue',Arial,Helvetica,sans-serif;color:#202723">
