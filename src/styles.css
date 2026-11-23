@@ -10776,3 +10776,195 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   outline-offset: 4px;
   border-radius: 2px;
 }
+
+/* Shared visual language for native Reservation & Privacy / Contact dialogs.
+   Same restrained silver-on-black system as Booking's glass panels. */
+.info-dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-width: 600px;
+  max-height: min(760px, calc(100dvh - 32px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(231, 238, 246, 0.22);
+  border-radius: 18px;
+  background: linear-gradient(150deg, rgba(24, 27, 34, 0.985), rgba(9, 11, 16, 0.995));
+  color: #f0f3f7;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 28px 90px rgba(0, 0, 0, 0.7);
+  scrollbar-color: rgba(225, 231, 240, 0.27) transparent;
+  scrollbar-width: thin;
+}
+.info-dialog::backdrop {
+  background: rgba(3, 4, 7, 0.78);
+  backdrop-filter: blur(12px);
+}
+.info-dialog .dialog-content {
+  padding: clamp(26px, 4vw, 42px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.info-dialog .dialog-eyebrow {
+  margin: 0 42px 19px 0;
+}
+.info-dialog .dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  top: 18px;
+  right: 18px;
+  padding: 0;
+  border: 1px solid rgba(236, 242, 249, 0.22);
+  border-radius: 50%;
+  color: rgba(239, 244, 249, 0.82);
+  background: rgba(255, 255, 255, 0.045);
+  transition: background 0.2s, border-color 0.2s;
+}
+.info-dialog .dialog-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(239, 244, 249, 0.55);
+}
+.info-dialog .dialog-close:focus-visible {
+  outline: 2px solid rgba(239, 244, 249, 0.92);
+  outline-offset: 3px;
+}
+.info-dialog .dialog-content .chauffeur-display-heading {
+  margin: 0 0 24px;
+  max-width: 470px;
+  color: #f4f6f9;
+  font-family: var(--sans);
+  font-size: clamp(31px, 3.5vw, 44px);
+  font-weight: 200;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+.info-dialog .dialog-policy-list {
+  border-top: 1px solid rgba(227, 234, 243, 0.14);
+}
+.info-dialog .dialog-policy-section {
+  padding: 18px 0 19px;
+  border-bottom: 1px solid rgba(227, 234, 243, 0.12);
+}
+.info-dialog .dialog-policy-section:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.info-dialog .dialog-policy-section h3 {
+  margin: 0 0 8px;
+  color: rgba(243, 246, 250, 0.91);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+}
+.info-dialog .dialog-content .dialog-policy-section p,
+.info-dialog .dialog-content .dialog-contact-intro,
+.info-dialog .dialog-content .dialog-note {
+  margin: 0;
+  color: rgba(216, 224, 235, 0.70);
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.75;
+}
+.info-dialog .dialog-content .dialog-policy-section a {
+  color: rgba(244, 248, 253, 0.92);
+  text-decoration-color: rgba(244, 248, 253, 0.52);
+  text-underline-offset: 3px;
+}
+.info-dialog .dialog-contact-card {
+  display: grid;
+  gap: 7px;
+  margin-top: 22px;
+  padding: 18px 20px;
+  border: 1px solid rgba(232, 238, 247, 0.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+.info-dialog .dialog-contact-card small {
+  color: rgba(229, 234, 243, 0.6);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+}
+.info-dialog .dialog-contact-card strong {
+  color: #f0f3f7;
+  font-size: 17px;
+  font-weight: 350;
+  overflow-wrap: anywhere;
+}
+.info-dialog .dialog-contact-card > span {
+  color: rgba(221, 226, 236, 0.62);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.info-dialog .dialog-content .dialog-note {
+  padding-top: 16px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(227, 234, 243, 0.12);
+}
+.info-dialog .dialog-content .button.gold-button {
+  margin-top: 20px;
+  border-color: rgba(231, 238, 246, 0.32);
+  background: rgba(255, 255, 255, 0.075);
+  color: #f4f6f9;
+  font-weight: 400;
+}
+
+/* Contact channel icons are purely visual. Preserve accessible native radios
+   (focus, keyboard selection and screen-reader announcements). */
+.booking-glass-stage.is-expanded .contact-method-grid > label {
+  position: relative;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.booking-glass-stage.is-expanded .contact-method-grid > label:focus-within {
+  outline: 1px solid rgba(239, 243, 249, 0.75);
+  outline-offset: 3px;
+}
+.booking-glass-stage.is-expanded .contact-method-grid input.contact-method-native-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.booking-glass-stage.is-expanded .contact-method-grid .contact-method-icon {
+  display: block;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  color: rgba(224, 231, 240, 0.64);
+}
+.booking-glass-stage.is-expanded .contact-method-grid > label.selected {
+  border-color: rgba(225, 234, 246, 0.45) !important;
+  background: rgba(244, 247, 252, 0.085) !important;
+}
+.booking-glass-stage.is-expanded .contact-method-grid > label.selected .contact-method-icon {
+  color: rgba(248, 250, 253, 0.97);
+}
+
+/* Quiet metadata under Estimated total: it is supporting information. */
+.booking-glass-stage.is-expanded .summary-total small.tax-notice {
+  color: rgba(216, 224, 235, 0.52) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.015em;
+}
+
+@media (max-width: 650px) {
+  .info-dialog .dialog-content {
+    padding: 28px 23px;
+  }
+  .info-dialog .dialog-eyebrow {
+    margin-bottom: 17px;
+  }
+  .info-dialog .dialog-content .chauffeur-display-heading {
+    font-size: clamp(30px, 8vw, 39px);
+    margin-bottom: 22px;
+  }
+  .info-dialog .dialog-policy-section {
+    padding: 16px 0;
+  }
+}

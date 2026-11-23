@@ -3,16 +3,16 @@ import type { ReactNode } from 'react'
 import {
   ArrowRight,
   ArrowUpRight,
-  Clock3,
   Globe2,
   Menu,
-  ShieldCheck,
   X,
 } from 'lucide-react'
 import Hero from './Hero'
 import FleetSection from './FleetSection'
 import PricingSection from './PricingSection'
 import Booking from './Booking'
+import DisplayHeading from './components/ui/DisplayHeading'
+import SectionEyebrow from './components/ui/SectionEyebrow'
 import { customQuoteEmail, OPERATOR_EMAIL } from './contact'
 import { useJourneyScroll } from './useJourneyScroll'
 import { DEFAULT_USD_RATE } from './utils'
@@ -69,14 +69,17 @@ function Modal({
     >
       <div className="dialog-content">
         <button
+          type="button"
           onClick={onClose}
           className="icon-button dialog-close"
           aria-label="Close dialog"
         >
-          <X size={20} />
+          <X size={18} strokeWidth={1.5} aria-hidden="true" />
         </button>
-        <p className="eyebrow">THE CHAUFFEUR STANDARD</p>
-        <h2 id="dialog-title">{title}</h2>
+        <SectionEyebrow className="dialog-eyebrow">
+          THE CHAUFFEUR STANDARD
+        </SectionEyebrow>
+        <DisplayHeading as="h2" id="dialog-title">{title}</DisplayHeading>
         {children}
       </div>
     </dialog>
@@ -236,93 +239,77 @@ export default function App() {
         open={modal !== null}
         onClose={() => setModal(null)}
         title={
-          modal === 'contact' ? 'At your service.' : 'A note on your journey.'
+          modal === 'contact' ? 'Contact our team.' : 'Reservation & privacy.'
         }
       >
         {modal === 'contact' ? (
           <>
-            <p>
-              For an airport arrival, a considered day in the city, or something
-              entirely your own, start with a few journey details.
+            <p className="dialog-contact-intro">
+              Planning something beyond our standard services?
+              Email us your dates and itinerary. We'll help with the details.
             </p>
-            <div className="concierge-detail">
-              <Clock3 size={19} />
-              <div>
-                Private travel in Seoul
-                <small>
-                  All journey times are Korean Standard Time (UTC+9).
-                </small>
-              </div>
-            </div>
-            <div className="concierge-detail">
-              <ShieldCheck size={19} />
-              <div>
-                A personal request, thoughtfully prepared
-                <small>
-                  Reservations are subject to vehicle and chauffeur
-                  confirmation.
-                </small>
-              </div>
+            <div className="dialog-contact-card">
+              <small>DIRECT CONTACT</small>
+              <strong>{OPERATOR_EMAIL}</strong>
+              <span>Custom journeys · Private transfers · Special requests</span>
             </div>
             <p className="dialog-note">
-              For a custom itinerary, send us an email directly. Online reservation
-              requests are saved pending confirmation; delivery requires a configured mail service.
+              All journey requests are subject to confirmation. No upfront payment is taken.
             </p>
             <a className="button gold-button" href={customQuoteEmail()}>
-              Email {OPERATOR_EMAIL} <ArrowRight size={16} />
+              Write an email <ArrowRight size={16} aria-hidden="true" />
             </a>
           </>
         ) : (
-          <>
-            <h3>Reservation requests</h3>
-            <p>
-              Submitting the form saves a pending request. It does not confirm a
-              vehicle, assign a driver, or take payment. Prices are illustrative
-              service rates in Korean won. All displayed prices exclude TAX; any
-              applicable tax is additional. Vehicle images are representative;
-              the final model must be confirmed separately.
-            </p>
-            <h3>Your details</h3>
-            <p>
-              Your name, email, phone number, preferred contact app, messenger
-              details, route, and daily vehicle preferences are stored in this
-              application's local reservation database. They are not sent to an
-              operator or an email service. Please use sample details while
-              evaluating this site.
-            </p>
-            <h3>Availability & changes</h3>
-            <p>
-              Availability reflects requests held in this local system, not a
-              live fleet feed. Overlapping requests for the same vehicle class
-              are prevented. Allow at least two hours before departure. Online
-              cancellation, payment, and operator confirmation are not
-              connected.
-            </p>
-            <h3>Finding your address</h3>
-            <p>
-              When live address search is enabled, your search text is sent to
-              Google Maps to find locations in South Korea. Popular-location
-              search is handled locally. Selected addresses and building-level
-              coordinates are saved with your request; confirm the exact meeting
-              point with your chauffeur. Google Maps use is subject to the{' '}
-              <a
-                href="https://maps.google.com/help/terms_maps/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Google Maps terms
-              </a>{' '}
-              and{' '}
-              <a
-                href="https://policies.google.com/privacy"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Google Privacy Policy
-              </a>
-              .
-            </p>
-          </>
+          <div className="dialog-policy-list">
+            <section className="dialog-policy-section" aria-labelledby="privacy-status">
+              <h3 id="privacy-status">Reservation status</h3>
+              <p>
+                Your request is pending until we confirm the vehicle and chauffeur.
+                No payment is taken online. Prices are in KRW and exclude tax.
+              </p>
+            </section>
+            <section className="dialog-policy-section" aria-labelledby="privacy-information">
+              <h3 id="privacy-information">Your information</h3>
+              <p>
+                When online booking is available, we store your contact details,
+                itinerary and vehicle choices to manage your request. An email
+                notification is sent to our operator when email delivery is configured.
+                An email enquiry opens your mail app and is only sent when you send it.
+              </p>
+            </section>
+            <section className="dialog-policy-section" aria-labelledby="privacy-availability">
+              <h3 id="privacy-availability">Availability & changes</h3>
+              <p>
+                Vehicle availability is indicative, not a live fleet guarantee.
+                Final arrangements are confirmed by our team. Online cancellation
+                and payment are not currently available.
+              </p>
+            </section>
+            <section className="dialog-policy-section" aria-labelledby="privacy-places">
+              <h3 id="privacy-places">Addresses & maps</h3>
+              <p>
+                Live place searches use Google Maps when enabled. Selected locations
+                are used to plan your journey. Please confirm the exact meeting
+                point with your chauffeur. See{' '}
+                <a
+                  href="https://maps.google.com/help/terms_maps/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Google Maps Terms
+                </a>{' '}
+                and{' '}
+                <a
+                  href="https://policies.google.com/privacy"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Google's Privacy Policy
+                </a>.
+              </p>
+            </section>
+          </div>
         )}
       </Modal>
     </>

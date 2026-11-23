@@ -14,6 +14,11 @@ import {
   FileDown,
   Image,
   Mail,
+  Phone,
+  MessageCircle,
+  MessageSquare,
+  MessagesSquare,
+  MessageCircleMore,
   Plus,
   X,
 } from 'lucide-react'
@@ -41,6 +46,15 @@ import {
   seoulDate,
   tomorrow,
 } from './utils'
+
+const CONTACT_METHOD_ICONS: Record<string, typeof Mail> = {
+  email: Mail,
+  phone: Phone,
+  whatsapp: MessageCircle,
+  line: MessageSquare,
+  kakao: MessagesSquare,
+  wechat: MessageCircleMore,
+}
 
 const timeOptions = Array.from({ length: 48 }, (_, i) => {
   return `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`
@@ -1661,27 +1675,35 @@ export default function Booking({
                         <fieldset className="contact-methods">
                           <legend>Preferred Contact Method</legend>
                           <div className="contact-method-grid">
-                            {catalog.contactMethods.map((method) => (
-                              <label
-                                key={method.id}
-                                className={
-                                  contactMethod === method.id ? 'selected' : ''
-                                }
-                              >
-                                <input
-                                  type="radio"
-                                  name="contact-method"
-                                  value={method.id}
-                                  checked={contactMethod === method.id}
-                                  onChange={() => {
-                                    setContactMethod(method.id)
-                                    setMessengerContact('')
-                                    setUsePhoneForMessenger(false)
-                                  }}
-                                />
-                                <span>{method.name}</span>
-                              </label>
-                            ))}
+                            {catalog.contactMethods.map((method) => {
+                              const ContactIcon = CONTACT_METHOD_ICONS[method.id] ?? MessageCircle
+                              return (
+                                <label
+                                  key={method.id}
+                                  className={contactMethod === method.id ? 'selected' : ''}
+                                >
+                                  <input
+                                    className="contact-method-native-radio"
+                                    type="radio"
+                                    name="contact-method"
+                                    value={method.id}
+                                    checked={contactMethod === method.id}
+                                    onChange={() => {
+                                      setContactMethod(method.id)
+                                      setMessengerContact('')
+                                      setUsePhoneForMessenger(false)
+                                    }}
+                                  />
+                                  <ContactIcon
+                                    className="contact-method-icon"
+                                    size={15}
+                                    strokeWidth={1.5}
+                                    aria-hidden="true"
+                                  />
+                                  <span>{method.name}</span>
+                                </label>
+                              )
+                            })}
                           </div>
                           {!['email', 'phone'].includes(contactMethod) && (
                             <div className="messenger-preference">
