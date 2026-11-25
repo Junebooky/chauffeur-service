@@ -254,25 +254,33 @@ export default function PricingSection({
                 aria-label={`${index + 1} of ${PRICING_PLANS.length}`}
                 className="group relative flex min-h-[clamp(380px,49dvh,525px)] w-[82dvw] max-w-[360px] shrink-0 snap-center snap-always flex-col justify-between rounded-[18px] border border-[#e5dfd5]/35 bg-[#050608] shadow-[0_26px_60px_rgba(0,0,0,0.84),inset_0_1px_0_rgba(255,250,242,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-[#f4f5f7]/30 focus-within:-translate-y-1 focus-within:border-[#f4f5f7]/40 lg:h-[clamp(400px,49dvh,525px)] lg:w-auto lg:max-w-none lg:shrink lg:snap-none"
               >
-              {/* Clockwise Border Beam Halo (subtle soft bloom on hover/focus) */}
+              {/* Clockwise Border Beam Halo (subtle soft bloom on hover/focus, active slide only on mobile) */}
               <span
                 aria-hidden="true"
                 style={BEAM_MASK_STYLE}
-                className="pointer-events-none absolute -inset-[1px] z-20 overflow-hidden rounded-[19px] p-[1.5px] opacity-0 blur-[2px] transition-opacity duration-300 group-hover:opacity-45 group-focus-within:opacity-45 max-lg:opacity-40 [@media(hover:none)]:opacity-40"
+                className={`pointer-events-none absolute -inset-[1px] z-20 overflow-hidden rounded-[19px] p-[1.5px] opacity-0 blur-[2px] transition-opacity duration-300 group-hover:opacity-45 group-focus-within:opacity-45 ${
+                  activePlanIndex === index ? 'max-lg:opacity-40' : 'max-lg:opacity-0'
+                }`}
               >
                 <span
-                  className={`absolute top-1/2 left-1/2 aspect-square w-[260%] motion-safe:animate-border-beam ${BEAM_GRADIENT}`}
+                  className={`absolute top-1/2 left-1/2 aspect-square w-[260%] motion-safe:animate-border-beam ${
+                    activePlanIndex === index ? '' : 'max-lg:[animation-play-state:paused]'
+                  } ${BEAM_GRADIENT}`}
                 />
               </span>
 
-              {/* Clockwise Border Beam Crisp 1px Ring (on hover/focus) */}
+              {/* Clockwise Border Beam Crisp 1px Ring (on hover/focus, active slide only on mobile) */}
               <span
                 aria-hidden="true"
                 style={BEAM_MASK_STYLE}
-                className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[18px] p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 max-lg:opacity-90 [@media(hover:none)]:opacity-90"
+                className={`pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[18px] p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 ${
+                  activePlanIndex === index ? 'max-lg:opacity-95' : 'max-lg:opacity-0'
+                }`}
               >
                 <span
-                  className={`absolute top-1/2 left-1/2 aspect-square w-[260%] motion-safe:animate-border-beam ${BEAM_GRADIENT}`}
+                  className={`absolute top-1/2 left-1/2 aspect-square w-[260%] motion-safe:animate-border-beam ${
+                    activePlanIndex === index ? '' : 'max-lg:[animation-play-state:paused]'
+                  } ${BEAM_GRADIENT}`}
                 />
               </span>
 

@@ -11262,7 +11262,7 @@ h3 {
   }
 
   .slide-overview .fleet-slide-bg {
-    top: 56%;
+    top: calc(56% - 10px); /* 모바일 Our Fleet 배경 상하 위치: 값을 줄이면 위로, 늘리면 아래로 이동 */
     bottom: auto;
     left: 0;
     right: 0;
@@ -11408,10 +11408,6 @@ h3 {
   :root {
     --header: 66px;
     --gutter: 20px;
-  }
-
-  .slide-overview .fleet-slide-bg {
-    top: 56%;
   }
 
   .fleet-vehicle-stage-layer,
@@ -11662,6 +11658,21 @@ h3 {
     width: auto;
     font-size: 11px;
     line-height: 1.5;
+  }
+
+  #reservation.booking-screen .booking-success .success-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 0;
+  }
+
+  #reservation.booking-screen .booking-confirmation-export,
+  #reservation.booking-screen .booking-confirmation-email {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 14px;
   }
 
   .info-dialog {

@@ -52,10 +52,12 @@ test('mobile optimizations cover left-aligned vertical footer, overview gradient
   assert.match(mobileLayer, /\.section-numeral,\s*\.mobile-nav > button > span\s*\{\s*display:\s*none;\s*\}/)
   assert.match(mobileLayer, /\.fleet-overview-header\s*\{\s*margin-top:\s*clamp\(56px, 9dvh, 92px\);/)
   assert.match(mobileLayer, /\.fleet-card > \.fleet-card-beam-ring\s*\{\s*opacity:\s*0\.94;/)
-  assert.match(pricing, /max-lg:opacity-90 \[@media\(hover:none\)\]:opacity-90/)
+  assert.match(pricing, /activePlanIndex === index \? 'max-lg:opacity-95' : 'max-lg:opacity-0'/)
+  assert.match(pricing, /activePlanIndex === index \? '' : 'max-lg:\[animation-play-state:paused\]'/)
   assert.match(mobileLayer, /\.hero-backdrop-img\s*\{[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
-  assert.match(mobileLayer, /\.slide-overview \.fleet-slide-bg\s*\{[\s\S]*?top:\s*56%;[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
+  assert.match(mobileLayer, /\.slide-overview \.fleet-slide-bg\s*\{[\s\S]*?top:\s*calc\(56% - 10px\);[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
   assert.match(mobileLayer, /\.hero-book-link\s*\{\s*margin-top:\s*auto;\s*align-self:\s*flex-end;/)
+  assert.match(mobileLayer, /#reservation\.booking-screen \.booking-success \.success-actions\s*\{[\s\S]*?flex-direction:\s*row;/)
 })
 
 test('dropdown and address popups respond to visualViewport scroll and clamp to viewport width', () => {
