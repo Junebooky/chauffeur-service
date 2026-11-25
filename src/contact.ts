@@ -6,6 +6,5 @@ export function composeEmail(subject: string, body = '') {
   return `mailto:${OPERATOR_EMAIL}?${params.toString()}`
 }
 
-export const customQuoteEmail = () =>
-  composeEmail('CHAUFFEUR · Custom itinerary inquiry',
-    'Hello CHAUFFEUR,\n\nI would like to ask about a custom journey.\n\nDates:\nPickup / destination:\nNumber of guests:\nSpecial requests:\n\nThank you.')
+// Let the customer write their own subject and message for custom enquiries.
+export const customQuoteEmail = () => `mailto:${OPERATOR_EMAIL}`

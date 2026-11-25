@@ -75,3 +75,12 @@ test('the existing photographic hover and Border Beam design is retained', () =>
   assert.match(pricing, /\[@media\(hover:none\)\]:opacity-100/)
   assert.match(pricing, /group-hover:scale-\[1\.04\]/)
 })
+
+
+test('custom quote email opens an empty draft with the recipient only', () => {
+  const contact = read('src/contact.ts')
+  assert.match(pricing, /window\.location\.href = customQuoteEmail\(\)/)
+  assert.match(contact, /export const customQuoteEmail = \(\) => `mailto:\$\{OPERATOR_EMAIL\}`/)
+  assert.doesNotMatch(contact, /Custom itinerary inquiry|I would like to ask about a custom journey/)
+  assert.match(contact, /export function composeEmail\(subject: string, body = ''\)/)
+})

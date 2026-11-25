@@ -10481,16 +10481,20 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   column-gap: 12px;
 }
 
+/* Inline service labels: quiet silver tones and a weight distinction,
+   without extra badges or icons that crowd the daily itinerary. */
 .booking-screen .service-tone {
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .booking-screen .service-tone.service-tone-airport {
-  color: #9ec5e8 !important;
+  color: rgba(222, 232, 244, 0.84) !important;
+  font-weight: 400;
 }
 
 .booking-screen .service-tone.service-tone-day {
-  color: #dfbe8a !important;
+  color: rgba(237, 232, 223, 0.78) !important;
+  font-weight: 500;
 }
 .booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-date {
   min-width: 0;

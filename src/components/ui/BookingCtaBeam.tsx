@@ -1,5 +1,5 @@
 /**
- * Shared hairline Border Beam for every ReservationButton (Booking and Fleet).
+ * Shared hairline Border Beam for the booking invitation and ReservationButton.
  * Both highlights use one 1px mask and a symmetric gradient, with no extra
  * blurred halo that could make one side look thicker.
  */

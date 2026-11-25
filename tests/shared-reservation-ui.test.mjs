@@ -31,13 +31,15 @@ test('Booking and Fleet Specs share the exact same reservation button', () => {
   assert.match(fleet, /handleReserve\(activeVehicle\.catalogId\)/)
 })
 
-test('Ready to reserve idle button preserves the original blurred halo and crisp ring beam', () => {
+test('Ready to reserve uses the shared symmetric hairline beam; expanded booking keeps its own frame', () => {
   const booking = load('src/Booking.tsx')
   const start = booking.indexOf('{!glassOpen && !result && (')
   const end = booking.indexOf('{(glassOpen || result) && (', start)
   const idleBlock = booking.slice(start, end)
-  assert.match(idleBlock, /className="booking-glass-beam-halo"/)
-  assert.match(idleBlock, /className="booking-glass-beam-ring"/)
+  assert.match(idleBlock, /<BookingCtaBeam \/>/)
+  assert.doesNotMatch(idleBlock, /booking-glass-beam-halo|booking-glass-beam-spinner/)
+  assert.match(idleBlock, /className="booking-optical-lens"/)
+  assert.match(booking.slice(end), /booking-card-beam-ring/)
 })
 
 test('the Specs name shares the Booking display heading and thin font weight', () => {
