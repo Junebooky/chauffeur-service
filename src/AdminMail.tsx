@@ -4,9 +4,9 @@ import { Mail,RefreshCw,ArrowRight,ExternalLink } from 'lucide-react'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
 type Api=(method:'GET'|'POST',body?:Record<string,unknown>)=>Promise<any>
-type Connection={configured:boolean;connected:boolean;email?:string}
+type Connection={configured:boolean;connected:boolean;email?:string;connectOrigin?:string}
 type Message={id:string;from:string;subject:string;date:string;snippet:string;unread:boolean;body?:string;replyTo?:string}
-const notices:Record<string,string>={connected:'Gmail을 연결했어요.',wrong_account:'등록한 업무 Gmail 계정으로 다시 연결해 주세요.',permissions:'메일 읽기와 보내기 권한을 모두 허용해 주세요.',state_error:'연결 요청이 만료됐어요. 다시 연결해 주세요.',cancelled:'Google 연결을 취소했어요.',not_configured:'서버의 Gmail 설정을 확인해 주세요.',error:'Gmail 연결을 완료하지 못했어요. 다시 시도해 주세요.',forbidden:'소유자 권한이 필요해요.'}
+const notices:Record<string,string>={connect_origin:'이 주소에서 관리자 로그인 후 Google 계정을 연결해 주세요.',connected:'Gmail을 연결했어요.',wrong_account:'등록한 업무 Gmail 계정으로 다시 연결해 주세요.',permissions:'메일 읽기와 보내기 권한을 모두 허용해 주세요.',state_error:'연결 요청이 만료됐어요. 다시 연결해 주세요.',cancelled:'Google 연결을 취소했어요.',not_configured:'서버의 Gmail 설정을 확인해 주세요.',error:'Gmail 연결을 완료하지 못했어요. 다시 시도해 주세요.',forbidden:'소유자 권한이 필요해요.'}
 export default function AdminMail({api,role}:{api:Api;role:string|undefined}){
  const [connection,setConnection]=useState<Connection|null>(null)
  const [messages,setMessages]=useState<Message[]>([])
@@ -34,6 +34,9 @@ export default function AdminMail({api,role}:{api:Api;role:string|undefined}){
   try{await fn()}catch(e){setError(e instanceof Error?e.message:'다시 시도해 주세요.')}finally{setBusy(false)}
  }
  const connect=()=>void run(async()=>{
+  if(connection?.connectOrigin&&connection.connectOrigin!==window.location.origin){
+   window.location.assign(connection.connectOrigin+'/admin/live?gmail=connect_origin');return
+  }
   const r=await api('POST',{action:'gmail_start'})
   window.location.assign(r.data.url)
  })
@@ -60,6 +63,7 @@ export default function AdminMail({api,role}:{api:Api;role:string|undefined}){
   {role!=='owner'?<section className="admin-ops-panel"><p>Gmail은 소유자 계정으로만 사용할 수 있어요.</p></section>:!connection?<section className="admin-ops-panel"><p>연결 상태를 확인하고 있어요.</p></section>:<>
    <section className="admin-ops-panel"><h2><Mail size={17}/> {connection.connected?'Gmail 연결됨':'Gmail 연결'}</h2>
     <p className="admin-ko-caption">{connection.email||'서버 환경변수 설정이 필요해요.'}</p>
+    {connection.connectOrigin&&connection.connectOrigin!==window.location.origin&&<p className="admin-ko-caption">Google 계정 연결은 공식 관리자 주소에서 진행해 주세요.</p>}
     <p className="admin-ko-caption">회사 계정의 받은 메일과 보낸 메일을 확인해요. 스팸·휴지통은 제외하고 광고·소셜 메일은 분류 확인에 따로 표시해요.</p>
     <div className="admin-ko-actions"><button className="admin-secondary" disabled={busy||!connection.configured} onClick={connect}>{connection.connected?'Gmail 다시 연결':'Google 계정 연결'} <ArrowRight size={14}/></button>{connection.connected&&<button className="admin-primary" disabled={busy} onClick={()=>refresh()}><RefreshCw size={15}/> 메일 불러오기</button>}</div>
    </section>

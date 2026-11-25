@@ -55,7 +55,7 @@ export default async function handler(req,res) {
     const action=b.action
     let data
     if(action==='gmail_status') data=await gmailStatus(staff)
-    else if(action==='gmail_start') data=await gmailStart(staff,res)
+    else if(action==='gmail_start') data=await gmailStart(staff,res,req.headers.origin)
     else if(action==='gmail_list') data=await gmailList(staff,b.folder,b.pageToken)
     else if(action==='gmail_read') data=await gmailRead(staff,b.id)
     else if(action==='gmail_send') data=await gmailSend(staff,b)

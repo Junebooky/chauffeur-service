@@ -1,0 +1,16 @@
+import {test} from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
+test('production domain metadata uses canonical www and keeps admin routes out of search',()=>{
+ const site='https://www.jpchauffeurkorea.com/'
+ assert.ok(read('index.html').includes('rel="canonical" href="'+site+'"'))
+ assert.ok(read('public/sitemap.xml').includes('<loc>'+site+'</loc>'))
+ assert.ok(!read('public/sitemap.xml').includes('/admin'))
+ assert.ok(read('public/robots.txt').includes('Sitemap: '+site+'sitemap.xml'))
+ const config=JSON.parse(read('vercel.json'))
+ for(const path of ['/admin','/admin/','/admin/:path*','/api/:path*']){
+  assert.ok(config.headers.find(h=>h.source===path)?.headers.some(h=>h.key==='X-Robots-Tag'&&h.value==='noindex, nofollow'))
+ }
+ assert.equal(config.git.deploymentEnabled,false)
+})

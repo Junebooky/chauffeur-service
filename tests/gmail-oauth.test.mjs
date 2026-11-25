@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {gmailStart,gmailCallback,gmailStatus,gmailList,gmailRead,gmailSend,prepareAutomaticMail,automaticMailReady} from '../server/gmail.mjs'
+import {gmailStart,gmailCallback,gmailStatus,gmailList,gmailRead,gmailSend,prepareAutomaticMail,automaticMailReady,gmailConfigured} from '../server/gmail.mjs'
 const id='a3cf6400-d7b5-4056-b47b-e9d49ee8a0a3',staff={id,role:'owner'},redirect='http://localhost:5173/api/gmail/callback'
 const settings={SUPABASE_URL:'https://test.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_TEST',GOOGLE_OAUTH_CLIENT_ID:'test-client',GOOGLE_OAUTH_CLIENT_SECRET:'test-secret',GOOGLE_OAUTH_REDIRECT_URI:redirect,GMAIL_TOKEN_ENCRYPTION_KEY:'a'.repeat(64),GMAIL_ALLOWED_EMAIL:'owner@example.invalid'}
 const response=()=>({headers:{},code:0,setHeader(k,v){this.headers[k]=v},status(n){this.code=n;return this},end(){return this}})
@@ -35,7 +35,7 @@ test('owner-only OAuth uses PKCE, single-use state, browser cookie, exact accoun
  }
  try{
   await assert.rejects(gmailStatus({...staff,role:'operator'}),/소유자/)
-  const start=response(),result=await gmailStart(staff,start),u=new URL(result.url),s=u.searchParams.get('state')
+  const start=response(),result=await gmailStart(staff,start,'http://localhost:5173'),u=new URL(result.url),s=u.searchParams.get('state')
   assert.equal(u.searchParams.get('redirect_uri'),redirect)
   assert.equal(u.searchParams.get('code_challenge_method'),'S256')
   assert.equal(u.searchParams.get('access_type'),'offline')
@@ -64,4 +64,24 @@ test('owner-only OAuth uses PKCE, single-use state, browser cookie, exact accoun
   assert.match(raw,/Content-Type: application\/pdf/)
   assert.match(raw,/Confirmation\.pdf/)
  }finally{globalThis.fetch=original;for(const [k,v] of Object.entries(old)){if(v===undefined)delete process.env[k];else process.env[k]=v}}
+})
+
+test('custom production OAuth origin is allowed; alias-origin requests cannot create a cross-host state cookie',async()=>{
+ const old=Object.fromEntries(Object.keys(settings).map(k=>[k,process.env[k]]))
+ const fetchOld=globalThis.fetch,origin='https://www.jpchauffeurkorea.com'
+ Object.assign(process.env,settings,{GOOGLE_OAUTH_REDIRECT_URI:origin+'/api/gmail/callback'})
+ let calls=0
+ globalThis.fetch=async()=>{calls++;return json(null)}
+ try{
+  assert.equal(gmailConfigured(),true)
+  const wrong=response()
+  await assert.rejects(gmailStart(staff,wrong,'https://chauffeur-service-bice.vercel.app'),/공식 관리자 주소/)
+  assert.equal(calls,0)
+  assert.equal(wrong.headers['Set-Cookie'],undefined)
+  const good=response(),result=await gmailStart(staff,good,origin)
+  assert.equal(new URL(result.url).searchParams.get('redirect_uri'),origin+'/api/gmail/callback')
+  assert.match(good.headers['Set-Cookie'],/HttpOnly; SameSite=Lax; Max-Age=600; Secure/)
+  process.env.GOOGLE_OAUTH_REDIRECT_URI='https://www.jpchauffeurkorea.com.evil.invalid/api/gmail/callback'
+  assert.equal(gmailConfigured(),false)
+ }finally{globalThis.fetch=fetchOld;for(const [k,v] of Object.entries(old)){if(v===undefined)delete process.env[k];else process.env[k]=v}}
 })

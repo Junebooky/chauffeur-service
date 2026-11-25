@@ -6,7 +6,7 @@ const AUTH='https://accounts.google.com/o/oauth2/v2/auth',TOKEN='https://oauth2.
 const GMAIL='https://gmail.googleapis.com/gmail/v1/users/me/'
 const SCOPES=['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.send']
 const COOKIE='chauffeur_gmail_state'
-const REDIRECTS=new Set(['http://localhost:5173/api/gmail/callback','https://chauffeur-service-bice.vercel.app/api/gmail/callback'])
+const REDIRECTS=new Set(['http://localhost:5173/api/gmail/callback','https://chauffeur-service-bice.vercel.app/api/gmail/callback','https://www.jpchauffeurkorea.com/api/gmail/callback'])
 const hash=s=>createHash('sha256').update(s).digest('hex')
 const enc=encodeURIComponent
 const config=()=>{
@@ -97,10 +97,14 @@ export async function gmailStatus(staff){
  const c=config()
  if(!c)return {configured:false,connected:false}
  const rows=await db(connectionQuery(staff,c)+'&select=email,connected_at&limit=1')
- return {configured:true,connected:rows?.[0]?.email===c.email,email:c.email,connectedAt:rows?.[0]?.connected_at||null}
+ return {configured:true,connected:rows?.[0]?.email===c.email,email:c.email,connectedAt:rows?.[0]?.connected_at||null,connectOrigin:new URL(c.redirect).origin}
 }
-export async function gmailStart(staff,res){
- owner(staff);const c=requireConfig(),state=randomBytes(32).toString('base64url'),verifier=randomBytes(48).toString('base64url')
+export async function gmailStart(staff,res,origin){
+ owner(staff);const c=requireConfig()
+ // OAuth state cookie is host-only. Reject a start from an alias/preview
+ // that cannot receive the callback cookie on the configured origin.
+ if(origin!==new URL(c.redirect).origin)throw new ApiError(409,'공식 관리자 주소에서 Gmail을 연결해 주세요: '+new URL(c.redirect).origin+'/admin/live')
+ const state=randomBytes(32).toString('base64url'),verifier=randomBytes(48).toString('base64url')
  await db('gmail_oauth_states?expires_at=lt.'+enc(new Date().toISOString()),{method:'DELETE',prefer:'return=minimal'})
  await db('gmail_oauth_states',{method:'POST',body:{state_hash:hash(state),owner_id:staff.id,redirect_uri:c.redirect,verifier,expires_at:new Date(Date.now()+600000).toISOString()},prefer:'return=minimal'})
  res.setHeader('Set-Cookie',cookie(c,state,600))
