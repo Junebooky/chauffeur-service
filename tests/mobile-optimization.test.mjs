@@ -58,6 +58,7 @@ test('mobile optimizations cover left-aligned vertical footer, overview gradient
   assert.match(mobileLayer, /\.slide-overview \.fleet-slide-bg\s*\{[\s\S]*?top:\s*calc\(56% - 10px\);[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
   assert.match(mobileLayer, /\.hero-book-link\s*\{\s*margin-top:\s*auto;\s*align-self:\s*flex-end;/)
   assert.match(mobileLayer, /#reservation\.booking-screen \.booking-success \.success-actions\s*\{[\s\S]*?flex-direction:\s*row;/)
+  assert.match(mobileLayer, /\.booking-outer-buttons:not\(\.is-details-actions\)\s+\.booking-back-btn\s*\{\s*order:\s*2;/)
 })
 
 test('dropdown and address popups respond to visualViewport scroll and clamp to viewport width', () => {

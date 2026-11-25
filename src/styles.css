@@ -11623,6 +11623,10 @@ h3 {
     line-height: 1.25;
   }
 
+  .booking-outer-buttons:not(.is-details-actions) .booking-back-btn {
+    order: 2;
+  }
+
   .site-footer {
     flex-direction: column;
     align-items: flex-start;
