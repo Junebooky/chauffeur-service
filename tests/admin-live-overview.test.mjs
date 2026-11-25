@@ -121,3 +121,15 @@ test('local Express routes to live overview if configured',async()=>{
     assert.deepEqual(data.reservations,[])
   }finally{await new Promise(resolve=>listener.close(resolve));close();globalThis.fetch=originalFetch;restore()}
 })
+
+test('admin overview is a compact work surface with normal document scrolling',()=>{
+  const ui=readFileSync(new URL('../src/AdminOverview.tsx',import.meta.url),'utf8')
+  const css=readFileSync(new URL('../src/admin.css',import.meta.url),'utf8')
+  const overviewCss=readFileSync(new URL('../src/admin-overview.css',import.meta.url),'utf8')
+  assert.doesNotMatch(ui,/예약이 한눈에 보여요|Supabase 실시간 예약 현황|admin-ko-main-cta/)
+  assert.match(ui,/className="admin-stats"/)
+  assert.match(ui,/현재 진행 단계/)
+  assert.equal((ui.match(/onClick=\{\(\)=>setManage\(true\)\}/g)||[]).length,1)
+  assert.match(css,/body:has\(\.admin-root\)\{overflow-x:hidden;overflow-y:auto\}/)
+  assert.match(overviewCss,/\.admin-overview \.admin-booking-list,\.admin-overview \.admin-detail-scroll\{max-height:none;overflow:visible\}/)
+})

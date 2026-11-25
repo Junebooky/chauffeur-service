@@ -14,3 +14,14 @@
 @media(max-width:1180px){.admin-sidebar{width:180px}.admin-content{padding:30px 20px}.admin-board{grid-template-columns:minmax(260px,.9fr) minmax(350px,1.1fr)}.admin-detail-scroll{padding:0 15px}.admin-panel-heading{padding:17px 15px}}
 @media(max-width:850px){.admin-root{display:block}.admin-sidebar{width:100%;height:auto;min-height:0;border-bottom:1px solid #333;padding:15px;display:flex;flex-direction:row;align-items:center;flex-wrap:wrap}.admin-sidebar>.admin-logo{margin:0 auto 0 0}.admin-sidebar-eyebrow,.admin-sidebar-bottom{display:none}.admin-sidebar>button{padding:9px;font-size:11px}.admin-topbar{height:48px;padding:0 16px}.admin-content{padding:26px 14px}.admin-stats{grid-template-columns:repeat(2,1fr)}.admin-board,.admin-partner-grid{grid-template-columns:1fr}.admin-detail-scroll,.admin-booking-list{max-height:none}.admin-login{min-height:100vh}}
 @media(max-width:480px){.admin-field-grid{grid-template-columns:1fr}.admin-filters{flex-wrap:wrap}.admin-select-wrap{width:100%}.admin-stats>div{min-height:96px;padding:16px}.admin-heading h1{font-size:35px}.admin-sidebar>.admin-logo{width:100%}}
+
+/* The public site intentionally locks body scrolling for its snap deck.
+   Operations uses normal document scrolling on both admin routes. */
+body:has(.admin-root){overflow-x:hidden;overflow-y:auto}
+.admin-root{min-height:100dvh}
+@media(min-width:851px){
+  .admin-root>.admin-sidebar{position:sticky;top:0;align-self:flex-start;height:100dvh;min-height:0;overflow-y:auto}
+}
+@media(max-width:850px){
+  .admin-root>.admin-sidebar{position:static;height:auto;min-height:0;overflow:visible}
+}

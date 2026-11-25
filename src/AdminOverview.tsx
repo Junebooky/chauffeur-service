@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowRight, CalendarDays, Check, ClipboardList, Database, RefreshCw, Search, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, ClipboardList, RefreshCw, Search, ShieldCheck, Truck } from 'lucide-react'
 import AdminBrand from './components/ui/AdminBrand'
-import DisplayHeading from './components/ui/DisplayHeading'
-import SectionEyebrow from './components/ui/SectionEyebrow'
 import { bookingStatusKo, serviceKo, vehicleKo, dateKo } from './admin-locale'
 import Admin from './Admin'
 import './admin.css'
@@ -77,12 +75,9 @@ export default function AdminOverview(){
     </aside>
     <main className="admin-main">
       <header className="admin-topbar"><span>CHAUFFEUR / 예약 현황</span><button onClick={()=>void refresh()} disabled={busy}><RefreshCw size={14}/> 새로고침</button></header>
-      <div className="admin-content">
+      <div className="admin-content admin-overview-content">
         {error&&<div className="admin-error admin-banner" role="alert">{error}<button onClick={()=>void refresh()}>다시 시도</button></div>}
-        <div className="admin-heading"><div><SectionEyebrow>예약 관리</SectionEyebrow><DisplayHeading as="h1">예약이 한눈에 보여요.</DisplayHeading><p>고객의 예약 요청과 진행 상황을 확인하고, 필요한 업무를 바로 처리해 보세요.</p></div>
-          <button type="button" className="admin-primary admin-ko-main-cta" onClick={()=>setManage(true)}>예약 처리하기 <ArrowRight size={15}/></button></div>
         <div className="admin-stats">{stats.map(([name,n])=><div key={name}><span>{name}</span><strong>{n}</strong></div>)}</div>
-        <div className="admin-live-banner"><Database size={16}/><div><strong>Supabase 실시간 예약 현황</strong><span>실제 예약 데이터를 바탕으로 표시돼요. 고객 연락처와 자세한 일정은 관리자 확인 후 볼 수 있어요.</span></div><span className="admin-live-dot"/></div>
         <div className="admin-board">
           <section className="admin-list">
             <div className="admin-panel-heading"><h2>들어온 예약</h2><span>최근 100건</span></div>
@@ -100,10 +95,7 @@ export default function AdminOverview(){
                   const done=i<=stageIndex(current)
                   return <div className={'admin-live-stage '+(done?'done':'')} key={step.name}><span className="admin-live-node">{done?<Check size={12}/>:i+1}</span><div><strong>{step.name}</strong><small>{step.hint}</small></div></div>
                 })}</div></section>
-                <section className="admin-section admin-ko-step"><h3>다음 단계로 진행할까요?</h3><p>고객 정보 확인부터 예약 승인까지 할 수 있어요. <strong>차량과 기사는 아직 정해지지 않아도 괜찮아요.</strong></p>
-                  <button type="button" className="admin-primary admin-ko-full" onClick={()=>setManage(true)}>이 예약 처리하기 <ArrowRight size={15}/></button>
-                  <p className="admin-ko-caption"><ShieldCheck size={12}/> 실제 예약을 변경할 때는 관리자 인증이 필요해요.</p>
-                </section>
+
               </div>
             </>}
           </section>

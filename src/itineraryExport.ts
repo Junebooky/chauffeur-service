@@ -13,7 +13,26 @@ const W = 1240, H = 1754, HEADER_H = 375, PAGE_W = 595, PAGE_H = 842
 const olive = '#899766'
 const HEADER_BG_SRC = '/media/hero/bg_003.png'
 const BRAND_MARK_SRC = '/media/brand/logo_brand.webp'
-const DISPLAY_FONT_STACK = 'Pretendard, "Chauffeur Manrope", "Noto Sans KR", Arial, sans-serif'
+const DISPLAY_FONT_STACK = '"Chauffeur Playfair", "Playfair Display", Georgia, "Noto Sans KR", serif'
+const PLAYFAIR_FONT_SRC = '/fonts/playfair-display.ttf'
+let displayFontPromise: Promise<unknown> | null = null
+
+// Load the committed font before rasterizing any PDF/PNG canvas. The font is
+// self-hosted so exports do not depend on the Google Fonts CDN.
+function ensureDisplayFont(): Promise<unknown> {
+  if (!displayFontPromise) {
+    displayFontPromise = (async () => {
+      const face = new FontFace('Chauffeur Playfair', 'url(' + PLAYFAIR_FONT_SRC + ')', { weight: '400 900', style: 'normal' })
+      document.fonts.add(await face.load())
+      await document.fonts.load('400 49px "Chauffeur Playfair"')
+    })().catch(() => {
+      // Retry on a subsequent export instead of permanently caching a failure.
+      displayFontPromise = null
+      throw new Error('Could not load the itinerary font. Please try again.')
+    })
+  }
+  return displayFontPromise
+}
 const BODY_FONT_STACK = 'Pretendard, "Chauffeur Manrope", Arial, "Noto Sans KR", sans-serif'
 
 type HeaderAssets = {
@@ -48,6 +67,7 @@ async function ensureHeaderAssets(): Promise<HeaderAssets> {
     const fontLoads: Promise<unknown>[] = []
     if (typeof document !== 'undefined' && 'fonts' in document && document.fonts) {
       fontLoads.push(
+        ensureDisplayFont(),
         document.fonts.load('100 36px Pretendard').catch(() => undefined),
         document.fonts.load('200 36px Pretendard').catch(() => undefined),
         document.fonts.load('300 14px Pretendard').catch(() => undefined),
@@ -59,7 +79,10 @@ async function ensureHeaderAssets(): Promise<HeaderAssets> {
       loadImage(HEADER_BG_SRC),
       loadImage(BRAND_MARK_SRC),
       ...fontLoads,
-    ]).then(([background, mark]) => ({ background, mark }))
+    ]).then(([background, mark]) => ({ background, mark })).catch(error => {
+      cachedAssetsPromise = null
+      throw error
+    })
   }
   return cachedAssetsPromise
 }
@@ -153,7 +176,7 @@ function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets) {
     109,
     36,
     '#f4f5f7',
-    200,
+    400,
     DISPLAY_FONT_STACK,
     '0.02em',
   )
@@ -165,7 +188,7 @@ function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets) {
     14,
     'rgba(229, 233, 240, 0.78)',
     300,
-    DISPLAY_FONT_STACK,
+    BODY_FONT_STACK,
     '0.06em',
   )
 
@@ -182,12 +205,12 @@ function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets) {
   )
   drawText(
     ctx,
-    'Journey itinerary',
+    'Chauffeur Itinerary',
     100,
     304,
     49,
     '#ffffff',
-    200,
+    400,
     DISPLAY_FONT_STACK,
     '-0.015em',
   )
@@ -214,12 +237,12 @@ function drawPage(
   drawText(ctx, 'Saved · Awaiting confirmation', W - 100, 422, 22, olive, 600)
   ctx.textAlign = 'left'
   const sections = [
-    ['DATES', data.journeys.length > 1
+    [data.journeys.length === 1 ? 'DATE' : 'DATES', data.journeys.length > 1
       ? prettyDate(data.journeys[0].date) + ' – ' +
         prettyDate(data.journeys[data.journeys.length - 1].date)
       : prettyDate(data.journeys[0]?.date || '')],
-    ['JOURNEYS', String(data.journeys.length) +
-      (data.journeys.length === 1 ? ' day' : ' days')],
+    ['DURATION', String(data.journeys.length) +
+      (data.journeys.length === 1 ? ' day' : ' service days')],
     ['TIME ZONE', 'KST · UTC+9'],
   ]
   ctx.strokeStyle = '#dfe4df'; ctx.strokeRect(100, 505, W - 200, 130)
@@ -232,7 +255,7 @@ function drawPage(
     ctx.font = '600 24px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, value, 305), x, 595, 24, '#242c27', 600)
   })
-  drawText(ctx, 'Daily itinerary', 100, 712, 31, '#222a26', 600)
+  drawText(ctx, 'Daily Itinerary', 100, 712, 31, '#222a26', 500, DISPLAY_FONT_STACK)
   let y = 748
   days.forEach((day, idx) => {
     const absoluteIndex = page * 3 + idx

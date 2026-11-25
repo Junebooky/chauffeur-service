@@ -7,3 +7,9 @@
 .admin-live-action{margin:22px 0;text-decoration:none;max-width:250px}.admin-live-footer{margin-top:22px;display:flex;align-items:center;gap:9px;color:#7f8893;font-size:10px;line-height:1.6}.admin-overview .admin-banner button{background:none;color:inherit;border:0;font-size:11px}
 @media(max-width:850px){.admin-overview .admin-sidebar{gap:8px}.admin-overview .admin-sidebar .admin-nav-item{padding:9px}.admin-live-banner{margin-bottom:24px}.admin-overview .admin-topbar{font-size:9px}}
 @keyframes admin-spin{to{transform:rotate(360deg)}}.admin-spin{animation:admin-spin 1s linear infinite}
+
+/* Show every progress stage in the document's single scroll flow. */
+.admin-overview .admin-overview-content{padding-top:24px}
+.admin-overview .admin-stats{margin-bottom:20px}
+.admin-overview .admin-booking-list,.admin-overview .admin-detail-scroll{max-height:none;overflow:visible}
+@media(max-width:850px){.admin-overview .admin-overview-content{padding-top:18px}}
