@@ -11321,10 +11321,14 @@ h3 {
 
   .fleet-card > .fleet-card-beam-halo {
     opacity: 0.42;
+    inset: -0.5px;
+    padding: 0.75px;
+    filter: blur(1px);
   }
 
   .fleet-card > .fleet-card-beam-ring {
     opacity: 0.94;
+    padding: 0.5px;
   }
 
   #collection.fleet-apple-section {
