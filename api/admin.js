@@ -1,5 +1,7 @@
 import { ApiError, db, fail, hasDatabase, noCache, onlyString, requireStaff, validUuid } from '../server/chauffeur-supabase.mjs'
 
+import { confirmAndSend, getConfirmationPreview, sendQueuedConfirmation, confirmationPreview } from '../server/confirmation-delivery.mjs'
+
 const writeRoles = new Set(['owner','admin','operator'])
 const financeRoles = new Set(['owner','admin','finance'])
 const ownerRoles = new Set(['owner','admin'])
@@ -31,31 +33,43 @@ export default async function handler(req,res) {
   try {
     const staff=await requireStaff(req)
     if (req.method==='GET') {
-      const finance=financeRoles.has(staff.role)
-      const [reservations,days,assignments,suppliers,drivers,payments,expenses] =
-        await Promise.all([
-          db('reservations?select=*&order=created_at.desc&limit=150'),
-          selectAll('reservation_days'),
-          selectAll('assignments'),
-          selectAll('vehicle_suppliers'),
-          selectAll('drivers'),
-          finance?selectAll('payment_records'):Promise.resolve([]),
-          finance?selectAll('expenses'):Promise.resolve([])
-        ])
-      return res.status(200).json({
-        role:staff.role,reservations,days,assignments,suppliers,drivers,payments,expenses
-      })
+      const reservations=await db('reservations?select=*&order=created_at.desc&limit=150')
+      const ids=reservations.map(r=>r.id).filter(validUuid)
+      const selection='in.('+ids.join(',')+')'
+      const [days,deliveries]=ids.length?await Promise.all([
+        db('reservation_days?select=*&reservation_id='+selection+'&order=position.asc&limit=10000'),
+        db('confirmation_deliveries?select=reservation_id,status,attempts,sent_at,claimed_at&reservation_id='+selection)
+      ]):[[],[]]
+      return res.status(200).json({role:staff.role,reservations,days,deliveries})
     }
     const b=getBody(req)
     if(!b || typeof b!=='object' || Array.isArray(b) || JSON.stringify(b).length>15000)
       throw new ApiError(400,'Invalid request body.')
     const action=b.action
     let data
-    if(action==='status' || action==='advance') {
+    if(action==='confirmation_preview') {
+      roleCheck(staff.role,writeRoles)
+      data=await getConfirmationPreview(requireId(b.reservation_id),b.payment_method)
+    } else if(action==='confirm_and_send') {
+      roleCheck(staff.role,writeRoles)
+      data=await confirmAndSend({id:requireId(b.reservation_id),expectedStatus:b.expected_status,
+        updatedAt:b.expected_updated_at,paymentMethod:b.payment_method,staffId:staff.id})
+    } else if(action==='retry_confirmation') {
+      roleCheck(staff.role,writeRoles)
+      data={delivery:await sendQueuedConfirmation(requireId(b.reservation_id),staff.id)}
+    } else if(action==='confirmation_document') {
+      roleCheck(staff.role,writeRoles)
+      const id=requireId(b.reservation_id)
+      const rows=await db('confirmation_deliveries?select=snapshot,pdf_base64&reservation_id=eq.'+id+'&limit=1')
+      if(!rows?.length)throw new ApiError(404,'아직 발행된 확인서가 없어요.')
+      data=confirmationPreview(rows[0].snapshot)
+      if(rows[0].pdf_base64)data.pdfBase64=rows[0].pdf_base64
+    } else if(action==='status' || action==='advance') {
       roleCheck(staff.role,writeRoles)
       const id=requireId(b.reservation_id)
       if(!allowedStatuses.has(b.status)||!allowedStatuses.has(b.expected_status))
         throw new ApiError(400,'예약 상태를 다시 확인해 주세요.')
+      if(b.status==='confirmed')throw new ApiError(409,'확정 메일 미리보기에서 예약을 확정해 주세요.')
       data=await db('rpc/advance_reservation_v1',{
         method:'POST',
         body:{

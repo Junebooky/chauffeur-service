@@ -55,7 +55,10 @@ function dayRow(day, index) {
     </td><td align="right" style="padding:19px 0 19px 12px;border-bottom:1px solid #e7eae6;white-space:nowrap;vertical-align:top;font-size:12px;color:#424b45">${escapeHtml(readableMoney(day.total))}</td></tr>`
 }
 
-export function buildOperatorEmail({ reference, status = 'pending', total, details }) {
+export function buildOperatorEmail({ reference, status = 'pending', total, details, audience = 'operator' }) {
+  const customer = audience === 'customer'
+  const payment = details.paymentMethod === 'on_site' ? 'Payment on the day of your service.' : 'Payment as agreed with our team.'
+  const taxLabel = details.taxIncluded === true ? 'Tax included' : 'Tax excluded'
   const days = Array.isArray(details.journeys) ? details.journeys : []
   const options = Array.isArray(details.options) && details.options.length
     ? details.options.map((id) =>
@@ -66,7 +69,7 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
   const phone = String(details.phone || '')
   const method = String(details.contactMethod || 'email')
   const messenger = String(details.messengerContact || '')
-  const subject = `[CHAUFFEUR] New Booking Request · ${reference}`
+  const subject = `[CHAUFFEUR] ${customer ? 'Booking Confirmed' : 'New Booking Request'} · ${reference}`
   const plainDays = days.map((day, i) =>
     `Day ${String(i + 1).padStart(2, '0')} · ${prettyDate(day.date)} · ${day.time} KST\n` +
     `${day.service} · ${day.vehicle}\n${day.pickup} → ${day.destination}\n` +
@@ -74,19 +77,20 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
     `${readableMoney(day.total)}`
   ).join('\n\n')
   const text = [
-    'J Production · Team of Premium Chauffeur Service — New reservation request',
+    customer ? 'J Production · Team of Premium Chauffeur Service — Reservation confirmed' : 'J Production · Team of Premium Chauffeur Service — New reservation request',
     'Reference: ' + reference,
-    'Status: ' + status + ' (awaiting confirmation)',
+    customer ? 'Status: Confirmed' : 'Status: ' + status + ' (awaiting confirmation)',
+    customer ? 'Dear ' + name + ', thank you for choosing CHAUFFEUR. Your journey is confirmed.' : undefined,
     '', 'GUEST',
     'Name: ' + name,
     'Email: ' + email,
-    'Phone: ' + phone,
-    'Preferred contact: ' + method,
-    messenger ? 'Messenger: ' + messenger : '',
+    customer ? undefined : 'Phone: ' + phone,
+    customer ? undefined : 'Preferred contact: ' + method,
+    !customer && messenger ? 'Messenger: ' + messenger : '',
     '', 'ITINERARY', plainDays,
     '', 'Add-ons: ' + options,
-    'Estimated total, tax excluded: ' + readableMoney(total),
-    '', 'This is a pending request. No booking has been confirmed or payment taken.',
+    (customer ? 'Confirmed service total, ' + taxLabel.toLowerCase() : 'Estimated total, tax excluded') + ': ' + readableMoney(total),
+    '', customer ? payment + ' Your reservation confirmation is attached. We will share the vehicle and chauffeur details before your journey. Please reply to this email with any questions.' : 'This is a pending request. No booking has been confirmed or payment taken.',
   ].filter((line) => line !== undefined).join('\n')
   const attachments = EMAIL_HEADER_BUFFER
     ? [{
@@ -106,17 +110,16 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
 <tr><td style="background:#171b1d;color:#ffffff;padding:0">
   ${headerBanner}
   <div style="padding:10px 36px 30px">
-    <div style="font-size:10px;letter-spacing:2px;color:#b8c6a6">NEW RESERVATION REQUEST</div>
-    <div style="margin-top:8px;font-size:27px;font-weight:200;letter-spacing:-0.01em">A new journey awaits.</div>
-    <div style="margin-top:16px;font-size:12px;color:#d5dcd5">Reference <strong style="color:#ffffff;font-weight:400;letter-spacing:0.04em">${escapeHtml(reference)}</strong> &nbsp;·&nbsp; Pending confirmation</div>
+    <div style="font-size:10px;letter-spacing:2px;color:#b8c6a6">${customer ? 'RESERVATION CONFIRMED' : 'NEW RESERVATION REQUEST'}</div>
+    <div style="margin-top:8px;font-size:27px;font-weight:200;letter-spacing:-0.01em">${customer ? 'Your journey is confirmed.' : 'A new journey awaits.'}</div>
+    <div style="margin-top:16px;font-size:12px;color:#d5dcd5">Reference <strong style="color:#ffffff;font-weight:400;letter-spacing:0.04em">${escapeHtml(reference)}</strong> &nbsp;·&nbsp; ${customer ? 'Confirmed' : 'Pending confirmation'}</div>
   </div>
 </td></tr>
 <tr><td style="padding:28px 36px 31px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
     <tr><td style="font-size:12px;letter-spacing:1px;font-weight:700;color:#899766;padding-bottom:14px">GUEST DETAILS</td></tr>
     <tr><td style="font-size:18px;font-weight:600;padding-bottom:5px">${escapeHtml(name)}</td></tr>
-    <tr><td style="font-size:12px;color:#555e59;line-height:1.9">Email: ${escapeHtml(email)}<br>Phone: ${escapeHtml(phone)}<br>Preferred contact: ${escapeHtml(method)}
-      ${messenger ? '<br>Messenger: ' + escapeHtml(messenger) : ''}</td></tr>
+    <tr><td style="font-size:12px;color:#555e59;line-height:1.9">${customer ? 'Thank you for choosing CHAUFFEUR. We look forward to welcoming you.' : 'Email: ' + escapeHtml(email) + '<br>Phone: ' + escapeHtml(phone) + '<br>Preferred contact: ' + escapeHtml(method) + (messenger ? '<br>Messenger: ' + escapeHtml(messenger) : '')}</td></tr>
     <tr><td style="font-size:12px;letter-spacing:1px;font-weight:700;color:#899766;padding:28px 0 7px">DAILY ITINERARY · ${days.length} ${days.length === 1 ? 'DAY' : 'DAYS'}</td></tr>
   </table>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
@@ -124,17 +127,15 @@ export function buildOperatorEmail({ reference, status = 'pending', total, detai
   </table>
   <div style="padding-top:18px;font-size:12px;color:#646e66">Add-ons: ${escapeHtml(options)}</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;border-top:1px solid #d7ded4">
-    <tr><td style="padding:19px 0;font-size:12px;color:#6f7572">Estimated total · Tax excluded</td>
+    <tr><td style="padding:19px 0;font-size:12px;color:#6f7572">${customer ? 'Confirmed service total · ' + taxLabel : 'Estimated total · Tax excluded'}</td>
       <td align="right" style="padding:19px 0;font-size:19px;font-weight:700;white-space:nowrap">${escapeHtml(readableMoney(total))}</td></tr>
   </table>
-  <p style="margin:9px 0 20px;font-size:11px;line-height:1.6;color:#717b73">This request is saved but not confirmed. Review the schedule, vehicle availability and guest details before responding.</p>
-  <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-    <td bgcolor="#1d2320" style="padding:13px 20px"><a href="${escapeHtml(safeMailto(email, reference))}" style="color:#ffffff;text-decoration:none;font-size:12px;font-weight:bold">Reply to guest →</a></td>
-  </tr></table>
+  <p style="margin:9px 0 20px;font-size:11px;line-height:1.6;color:#717b73">${customer ? escapeHtml(payment) + ' Your reservation confirmation is attached. We will share the vehicle and chauffeur details before your journey.' : 'This request is saved but not confirmed. Review the schedule, vehicle availability and guest details before responding.'}</p>
+  ${customer ? '<p style="font-size:12px;line-height:1.7;color:#555e59">If you have questions or need to make changes, simply reply to this email.<br><br>Warm regards,<br>The CHAUFFEUR Team</p>' : `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="#1d2320" style="padding:13px 20px"><a href="${escapeHtml(safeMailto(email, reference))}" style="color:#ffffff;text-decoration:none;font-size:12px;font-weight:bold">Reply to guest →</a></td></tr></table>`}
 </td></tr>
-<tr><td style="background:#f7f8f6;border-top:1px solid #e5e7e2;padding:16px 36px;font-size:10px;color:#8b938d">J Production · Team of Premium Chauffeur Service · ${escapeHtml(reference)}<br>Please treat guest contact information as confidential.</td></tr>
+<tr><td style="background:#f7f8f6;border-top:1px solid #e5e7e2;padding:16px 36px;font-size:10px;color:#8b938d">J Production · Team of Premium Chauffeur Service · ${escapeHtml(reference)}${customer ? '' : '<br>Please treat guest contact information as confidential.'}</td></tr>
 </table></body></html>`
-  return { subject, html, text, replyTo: email, attachments }
+  return { subject, html, text, replyTo: customer ? undefined : email, attachments }
 }
 
 export function createOperatorNotifier({
@@ -200,4 +201,14 @@ export function createOperatorNotifier({
     return true
   }
   return { enabled, deliver, to: recipient }
+}
+
+// Same branded layout; only the audience-specific wording differs.
+export function buildCustomerConfirmation(snapshot) {
+  const journeys=snapshot.journeys.map(d=>({ ...d,
+    service:catalog.services.find(s=>s.id===d.service)?.name||d.service,
+    vehicle:catalog.vehicles.find(v=>v.id===d.vehicle)?.name||d.vehicle,
+  }))
+  return buildOperatorEmail({reference:snapshot.reference,status:'confirmed',total:snapshot.total,
+    details:{...snapshot,journeys},audience:'customer'})
 }

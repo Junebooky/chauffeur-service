@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowRight, CalendarDays, Check, ClipboardList, CreditCard, Database, RefreshCw, Search, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, ClipboardList, Database, RefreshCw, Search, ShieldCheck, Truck } from 'lucide-react'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
 import { bookingStatusKo, serviceKo, vehicleKo, dateKo } from './admin-locale'
@@ -10,24 +10,23 @@ import './admin-korean.css'
 
 type Entry = {
   number:number;maskedReference:string;status:string;createdAt:string;
-  dayCount:number;assignmentCount:number;paymentRecorded:boolean;
+  dayCount:number;
   service:string|null;fleet:string|null
 }
 type Board = {
   scope:string;updatedAt:string;
-  metrics:{requests:number;new:number;sourcing:number;awaitingPayment:number;confirmed:number};
+  metrics:{requests:number;new:number;sourcing:number;confirmed:number};
   reservations:Entry[]
 }
 const steps=[
   {name:'요청 접수',hint:'고객이 예약을 보냈어요.'},
-  {name:'예약 승인',hint:'관리자가 진행 여부를 결정해요.'},
-  {name:'배차 준비',hint:'실제 차량과 기사는 나중에 준비해요.'},
+  {name:'예약 확정',hint:'관리자가 확정해요. 차량과 기사는 나중에 준비해요.'},
   {name:'서비스 진행',hint:'예약된 일정대로 서비스를 제공해요.'}
 ]
 const stageIndex=(item:Entry)=>{
-  if(['completed','in_progress'].includes(item.status)) return 4
-  if(item.status==='confirmed') return item.assignmentCount>0?3:2
-  if(['reviewing','quoted','awaiting_deposit'].includes(item.status))return 1
+  if(['completed','in_progress'].includes(item.status)) return 2
+  if(item.status==='confirmed') return 1
+  if(['reviewing','quoted','awaiting_deposit'].includes(item.status))return 0
   if(item.status==='cancelled'||item.status==='declined')return 0
   return 0
 }
@@ -58,14 +57,13 @@ export default function AdminOverview(){
   },[refresh])
   const rows=board?.reservations||[]
   const filtered=useMemo(()=>rows.filter(row=>
-    (filter==='all'||row.status===filter)&&[row.maskedReference,serviceKo(row.service),vehicleKo(row.fleet)].some(s=>s.toLowerCase().includes(search.toLowerCase()))
+    (filter==='all'||row.status===filter||filter==='reviewing'&&['quoted','awaiting_deposit'].includes(row.status))&&[row.maskedReference,serviceKo(row.service),vehicleKo(row.fleet)].some(s=>s.toLowerCase().includes(search.toLowerCase()))
   ),[rows,filter,search])
   const current=rows.find(row=>row.number===selected)||null
   if(manage)return <Admin/>
   const stats=[
     ['새 예약',board?.metrics.new??0],
     ['확인 중',board?.metrics.sourcing??0],
-    ['입금 대기',board?.metrics.awaitingPayment??0],
     ['확정된 예약',board?.metrics.confirmed??0]
   ] as const
   return <div className="admin-root admin-overview admin-ko">
@@ -87,7 +85,7 @@ export default function AdminOverview(){
         <div className="admin-board">
           <section className="admin-list">
             <div className="admin-panel-heading"><h2>들어온 예약</h2><span>최근 100건</span></div>
-            <div className="admin-filters"><div className="admin-search"><Search size={15}/><input aria-label="예약 검색" placeholder="예약번호나 서비스로 검색" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="admin-select-wrap"><select aria-label="예약 상태" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">전체 상태</option>{Object.entries(bookingStatusKo).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div></div>
+            <div className="admin-filters"><div className="admin-search"><Search size={15}/><input aria-label="예약 검색" placeholder="예약번호나 서비스로 검색" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="admin-select-wrap"><select aria-label="예약 상태" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">전체 상태</option>{Object.entries(bookingStatusKo).filter(([k])=>!['quoted','awaiting_deposit'].includes(k)).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div></div>
             {!board&&!error?<div className="admin-empty">예약 정보를 가져오고 있어요…</div>
             :filtered.length===0?<div className="admin-empty"><CalendarDays size={24}/><strong>{rows.length?'조건에 맞는 예약이 없어요.':'아직 들어온 예약이 없어요.'}</strong><span>{rows.length?'검색어를 바꿔 보세요.':'고객이 예약을 보내면 이곳에 바로 나타나요.'}</span></div>
             :<div className="admin-booking-list">{filtered.map(r=><button key={r.number} className={'admin-booking '+(r.number===selected?'active':'')} onClick={()=>setSelected(r.number)}><div><strong>{r.maskedReference}</strong><span>{serviceKo(r.service)}</span><small>{r.dayCount}일 일정</small></div><div className="admin-booking-right"><span className={'admin-status '+r.status}>{bookingStatusKo[r.status]||r.status}</span><small>{dateKo(r.createdAt)}</small></div></button>)}</div>}
@@ -109,7 +107,7 @@ export default function AdminOverview(){
             </>}
           </section>
         </div>
-        <div className="admin-live-footer"><CreditCard size={15}/> 고객 정보는 공개되지 않아요. 승인과 결제 기록은 관리자 인증 후 안전하게 저장돼요.</div>
+        <div className="admin-live-footer"><ShieldCheck size={15}/> 고객 정보는 공개되지 않아요. 예약 확정은 관리자 인증 후 진행해요.</div>
       </div>
     </main>
   </div>

@@ -3,22 +3,15 @@ import { ApiError, db, fail, hasDatabase, noCache } from '../server/chauffeur-su
 // Public board: deliberately only operational metadata.
 // NEVER add customer names, emails, phone numbers, exact journey routes,
 // payment amounts, reservation IDs, or full confirmation references.
-const summarize = (reservations, days, assignments, payments) => {
+const summarize = (reservations, days) => {
   const dayMap = new Map()
   for (const day of days) {
     const list = dayMap.get(day.reservation_id) || []
     list.push(day)
     dayMap.set(day.reservation_id, list)
   }
-  const assignmentMap = new Map(assignments.map(a => [a.reservation_day_id, a.status]))
-  const paid = new Set(payments.filter(p =>
-    p.status === 'paid' && ['deposit', 'balance', 'full'].includes(p.kind)
-  ).map(p => p.reservation_id))
   const output = reservations.map((reservation, index) => {
     const tripDays = dayMap.get(reservation.id) || []
-    const assigned = tripDays.filter(day =>
-      ['assigned', 'confirmed', 'completed'].includes(assignmentMap.get(day.id))
-    ).length
     return {
       // UI-only ordinal; never expose actual UUIDs or full booking references.
       number: index + 1,
@@ -26,8 +19,6 @@ const summarize = (reservations, days, assignments, payments) => {
       status: reservation.status,
       createdAt: reservation.created_at,
       dayCount: tripDays.length,
-      assignmentCount: assigned,
-      paymentRecorded: paid.has(reservation.id),
       service: tripDays[0]?.service_code || null,
       fleet: tripDays[0]?.vehicle_class || null,
     }
@@ -39,8 +30,7 @@ const summarize = (reservations, days, assignments, payments) => {
     metrics: {
       requests: output.length,
       new: count('requested'),
-      sourcing: output.filter(entry => ['reviewing','quoted'].includes(entry.status)).length,
-      awaitingPayment: count('awaiting_deposit'),
+      sourcing: output.filter(entry => ['reviewing','quoted','awaiting_deposit'].includes(entry.status)).length,
       confirmed: output.filter(entry => ['confirmed', 'in_progress', 'completed'].includes(entry.status)).length,
     },
     reservations: output,
@@ -57,16 +47,11 @@ export default async function handler(req, res) {
     const reservations = await db('reservations?select=id,reference,status,created_at&order=created_at.desc&limit=100')
     if (!Array.isArray(reservations)) throw new ApiError(502, 'Could not retrieve booking records.')
     if (!reservations.length) {
-      return res.status(200).json(summarize([], [], [], []))
+      return res.status(200).json(summarize([], []))
     }
     const ids = reservations.map(r => r.id).filter(id => /^[0-9a-f-]{36}$/i.test(id))
     const selection = 'in.(' + ids.join(',') + ')'
     const days = await db('reservation_days?select=id,reservation_id,service_code,vehicle_class&reservation_id=' + selection + '&limit=1000')
-    const dayIds = days.map(d => d.id).filter(id => /^[0-9a-f-]{36}$/i.test(id))
-    const [assignments, payments] = await Promise.all([
-      dayIds.length ? db('assignments?select=reservation_day_id,status&reservation_day_id=in.(' + dayIds.join(',') + ')&limit=1000') : [],
-      db('payment_records?select=reservation_id,kind,status&reservation_id=' + selection + '&limit=1000'),
-    ])
-    return res.status(200).json(summarize(reservations, days, assignments, payments))
+    return res.status(200).json(summarize(reservations, days))
   } catch (error) { return fail(res, error) }
 }

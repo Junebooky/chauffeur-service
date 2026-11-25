@@ -1,5 +1,5 @@
 export const bookingStatusKo: Record<string,string> = {
-  requested:'새 예약', reviewing:'확인 중', quoted:'견적 안내', awaiting_deposit:'입금 대기',
+  requested:'새 예약', reviewing:'확인 중', quoted:'확인 중', awaiting_deposit:'확인 중',
   confirmed:'예약 확정', in_progress:'서비스 진행 중', completed:'서비스 완료',
   cancelled:'예약 취소', declined:'예약 거절',
 }
@@ -21,21 +21,19 @@ export const dayKo = (value:string) => value.replace(/-/g,'. ')
 export const nextActions: Record<string,Array<{to:string;label:string;hint:string;style:'primary'|'secondary'|'danger'}>> = {
   requested:[
     {to:'reviewing',label:'요청 확인했어요',hint:'예약을 검토 중으로 바꿔요.',style:'secondary'},
-    {to:'confirmed',label:'바로 예약 확정',hint:'차량·기사 배정 없이 확정할 수 있어요.',style:'primary'},
+    {to:'confirmed',label:'예약 확정하기',hint:'차량·기사 배정 없이 확정할 수 있어요.',style:'primary'},
     {to:'declined',label:'예약 거절',hint:'진행할 수 없는 요청일 때 선택해요.',style:'danger'}
   ],
   reviewing:[
-    {to:'awaiting_deposit',label:'입금 안내 단계로',hint:'예약금이나 잔금을 안내할 때 선택해요.',style:'secondary'},
     {to:'confirmed',label:'예약 확정하기',hint:'실제 차량과 기사는 나중에 배정해도 돼요.',style:'primary'},
     {to:'declined',label:'예약 거절',hint:'진행할 수 없는 요청일 때 선택해요.',style:'danger'}
   ],
   quoted:[
-    {to:'awaiting_deposit',label:'입금 안내 단계로',hint:'입금 확인을 기다리는 상태로 바꿔요.',style:'secondary'},
     {to:'confirmed',label:'예약 확정하기',hint:'차량·기사 배정은 필수가 아니에요.',style:'primary'},
     {to:'declined',label:'예약 거절',hint:'진행할 수 없는 요청일 때 선택해요.',style:'danger'}
   ],
   awaiting_deposit:[
-    {to:'confirmed',label:'예약 확정하기',hint:'입금 내역을 확인한 후 눌러 주세요.',style:'primary'},
+    {to:'confirmed',label:'예약 확정하기',hint:'고객에게 확정 이메일을 보내요.',style:'primary'},
     {to:'declined',label:'예약 거절',hint:'진행할 수 없는 요청일 때 선택해요.',style:'danger'}
   ],
   confirmed:[

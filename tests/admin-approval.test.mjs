@@ -30,47 +30,53 @@ test('public cannot perform booking approval without a staff session',async()=>w
     assert.equal(called,0)
   }finally{globalThis.fetch=original}
 }))
-test('owner can confirm a booking without supplier and driver assignment',async()=>withEnv(async()=>{
+test('owner can confirm a booking without supplier and driver assignment, even if mail is unavailable',async()=>withEnv(async()=>{
   const original=globalThis.fetch
+  const savedUser=process.env.SMTP_USER
+  delete process.env.SMTP_USER
   const calls=[]
   globalThis.fetch=async(url,options)=>{
     calls.push({url:String(url),body:options?.body?JSON.parse(options.body):null})
     if(String(url).includes('/auth/v1/user'))return json({id:staffId})
     if(String(url).includes('staff_members?'))return json([{active:true,role:'owner'}])
-    if(String(url).includes('rpc/advance_reservation_v1'))
-      return json({ok:true,status:'confirmed',previous_status:'requested'})
+    if(String(url).includes('rpc/confirm_and_queue_v1'))return json({ok:true,status:'confirmed'})
+    if(String(url).includes('rpc/claim_confirmation_v1'))return json({ok:true,snapshot:{}})
+    if(String(url).includes('confirmation_deliveries?'))return json(null)
     throw Error('Unexpected request')
   }
   try{
     const res=response()
     await handler({
       method:'POST',headers:{authorization:'Bearer STUB_SESSION'},
-      body:{action:'advance',reservation_id:bookingId,expected_status:'requested',status:'confirmed'},
+      body:{action:'confirm_and_send',reservation_id:bookingId,expected_status:'requested',
+        expected_updated_at:'2026-11-25T00:00:00Z',payment_method:'on_site'},
     },res)
     assert.equal(res.statusCode,200)
     assert.equal(res.data.ok,true)
     assert.equal(res.data.data.status,'confirmed')
-    const rpc=calls.find(call=>call.url.includes('rpc/advance_reservation_v1'))
+    assert.equal(res.data.data.delivery,'failed')
+    const rpc=calls.find(call=>call.url.includes('rpc/confirm_and_queue_v1'))
     assert.ok(rpc)
     assert.equal(rpc.body.p_expected_status,'requested')
-    assert.equal(rpc.body.p_next_status,'confirmed')
+    assert.equal(rpc.body.p_payment_method,'on_site')
     assert.equal(rpc.body.p_actor_user_id,staffId)
     assert.equal(rpc.body.p_reservation_id,bookingId)
     assert.ok(!calls.some(call=>call.url.includes('assignments')))
-  }finally{globalThis.fetch=original}
+    assert.ok(calls.some(call=>call.body?.status==='failed'))
+  }finally{globalThis.fetch=original;if(savedUser===undefined)delete process.env.SMTP_USER;else process.env.SMTP_USER=savedUser}
 }))
 test('stale booking approval is rejected instead of overwriting latest state',async()=>withEnv(async()=>{
   const original=globalThis.fetch
   globalThis.fetch=async(url)=>{
     if(String(url).includes('/auth/v1/user'))return json({id:staffId})
     if(String(url).includes('staff_members?'))return json([{active:true,role:'operator'}])
-    if(String(url).includes('rpc/advance_reservation_v1'))return json({ok:false,reason:'stale',status:'completed'})
+    if(String(url).includes('rpc/confirm_and_queue_v1'))return json({ok:false,reason:'stale',status:'completed'})
     throw Error('Unexpected request')
   }
   try{
     const res=response()
     await handler({method:'POST',headers:{authorization:'Bearer TOKEN'},body:{
-      action:'advance',reservation_id:bookingId,expected_status:'requested',status:'confirmed'
+      action:'confirm_and_send',reservation_id:bookingId,expected_status:'requested',expected_updated_at:'2026-11-25T00:00:00Z',payment_method:'on_site'
     }},res)
     assert.equal(res.statusCode,409)
     assert.match(res.data.error,/새로고침/)
@@ -83,7 +89,10 @@ test('Korean dashboard exposes explicit booking approval but no unverified mutat
   assert.match(source,/요청 확인했어요|nextActions/)
   assert.match(source,/expected_status:current.status/)
   assert.match(source,/관리자 이메일/)
-  assert.match(source,/예약금/)
+  assert.match(source,/예약 확정하고 이메일 보내기/)
+  assert.doesNotMatch(source,/입금 대기|결제 확인|예약금/)
+  assert.doesNotMatch(overview,/입금 대기/)
+  assert.match(source,/sandbox=""/)
   assert.match(overview,/예약 처리하기/)
   assert.match(overview,/import Admin from '.\/Admin'/)
   assert.doesNotMatch(overview,/\/api\/admin',\s*\{\s*method:'POST'/)

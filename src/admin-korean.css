@@ -66,3 +66,17 @@
 .admin-ko .admin-live-footer{margin-top:24px}
 @media(max-width:1100px){.admin-ko .admin-heading h1{font-size:32px}.admin-ko .admin-board{grid-template-columns:minmax(260px,.88fr) minmax(340px,1.12fr)}}
 @media(max-width:850px){.admin-ko .admin-board{grid-template-columns:1fr}.admin-ko .admin-content{padding:24px 16px}.admin-ko .admin-heading{flex-wrap:wrap}.admin-ko .admin-heading h1{font-size:31px}.admin-ko .admin-ko-main-cta{min-width:100%}.admin-ko .admin-sidebar .admin-logo{margin-right:auto}}
+
+/* Three essential booking counters and a single confirmation review. */
+.admin-ko .admin-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.admin-confirmation-modal{box-sizing:border-box;width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 36px);overflow:auto;margin:auto;padding:26px;border:1px solid #454c56;border-radius:18px;background:#171b21;color:#edf0f4;box-shadow:0 20px 90px #0009}
+.admin-confirmation-modal::backdrop{background:#050608c9;backdrop-filter:blur(5px)}
+.admin-confirmation-modal[open]{display:flex;flex-direction:column;gap:16px}
+.admin-confirmation-modal header{display:flex;align-items:start;justify-content:space-between;gap:14px}
+.admin-confirmation-modal header h2{font-size:25px;letter-spacing:-.045em;line-height:1.35;margin:0;font-weight:550}
+.admin-confirmation-modal header button{display:grid;place-items:center;background:#292e35;border:1px solid #424953;color:#dce2e9;width:34px;height:34px;border-radius:9px}
+.admin-confirmation-modal .admin-confirmation-meta{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px 12px;padding:16px;background:#20252c;border-radius:11px}
+.admin-confirmation-meta small{font-size:11px;color:#a3acb7}.admin-confirmation-meta strong{font-size:12px;font-weight:500;overflow-wrap:anywhere}
+.admin-confirmation-email{width:100%;height:min(440px,42dvh);min-height:240px;border:0;border-radius:10px;background:#eff1ed}
+.admin-confirmation-modal .admin-secondary,.admin-confirmation-modal .admin-primary{width:100%;flex:none;justify-content:center}
+@media(max-width:480px){.admin-ko .admin-stats{gap:7px}.admin-ko .admin-stats>div{padding:13px 10px;min-height:84px}.admin-ko .admin-stats span{font-size:10px}.admin-confirmation-modal{padding:18px}.admin-confirmation-modal .admin-confirmation-meta{grid-template-columns:72px minmax(0,1fr)}}

@@ -29,7 +29,7 @@ import GlassSelect from './GlassSelect'
 import GlassTimeInput from './GlassTimeInput'
 import VehicleCarousel from './VehicleCarousel'
 import { exportItineraryPdf, exportItineraryPng } from './itineraryExport'
-import { composeEmail } from './contact'
+import { composeEmail, customQuoteEmail } from './contact'
 import { LiquidGlass } from 'simple-liquid-glass'
 import { resetGlassPointer, trackGlassPointer } from './liquidGlass'
 import DisplayHeading from './components/ui/DisplayHeading'
@@ -1052,8 +1052,7 @@ export default function Booking({
                       <Image size={16} aria-hidden="true" /> PNG
                     </button>
                     <a className="booking-confirmation-email"
-                      href={composeEmail('CHAUFFEUR · ' + result.reference,
-                        'Hello CHAUFFEUR,\n\nI have a question about my reservation request ' + result.reference + '.\n\n')}>
+                      href={customQuoteEmail()}>
                       <Mail size={16} aria-hidden="true" /> Email Us
                     </a>
                   </div>
