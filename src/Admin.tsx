@@ -283,7 +283,7 @@ export default function Admin(){
                       {canEdit&&<div className="admin-ko-actions"><button type="button" className="admin-action-secondary" disabled={previewPending||pending} onClick={()=>void openPreview(true)}><FileText size={14}/> 확인서 및 이메일 보기</button>
                         {['pending','failed'].includes(delivery.status)&&current.status!=='cancelled'&&<button type="button" className="admin-action-primary" disabled={pending} onClick={()=>void retry()}>확정 이메일 다시 보내기</button>}</div>}
                     </>:<><p className="admin-ko-caption">아직 확정 이메일 발송 기록이 없어요.</p>{canEdit&&current.status==='confirmed'&&<button type="button" className="admin-secondary" disabled={previewPending||pending} onClick={()=>void openPreview()}>확정 이메일 준비하기</button>}</>}
-                  </section> 
+                  </section>}
                 </div>
               </>}
             </section>
