@@ -99,3 +99,50 @@ test('Korean dashboard exposes explicit booking approval but no unverified mutat
   assert.match(labels,/차량·기사 배정 없이 확정/)
   assert.match(labels,/requested:'새 예약'/)
 })
+
+test('authenticated operator can edit a day only through the version-checked RPC',async()=>withEnv(async()=>{
+  const original=globalThis.fetch
+  const calls=[]
+  globalThis.fetch=async(url,options)=>{
+    calls.push({url:String(url),body:options?.body?JSON.parse(options.body):null})
+    if(String(url).includes('/auth/v1/user'))return json({id:staffId})
+    if(String(url).includes('staff_members?'))return json([{active:true,role:'operator'}])
+    if(String(url).includes('rpc/edit_booking_v1'))return json({ok:true})
+    throw Error('Unexpected request')
+  }
+  try{
+    const res=response()
+    await handler({method:'POST',headers:{authorization:'Bearer TEST'},body:{
+      action:'edit_booking',reservation_id:bookingId,expected_updated_at:'2026-11-25T00:00:00Z',
+      patch:{kind:'day',day_id:bookingId,date:'2026-12-01',time:'09:00',amount:300000,tax_included:false}
+    }},res)
+    assert.equal(res.statusCode,200)
+    const rpc=calls.find(c=>c.url.includes('rpc/edit_booking_v1'))
+    assert.equal(rpc.body.p_actor_user_id,staffId)
+    assert.equal(rpc.body.p_patch.amount,300000)
+    assert.equal(rpc.body.p_expected_updated_at,'2026-11-25T00:00:00Z')
+    const invalid=response()
+    await handler({method:'POST',headers:{authorization:'Bearer TEST'},body:{
+      action:'edit_booking',reservation_id:bookingId,expected_updated_at:'2026-11-25T00:00:00Z',
+      patch:{kind:'day',day_id:bookingId,date:'2026-12-01',time:'99:00',amount:300000,tax_included:false}
+    }},invalid)
+    assert.equal(invalid.statusCode,400)
+    assert.equal(calls.filter(c=>c.url.includes('rpc/edit_booking_v1')).length,1)
+  }finally{globalThis.fetch=original}
+}))
+test('minimal operations workspace uses real reservation data and keeps dispatch sharing free of contact and price fields',()=>{
+  const source=readFileSync(new URL('../src/Admin.tsx',import.meta.url),'utf8')
+  const schedule=readFileSync(new URL('../src/AdminSchedule.tsx',import.meta.url),'utf8')
+  const tools=readFileSync(new URL('../src/AdminBookingTools.tsx',import.meta.url),'utf8')
+  const migration=readFileSync(new URL('../docs/sql/booking-edit-v1.sql',import.meta.url),'utf8')
+  assert.match(source,/AdminSchedule mode=\{tab\} reservations=\{reservations\}/)
+  assert.match(source,/expected_updated_at:current.updated_at/)
+  assert.match(source,/navigator.clipboard.writeText\(dispatchSummary\(current.reference,days\)\)/)
+  assert.match(schedule,/timeZone:'Asia\/Seoul'/)
+  assert.match(schedule,/openBooking\(r.id\)/)
+  assert.match(tools,/관리자만 볼 수 있어요/)
+  assert.doesNotMatch(tools.slice(tools.indexOf('export function dispatchSummary')),/customer_email|customer_phone|quoted_amount|internal_note/)
+  assert.match(migration,/for update/)
+  assert.match(migration,/confirmation_deliveries/)
+  assert.match(migration,/revoke all on function chauffeur.edit_booking_v1/)
+})

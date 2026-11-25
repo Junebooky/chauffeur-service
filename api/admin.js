@@ -47,7 +47,25 @@ export default async function handler(req,res) {
       throw new ApiError(400,'Invalid request body.')
     const action=b.action
     let data
-    if(action==='confirmation_preview') {
+    if(action==='edit_booking') {
+      roleCheck(staff.role,writeRoles)
+      const patch=b.patch
+      if(typeof b.expected_updated_at!=='string'||!Number.isFinite(Date.parse(b.expected_updated_at))||
+        !patch||typeof patch!=='object'||Array.isArray(patch)||!['contact','day','note'].includes(patch.kind))
+        throw new ApiError(400,'수정할 정보를 확인해 주세요.')
+      if(patch.kind==='day'&&(!validUuid(patch.day_id)||!/^\d{4}-\d{2}-\d{2}$/.test(patch.date||'')||
+        !/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.time||'')||typeof patch.amount!=='number'||
+        !Number.isSafeInteger(patch.amount)||patch.amount<0||typeof patch.tax_included!=='boolean'))
+        throw new ApiError(400,'날짜, 시간, 요금과 세금 조건을 확인해 주세요.')
+      data=await db('rpc/edit_booking_v1',{method:'POST',body:{
+        p_reservation_id:requireId(b.reservation_id),p_expected_updated_at:b.expected_updated_at,p_actor_user_id:staff.id,p_patch:patch
+      }})
+      if(!data?.ok)throw new ApiError(data?.reason==='forbidden'?403:data?.reason==='not_found'?404:409,
+        ({stale:'다른 변경 사항이 있어요. 새로고침 후 다시 수정해 주세요.',locked:'확정된 예약은 확인서 변경 절차가 필요해요.',overlap:'다른 날짜의 일정과 겹치거나 순서가 맞지 않아요.',invalid:'입력한 정보를 다시 확인해 주세요.'})[data?.reason]||'예약을 수정할 수 없어요.')
+    } else if(action==='booking_history') {
+      const id=requireId(b.reservation_id)
+      data=await db('audit_events?select=event_type,created_at&reservation_id=eq.'+id+'&order=created_at.desc&limit=30')
+    } else if(action==='confirmation_preview') {
       roleCheck(staff.role,writeRoles)
       data=await getConfirmationPreview(requireId(b.reservation_id),b.payment_method)
     } else if(action==='confirm_and_send') {

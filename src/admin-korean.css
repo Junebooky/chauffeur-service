@@ -81,3 +81,37 @@
 .admin-confirmation-email{width:100%;height:min(440px,42dvh);min-height:240px;border:0;border-radius:10px;background:#eff1ed}
 .admin-confirmation-modal .admin-secondary,.admin-confirmation-modal .admin-primary{width:100%;flex:none;justify-content:center}
 @media(max-width:480px){.admin-ko .admin-stats{gap:7px}.admin-ko .admin-stats>div{padding:13px 10px;min-height:84px}.admin-ko .admin-stats span{font-size:10px}.admin-confirmation-modal{padding:18px}.admin-confirmation-modal .admin-confirmation-meta{grid-template-columns:72px minmax(0,1fr)}}
+
+/* Compact authenticated operations workspace */
+.admin-ops-panel{border:1px solid #303640;background:#171b21;border-radius:14px;padding:22px;margin:0 0 18px}
+.admin-ops-panel h2{font-size:16px;font-weight:600;margin:0 0 18px;display:flex;gap:8px;align-items:center}
+.admin-task-row,.admin-schedule-row{display:flex;align-items:center;text-align:left;width:100%;gap:12px;padding:15px 0;color:#dce2eb;border:0;border-top:1px solid #303640;background:transparent}
+.admin-task-row>span,.admin-schedule-info{flex:1;min-width:0}
+.admin-task-row strong{font-size:12px;font-weight:500}
+.admin-schedule-time{font-size:12px;color:#abb5c0;white-space:nowrap}
+.admin-schedule-info{display:grid;gap:5px}
+.admin-schedule-info strong{font-size:13px;font-weight:550}
+.admin-schedule-info small{font-size:11px;color:#a2acb7;overflow-wrap:anywhere}
+.admin-schedule-tone{font-size:12px;color:#b6b1a5}.admin-schedule-tone.airport{color:#d5dde6}
+.admin-calendar-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.admin-calendar-header>div{display:flex;gap:8px}
+.admin-calendar-header button{border:1px solid #3b424c;border-radius:8px;background:#20252c;color:#d9dee5;padding:7px 10px;display:grid;place-items:center}
+.admin-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin:12px 0 24px}
+.admin-calendar-weekday{text-align:center;font-size:11px;color:#8d97a4;padding:8px 0}
+.admin-calendar-grid>button{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:10px;border:1px solid #303640;border-radius:8px;background:#1b2026;color:#d6dce5;min-height:83px;text-align:left}
+.admin-calendar-grid>button.is-selected{border-color:#bbc5d0;background:#303843}
+.admin-calendar-grid>button small{font-size:10px;color:#a4adba}
+.admin-calendar-lines{display:flex;gap:4px;width:100%;margin-top:auto}
+.admin-calendar-lines i{display:block;height:3px;flex:1;border-radius:5px;background:#b6b1a5}
+.admin-calendar-lines i.airport{background:#d5dde6}
+.admin-calendar-lines i.hourly{background:#8d9aab}
+.admin-edit-details{border-top:1px solid #303640;margin-top:12px;padding-top:12px}
+.admin-edit-details summary{font-size:12px;color:#c5ced8;cursor:pointer}
+.admin-edit-form{display:grid;gap:12px;margin-top:14px}
+.admin-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.admin-edit-form textarea{background:#14171b;color:#e1e5eb;border:1px solid #353b44;border-radius:8px;padding:10px;font:inherit;resize:vertical;width:100%}
+.admin-share-btn{margin:0 0 12px;display:flex;gap:8px;align-items:center}
+.admin-history{margin-top:20px}
+.admin-history-row{display:flex;gap:10px;justify-content:space-between;padding:10px 0;border-top:1px solid #343a42;color:#c1cad4;font-size:11px}
+.admin-history-row small{color:#9ba5b1}
+@media(max-width:600px){.admin-ops-panel{padding:13px}.admin-calendar-grid>button{min-height:58px;padding:5px}.admin-schedule-row{flex-wrap:wrap}.admin-edit-grid{grid-template-columns:1fr}}

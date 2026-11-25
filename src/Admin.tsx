@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
-import { ArrowLeft, ArrowRight, ChevronDown, ClipboardList, FileText, LogOut, Mail, RefreshCw, Search, ShieldCheck, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown, ClipboardList, Copy, FileText, LayoutDashboard, LogOut, Mail, RefreshCw, Search, ShieldCheck, X } from 'lucide-react'
+import AdminSchedule from './AdminSchedule'
+import { AdminNotes, EditContact, EditJourney, dispatchSummary } from './AdminBookingTools'
 import AdminBrand from './components/ui/AdminBrand'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
@@ -12,12 +14,12 @@ type Session = { access_token:string; refresh_token:string }
 type Reservation = {
   id:string; reference:string;customer_name:string;customer_email:string;customer_phone:string;
   status:string;customer_type:string;quoted_total:number|null;quote_required:boolean;created_at:string;tax_included:boolean|null;
-  contact_method:string;messenger_contact:string|null; company_name:string|null;
+  contact_method:string;messenger_contact:string|null; company_name:string|null;updated_at:string;internal_note:string|null;
 }
 type Journey = {
   id:string;reservation_id:string;position:number;service_date:string;pickup_time:string;
   service_code:string;vehicle_class:string;pickup_address:string;destination_address:string;
-  flight_number:string|null;stops?:Array<{location:string;place?:{name?:string}}>;
+  flight_number:string|null;quoted_amount:number|null;stops?:Array<{location:string;place?:{name?:string}}>;
 }
 type Delivery = {reservation_id:string;status:'pending'|'sending'|'sent'|'failed'|'uncertain';attempts:number;sent_at:string|null;claimed_at:string|null}
 type Snapshot = {role:string;reservations:Reservation[];days:Journey[];deliveries:Delivery[]}
@@ -128,6 +130,7 @@ export default function Admin(){
   const [selectedId,setSelectedId]=useState('')
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('all')
+  const [tab,setTab]=useState<'home'|'reservations'|'calendar'>('home')
   const [paymentMethod,setPaymentMethod]=useState<'on_site'|'separate'>('on_site')
   const [preview,setPreview]=useState<Preview|null>(null)
   const [previewId,setPreviewId]=useState('')
@@ -186,8 +189,8 @@ export default function Admin(){
   useEffect(()=>{void refresh()},[refresh])
   const mutate=async(body:Record<string,unknown>,success:string)=>{
     setPending(true);setError('');setMessage('')
-    try {await api('POST',body);setMessage(success);await refresh()}
-    catch(err){setError(err instanceof Error?err.message:'다시 시도해 주세요.')}
+    try {await api('POST',body);setMessage(success);await refresh();return true}
+    catch(err){setError(err instanceof Error?err.message:'다시 시도해 주세요.');return false}
     finally{setPending(false)}
   }
   const reservations=snapshot?.reservations||[]
@@ -198,6 +201,18 @@ export default function Admin(){
   const days=(snapshot?.days||[]).filter(d=>d.reservation_id===selectedId).sort((a,b)=>a.position-b.position)
   const delivery=(snapshot?.deliveries||[]).find(d=>d.reservation_id===selectedId)
   const canEdit=!!snapshot&&['owner','admin','operator'].includes(snapshot.role)
+  const canRevise=canEdit&&!!current&&['requested','reviewing','quoted','awaiting_deposit'].includes(current.status)&&!delivery
+  const selectBooking=(id:string)=>{setSelectedId(id);setFilter('all');setSearch('');setPreview(null);setPaymentMethod('on_site');setTab('reservations')}
+  const openFilter=(status:string)=>{setFilter(status);setSearch('');const match=reservations.find(r=>r.status===status||status==='reviewing'&&['quoted','awaiting_deposit'].includes(r.status));setSelectedId(match?.id||'');setTab('reservations')}
+  const saveEdit=async(patch:Record<string,unknown>)=>{
+    if(!current||pending)return false
+    return mutate({action:'edit_booking',reservation_id:current.id,expected_updated_at:current.updated_at,patch},'변경 사항을 저장했어요.')
+  }
+  const copyDispatch=async()=>{
+    if(!current)return
+    try{await navigator.clipboard.writeText(dispatchSummary(current.reference,days));setMessage('운행 정보를 복사했어요. 필요한 업체나 기사에게 전달해 주세요.')}
+    catch{setError('복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.')}
+  }
   const stats=[
     ['새 예약',reservations.filter(r=>r.status==='requested').length],
     ['확인 중',reservations.filter(r=>['reviewing','quoted','awaiting_deposit'].includes(r.status)).length],
@@ -246,15 +261,17 @@ export default function Admin(){
     <aside className="admin-sidebar">
       <AdminBrand />
       <p className="admin-sidebar-eyebrow">운영 관리</p>
-      <button className="selected" type="button"><ClipboardList size={17}/> 예약 관리</button>
+      <button className={tab==='home'?'selected':''} type="button" onClick={()=>setTab('home')}><LayoutDashboard size={17}/> 홈</button>
+      <button className={tab==='reservations'?'selected':''} type="button" onClick={()=>setTab('reservations')}><ClipboardList size={17}/> 예약 관리</button>
+      <button className={tab==='calendar'?'selected':''} type="button" onClick={()=>setTab('calendar')}><CalendarDays size={17}/> 일정</button>
       <div className="admin-sidebar-bottom"><span><ShieldCheck size={14}/> 관리자 권한 · {snapshot?.role||'확인 중'}</span><a href="/admin">예약 현황만 보기 <ArrowRight size={13}/></a><button onClick={signOut}><LogOut size={15}/> 로그아웃</button></div>
     </aside>
     <main className="admin-main">
-      <header className="admin-topbar"><span>CHAUFFEUR / 예약 관리</span><button disabled={loading} onClick={()=>void refresh()}><RefreshCw size={14}/> 새로고침</button></header>
+      <header className="admin-topbar"><span>CHAUFFEUR / {tab==='home'?'홈':tab==='calendar'?'일정':'예약 관리'}</span><button disabled={loading} onClick={()=>void refresh()}><RefreshCw size={14}/> 새로고침</button></header>
       <div className="admin-content">
         {error&&<div className="admin-error admin-banner" role="alert">{error}<button onClick={()=>setError('')}>닫기</button></div>}
         {message&&<div className="admin-success admin-banner" role="status">{message}<button onClick={()=>setMessage('')}>닫기</button></div>}
-        <>
+        {tab!=='reservations'?<AdminSchedule mode={tab} reservations={reservations} days={snapshot?.days||[]} deliveries={snapshot?.deliveries||[]} openBooking={selectBooking} openFilter={openFilter} loading={loading}/>:<>
           <div className="admin-heading"><div><SectionEyebrow>예약 운영</SectionEyebrow><DisplayHeading as="h1">예약 업무, 여기서 끝내요.</DisplayHeading><p>새 예약을 확인하고 고객에게 확정 안내를 보내 주세요.</p></div><span className="admin-count">실제 예약 {reservations.length}건</span></div>
           <div className="admin-stats">{stats.map(([label,count])=><div key={label}><span>{label}</span><strong>{count}</strong></div>)}</div>
           <div className="admin-board">
@@ -272,11 +289,12 @@ export default function Admin(){
                     {canEdit&&<div className="admin-ko-actions">{(nextActions[current.status]||[]).map(a=><button type="button" key={a.to} disabled={pending||previewPending} className={'admin-action-'+a.style} title={a.hint} onClick={()=>change(a.to)}>{pending||previewPending?'처리하고 있어요…':a.label}{a.style==='primary'&&<ArrowRight size={15}/>}</button>)}</div>}
                     {!canEdit&&<p className="admin-ko-caption">이 계정은 예약 변경 권한이 없어요.</p>}
                   </section>
-                  <section className="admin-section"><h3>고객 정보</h3><div className="admin-info-grid"><div><small>예약자</small><strong>{current.customer_name}</strong></div><div><small>전화번호</small><strong>{current.customer_phone}</strong></div><div className="wide"><small>이메일</small><strong>{current.customer_email}</strong></div>{current.company_name&&<div className="wide"><small>기업명</small><strong>{current.company_name}</strong></div>}</div></section>
-                  <section className="admin-section"><h3>이동 일정 <span>총 {days.length}일</span></h3>{days.map(d=><div className="admin-ko-day" key={d.id}><div className="admin-day-top"><span>DAY {String(d.position).padStart(2,'0')}</span><strong>{dayKo(d.service_date)} · {d.pickup_time.slice(0,5)}</strong></div><h4>{vehicleKo(d.vehicle_class)} · {serviceKo(d.service_code)}</h4><div className="admin-ko-route"><span>{d.pickup_address}</span><ArrowRight size={13}/><span>{d.destination_address}</span></div>{d.flight_number&&<small>항공편 {d.flight_number}</small>}
+                  <section className="admin-section"><h3>고객 정보</h3><div className="admin-info-grid"><div><small>예약자</small><strong>{current.customer_name}</strong></div><div><small>전화번호</small><strong>{current.customer_phone}</strong></div><div className="wide"><small>이메일</small><strong>{current.customer_email}</strong></div>{current.company_name&&<div className="wide"><small>기업명</small><strong>{current.company_name}</strong></div>}</div>{canRevise&&<EditContact key={current.id+current.updated_at} reservation={current} save={saveEdit} busy={pending}/>}</section>
+                  <section className="admin-section"><h3>이동 일정 <span>총 {days.length}일</span></h3>{canEdit&&days.length>0&&<button className="admin-secondary admin-share-btn" onClick={()=>void copyDispatch()}><Copy size={14}/> 운행 정보 복사</button>}{days.map(d=><div className="admin-ko-day" key={d.id}><div className="admin-day-top"><span>DAY {String(d.position).padStart(2,'0')}</span><strong>{dayKo(d.service_date)} · {d.pickup_time.slice(0,5)}</strong></div><h4>{vehicleKo(d.vehicle_class)} · {serviceKo(d.service_code)}</h4><div className="admin-ko-route"><span>{d.pickup_address}</span><ArrowRight size={13}/><span>{d.destination_address}</span></div>{d.flight_number&&<small>항공편 {d.flight_number}</small>}
                     {d.stops?.map((stop,i)=><small className="admin-ko-caption" key={i}>경유 {i+1} · {stop.place?.name||stop.location}</small>)}
+                    {canRevise&&<EditJourney key={d.id+current.updated_at} day={d} reservation={current} save={saveEdit} busy={pending}/>}
                   </div>)}</section>
-                  <section className="admin-section"><h3>예약 요금</h3><div className="admin-money"><span>서비스 금액 · {current.tax_included===true?'세금 포함':current.tax_included===false?'세금 별도':'세금 확인 필요'}</span><strong>{moneyKo(current.quoted_total)}</strong></div></section>
+                  <section className="admin-section"><h3>예약 요금</h3><div className="admin-money"><span>서비스 금액 · {current.tax_included===true?'세금 포함':current.tax_included===false?'세금 별도':'세금 확인 필요'}</span><strong>{moneyKo(current.quoted_total)}</strong></div>{current.quote_required&&<p className="admin-ko-caption">날짜별 최종 요금과 세금 조건을 저장하면 예약을 확정할 수 있어요.</p>}{!canRevise&&<p className="admin-ko-caption">확정 이후의 일정·요금 변경은 기존 확인서와 일치하도록 별도 변경 절차가 필요해요.</p>}</section>
                   {['confirmed','in_progress','completed','cancelled'].includes(current.status)&&<section className="admin-section"><h3><Mail size={16}/> 고객에게 보낸 안내</h3>
                     {delivery?<><div className="admin-money"><span>확정 이메일</span><strong>{deliveryLabels[delivery.status]||delivery.status}</strong></div>
                       {delivery.sent_at&&<p className="admin-ko-caption">{dateKo(delivery.sent_at)} 발송 요청이 Gmail에 전달됐어요.</p>}
@@ -285,11 +303,12 @@ export default function Admin(){
                         {['pending','failed'].includes(delivery.status)&&current.status!=='cancelled'&&<button type="button" className="admin-action-primary" disabled={pending} onClick={()=>void retry()}>확정 이메일 다시 보내기</button>}</div>}
                     </>:<><p className="admin-ko-caption">아직 확정 이메일 발송 기록이 없어요.</p>{canEdit&&current.status==='confirmed'&&<button type="button" className="admin-secondary" disabled={previewPending||pending} onClick={()=>void openPreview()}>확정 이메일 준비하기</button>}</>}
                   </section>}
+                  <AdminNotes key={current.id+current.updated_at} reservation={current} save={saveEdit} busy={pending} canEdit={canEdit} loadHistory={async()=>{const res=await api('POST',{action:'booking_history',reservation_id:current.id});return res.data}}/>
                 </div>
               </>}
             </section>
           </div>
-        </>
+        </>}
       </div>
     </main>
     {preview&&current?.id===previewId&&<dialog ref={confirmationDialog} className="admin-confirmation-modal" aria-labelledby="confirmation-modal-title" onCancel={e=>{e.preventDefault();if(!pending)setPreview(null)}}>
