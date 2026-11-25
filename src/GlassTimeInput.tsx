@@ -115,7 +115,10 @@ export default function GlassTimeInput({
     const above = rect.top - 14
     const upwards = below < 210 && above > below
     const maxHeight = Math.max(150, Math.min(290, upwards ? above : below))
-    const width = Math.max(rect.width, compact ? 160 : rect.width)
+    const width = Math.min(
+      Math.max(rect.width, compact ? 160 : rect.width),
+      viewportWidth - 24,
+    )
     const clampedLeft = Math.max(
       12,
       Math.min(rect.left, viewportWidth - width - 12),
@@ -150,12 +153,14 @@ export default function GlassTimeInput({
     window.addEventListener('scroll', handleReposition, true)
     window.addEventListener('resize', handleReposition)
     window.visualViewport?.addEventListener('resize', handleReposition)
+    window.visualViewport?.addEventListener('scroll', handleReposition)
     document.addEventListener('pointerdown', handleOutside)
 
     return () => {
       window.removeEventListener('scroll', handleReposition, true)
       window.removeEventListener('resize', handleReposition)
       window.visualViewport?.removeEventListener('resize', handleReposition)
+      window.visualViewport?.removeEventListener('scroll', handleReposition)
       document.removeEventListener('pointerdown', handleOutside)
     }
   }, [open])

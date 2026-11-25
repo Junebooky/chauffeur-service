@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   ArrowUpRight,
   ArrowLeft,
@@ -295,6 +295,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
   const [isSlideDetailOpen, setIsSlideDetailOpen] = useState(false)
   // activeSlideIndex: 0=Exterior, 1=Interior, 2=Specs
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
 
   // Active stage index on the showroom carousel track:
   // 0: Overview (4 cars together)
@@ -419,6 +420,20 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
         className={`fleet-full-slide-deck ${isSlideDetailOpen ? 'is-open' : ''
           }`}
         aria-hidden={!isSlideDetailOpen}
+        onTouchStart={(e) => {
+          touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        }}
+        onTouchEnd={(e) => {
+          const start = touchStart.current
+          touchStart.current = null
+          if (!start || !isSlideDetailOpen) return
+          const dx = e.changedTouches[0].clientX - start.x
+          const dy = e.changedTouches[0].clientY - start.y
+          if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+            if (dx < 0) handleNextSlide()
+            else handlePrevSlide()
+          }
+        }}
       >
         {/* Top Segmented Tabs Capsule (Ref Image 2) */}
         <div className="fleet-slide-top-nav">
@@ -578,6 +593,24 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
         className={`fleet-carousel-viewport ${isSlideDetailOpen ? 'is-hidden' : ''
           }`}
         aria-hidden={isSlideDetailOpen}
+        onTouchStart={(e) => {
+          touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        }}
+        onTouchEnd={(e) => {
+          const start = touchStart.current
+          touchStart.current = null
+          if (!start || isSlideDetailOpen) return
+          const dx = e.changedTouches[0].clientX - start.x
+          const dy = e.changedTouches[0].clientY - start.y
+          if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+            if (dx < 0 && activeStageIndex < FLEET_DATA.length) {
+              setSelectedId(FLEET_DATA[activeStageIndex].id)
+            } else if (dx > 0) {
+              if (activeStageIndex === 1) handleBackToOverview()
+              else if (activeStageIndex > 1) setSelectedId(FLEET_DATA[activeStageIndex - 2].id)
+            }
+          }
+        }}
       >
         <div
           className="fleet-carousel-track"

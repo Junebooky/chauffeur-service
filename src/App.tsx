@@ -169,32 +169,55 @@ export default function App() {
         </div>
       </header>
       {mobileMenu && (
-        <nav
-          id="mobile-nav"
-          className="mobile-nav"
-          aria-label="Mobile navigation"
-        >
-          <button onClick={() => nav(0)}>
-            The welcome <span>01</span>
-          </button>
-          <button onClick={() => nav(1)}>
-            The collection <span>02</span>
-          </button>
-          <button onClick={() => nav(2)}>
-            Our services <span>03</span>
-          </button>
-          <button onClick={() => nav(3)}>
-            Your journey <span>04</span>
-          </button>
-          <button
-            onClick={() => {
-              setModal('contact')
-              setMobileMenu(false)
-            }}
+        <>
+          <div
+            className="mobile-nav-backdrop"
+            aria-hidden="true"
+            onClick={() => setMobileMenu(false)}
+          />
+          <nav
+            id="mobile-nav"
+            className="mobile-nav"
+            aria-label="Mobile navigation"
           >
-            Concierge <ArrowUpRight size={20} />
-          </button>
-        </nav>
+            <button
+              className={active === 0 ? 'active' : ''}
+              aria-current={active === 0 ? 'location' : undefined}
+              onClick={() => nav(0)}
+            >
+              The welcome <span>01</span>
+            </button>
+            <button
+              className={active === 1 ? 'active' : ''}
+              aria-current={active === 1 ? 'location' : undefined}
+              onClick={() => nav(1)}
+            >
+              The collection <span>02</span>
+            </button>
+            <button
+              className={active === 2 ? 'active' : ''}
+              aria-current={active === 2 ? 'location' : undefined}
+              onClick={() => nav(2)}
+            >
+              Our services <span>03</span>
+            </button>
+            <button
+              className={active === 3 ? 'active' : ''}
+              aria-current={active === 3 ? 'location' : undefined}
+              onClick={() => nav(3)}
+            >
+              Your journey <span>04</span>
+            </button>
+            <button
+              onClick={() => {
+                setModal('contact')
+                setMobileMenu(false)
+              }}
+            >
+              Concierge <ArrowUpRight size={20} />
+            </button>
+          </nav>
+        </>
       )}
       <main
         ref={scrollRef}

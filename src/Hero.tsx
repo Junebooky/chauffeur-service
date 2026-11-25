@@ -106,7 +106,7 @@ export default function Hero({
           </h1>
           <p className="hero-subtitle">
             A discreet, safe, and refined travel experience
-            <br />
+            <br className="hero-subtitle-break" />
             for business and personal occasions.
           </p>
           <button

@@ -93,7 +93,7 @@ export default function PricingSection({
     <section
       id="services"
       aria-labelledby="services-title"
-      className="relative flex min-h-dvh w-full snap-start snap-always flex-col overflow-hidden bg-[#050608] px-[clamp(20px,4.5vw,84px)] pt-[calc(var(--header)+24px)] pb-14 antialiased select-none lg:h-dvh lg:pb-0"
+      className="relative flex min-h-dvh w-full snap-start snap-always flex-col overflow-hidden bg-[#050608] px-[clamp(20px,4.5vw,84px)] pt-[calc(var(--header)+24px)] pb-[max(3.5rem,calc(env(safe-area-inset-bottom,0px)+2rem))] antialiased select-none lg:h-dvh lg:pb-0"
     >
       {/* Full-bleed architectural lighting background */}
       <img
@@ -129,7 +129,7 @@ export default function PricingSection({
           {PRICING_PLANS.map((plan) => (
             <article
               key={plan.id}
-              className="group relative flex h-[clamp(400px,49vh,525px)] flex-col justify-between rounded-[18px] border border-[#e5dfd5]/35 bg-[#050608] shadow-[0_26px_60px_rgba(0,0,0,0.84),inset_0_1px_0_rgba(255,250,242,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-[#f4f5f7]/30 focus-within:-translate-y-1 focus-within:border-[#f4f5f7]/40"
+              className="group relative flex min-h-[clamp(380px,49dvh,525px)] flex-col justify-between rounded-[18px] border border-[#e5dfd5]/35 bg-[#050608] shadow-[0_26px_60px_rgba(0,0,0,0.84),inset_0_1px_0_rgba(255,250,242,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-[#f4f5f7]/30 focus-within:-translate-y-1 focus-within:border-[#f4f5f7]/40 lg:h-[clamp(400px,49dvh,525px)]"
             >
               {/* Clockwise Border Beam Halo (subtle soft bloom on hover/focus) */}
               <span
@@ -242,7 +242,7 @@ export default function PricingSection({
                       type="button"
                       onClick={() => navigateToReservation(plan.serviceId)}
                       aria-label={plan.serviceId === null ? 'Email us for a custom quote' : `Plan your ${plan.lines.join(' ').toLowerCase()} journey`}
-                      className="relative z-40 mt-3 inline-flex cursor-pointer items-center gap-1.5 !font-sans text-[11px] !font-light text-white/90 transition-colors hover:text-white hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                      className="relative z-40 mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 py-2 !font-sans text-[13px] !font-light text-white/90 transition-colors hover:text-white hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:min-h-0 lg:py-0 lg:text-[11px]"
                     >
                       {plan.serviceId === null ? 'Email us for a custom quote' : 'Plan your journey'}
                       <span aria-hidden="true">→</span>

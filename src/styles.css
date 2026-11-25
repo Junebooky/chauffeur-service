@@ -11035,3 +11035,507 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
     padding: 16px 0;
   }
 }
+
+
+/* === MOBILE OPTIMIZATION LAYER === */
+body {
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+.journey-scroll {
+  scroll-padding-top: calc(var(--header) + env(safe-area-inset-top, 0px));
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 44px;
+  }
+
+  :where(
+    button:not(.fleet-pagination button, .section-rail button),
+    select,
+    textarea,
+    input:not([type='checkbox'], [type='radio']),
+    [role='button'],
+    nav a,
+    label:has(input[type='checkbox'], input[type='radio'])
+  ) {
+    min-block-size: var(--target-size);
+  }
+
+  .icon-button,
+  .booking-glass-close,
+  .dialog-close,
+  .fleet-slide-close-circle {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+
+  .booking-glass-stage.is-expanded .fleet-pagination > button {
+    position: relative;
+    min-block-size: 2px;
+  }
+
+  .booking-glass-stage.is-expanded .fleet-pagination > button::before {
+    content: '';
+    position: absolute;
+    inset: -16px -6px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .journey-scroll {
+    scroll-snap-type: none;
+  }
+
+  .site-header {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px))
+      max(var(--gutter), env(safe-area-inset-right, 0px));
+    height: calc(var(--header) + env(safe-area-inset-top, 0px));
+    background: rgba(7, 8, 10, 0.74);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
+    backdrop-filter: blur(18px) saturate(130%);
+  }
+
+  .mobile-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 28;
+    background: rgba(4, 5, 8, 0.58);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .mobile-nav {
+    top: calc(var(--header) + env(safe-area-inset-top, 0px));
+    max-block-size: calc(100dvh - var(--header) - env(safe-area-inset-top, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-nav > button {
+    font-size: clamp(22px, 5.8vw, 28px);
+    min-height: 54px;
+    padding: 14px 0;
+  }
+
+  .mobile-nav > button.active {
+    color: #ffffff;
+  }
+
+  .mobile-menu-toggle {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+@media (max-width: 960px) {
+  #reservation.booking-screen.booking-glass-open {
+    height: auto !important;
+    min-height: 100dvh;
+    overflow: visible !important;
+    padding-top: calc(var(--header) + env(safe-area-inset-top, 0px) + 12px);
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .booking-glass-stage.is-expanded .booking-fields {
+    padding-top: 56px !important;
+  }
+
+  .booking-glass-stage.is-expanded .booking-panel.is-daily-schedule .booking-fields {
+    padding-top: 56px !important;
+  }
+
+  .booking-glass-stage.is-expanded .booking-glass-close {
+    width: 38px !important;
+    height: 38px !important;
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  .booking-glass-stage.is-expanded
+    .booking-panel.is-split-view:has(.fleet-selector):not(:has(.daily-schedule-configuration))
+    .journey-summary {
+    order: -1;
+    border-top: 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .section-rail {
+    display: none;
+  }
+
+  #collection.fleet-apple-section {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: clip;
+    overflow-y: visible;
+    padding: calc(var(--header) + env(safe-area-inset-top, 0px) + 14px)
+      max(var(--gutter), env(safe-area-inset-left, 0px))
+      max(20px, env(safe-area-inset-bottom, 0px))
+      max(var(--gutter), env(safe-area-inset-right, 0px));
+  }
+
+  .fleet-carousel-viewport {
+    min-height: 100%;
+  }
+
+  .fleet-slide-content.fleet-vehicle-content {
+    padding-top: calc(var(--header) + env(safe-area-inset-top, 0px) + 52px);
+    padding-bottom: 18px;
+  }
+
+  .fleet-detail-info {
+    max-width: 100%;
+    margin-top: 8px;
+  }
+
+  .fleet-right-view-tabs {
+    position: static;
+    transform: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    margin: 14px 0 0;
+  }
+
+  .booking-cta-pill.fleet-right-tab-btn {
+    min-width: 0;
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+
+  .booking-cta-pill.fleet-right-tab-btn:hover,
+  .booking-cta-pill.fleet-right-tab-btn:focus-visible {
+    transform: none;
+  }
+
+  .booking-cta-pill.fleet-right-tab-btn .booking-cta-pill-inner {
+    gap: 6px;
+  }
+
+  .fleet-vehicle-stage-layer,
+  .fleet-vehicle-stage-layer.vehicle-carnival,
+  .fleet-vehicle-stage-layer.vehicle-staria,
+  .fleet-vehicle-stage-layer.vehicle-sprinter319 {
+    left: 50%;
+    --vehicle-x: 0px;
+    --vehicle-y: 0px;
+    --vehicle-scale: 1;
+    bottom: clamp(148px, 21dvh, 210px);
+    width: min(92dvw, 460px);
+  }
+
+  .booking-glass-stage.is-expanded .field input,
+  .booking-glass-stage.is-expanded .address-control input,
+  .booking-glass-stage.is-expanded .field .glass-time-input,
+  .glass-select-trigger {
+    font-size: 16px !important;
+    height: 46px !important;
+  }
+
+  .glass-time-control {
+    height: 46px;
+  }
+}
+
+@media (max-width: 650px) {
+  :root {
+    --header: 66px;
+    --gutter: 20px;
+  }
+
+  .hero-backdrop-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(7, 8, 10, 0.56) 0%,
+      rgba(7, 8, 10, 0.34) 45%,
+      rgba(7, 8, 10, 0.68) 100%
+    );
+  }
+
+  .hero-heading {
+    top: 48%;
+    max-width: 100%;
+  }
+
+  .hero-book-link {
+    min-height: 44px;
+    padding: 10px 0;
+  }
+
+  .fleet-bottom-dock {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    max-width: 100%;
+    margin-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .fleet-card-inner {
+    height: auto;
+    min-height: 54px;
+    padding: 10px 11px;
+    gap: 8px;
+  }
+
+  .fleet-card-text {
+    min-width: 0;
+  }
+
+  .fleet-card-name {
+    font-size: 12px;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .fleet-card-sub {
+    font-size: 10px;
+  }
+
+  .fleet-slide-top-nav {
+    top: max(12px, env(safe-area-inset-top, 0px));
+    padding: 0 max(12px, env(safe-area-inset-left, 0px));
+    gap: 8px;
+  }
+
+  .fleet-slide-close-circle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .fleet-slide-segments {
+    gap: 2px;
+    padding: 4px;
+  }
+
+  .fleet-segment-pill {
+    padding: 7px 11px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+
+  .fleet-slide-arrow {
+    top: 44%;
+    width: 44px;
+    height: 44px;
+  }
+
+  .fleet-full-slide-deck:has(.slide-specs.is-active-slide) .fleet-slide-arrow {
+    top: calc(env(safe-area-inset-top, 0px) + 150px);
+  }
+
+  .fleet-slide-item.slide-specs {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: flex-end;
+    padding: calc(env(safe-area-inset-top, 0px) + 84px) 16px
+      max(22px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .fleet-slide-item.slide-specs .fleet-vehicle-stage-layer.is-ppt-slide {
+    top: calc(env(safe-area-inset-top, 0px) + 74px);
+    width: min(88dvw, 420px);
+    opacity: 0.9;
+  }
+
+  .fleet-specs-slide-card {
+    margin-top: min(26dvh, 210px);
+    width: 100%;
+    padding: 22px 18px;
+  }
+
+  [data-fleet-interior-controls] {
+    bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  }
+
+  #reservation.booking-screen.booking-glass-closed {
+    height: auto;
+    min-height: 100dvh;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .booking-glass-stage.is-idle .booking-glass-surface {
+    height: auto !important;
+    min-height: 64px;
+  }
+
+  .booking-glass-stage.is-idle .booking-glass-trigger {
+    min-height: 64px;
+    padding: 14px 18px;
+    text-align: left;
+  }
+
+  .booking-outer-stepper {
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 4px;
+    justify-content: space-between;
+  }
+
+  .booking-stepper-item {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .booking-stepper-item:last-child {
+    flex: 0 0 auto;
+  }
+
+  .booking-stepper-btn {
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 2px;
+  }
+
+  .booking-stepper-label {
+    font-size: 11px;
+  }
+
+  .booking-stepper-line {
+    flex: 1;
+    width: auto;
+    min-width: 8px;
+    margin-bottom: 16px;
+  }
+
+  .booking-glass-stage.is-expanded .calendar {
+    max-width: 100%;
+  }
+
+  .booking-glass-stage.is-expanded .calendar-grid > button {
+    height: 42px !important;
+    max-width: none !important;
+    font-size: 14px !important;
+  }
+
+  .booking-glass-stage.is-expanded .calendar-heading button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .booking-glass-stage.is-expanded .day-mode-pill {
+    min-height: 44px;
+    font-size: 13.5px;
+  }
+
+  .booking-glass-stage.is-expanded .fleet-arrow {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .booking-glass-stage.is-expanded .extra-option {
+    min-height: 54px;
+    padding: 14px 0;
+  }
+
+  .booking-glass-stage.is-expanded .extra-option small {
+    max-width: none;
+  }
+
+  .booking-daily-remove-stop {
+    top: 26px;
+    height: 46px;
+  }
+
+  .glass-select-option {
+    min-height: 46px;
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+
+  .address-result {
+    min-height: 48px;
+    padding: 12px 13px !important;
+    font-size: 15px !important;
+  }
+
+  .booking-cta-pill:not(.fleet-right-tab-btn) {
+    min-width: 0;
+    height: 50px;
+    padding: 0 18px;
+  }
+
+  .booking-outer-buttons.is-details-actions .booking-cta-pill.booking-submit {
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .site-footer {
+    font-size: 11px;
+    gap: 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .site-footer > span:first-child,
+  .site-footer > span:last-child {
+    font-size: 11px;
+  }
+
+  .site-footer > button {
+    font-size: 11px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .info-dialog {
+    width: calc(100dvw - 24px);
+    max-height: calc(
+      100dvh - 24px - env(safe-area-inset-top, 0px) -
+        env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  .info-dialog .dialog-close {
+    width: 40px;
+    height: 40px;
+    top: 14px;
+    right: 14px;
+  }
+
+  .info-dialog .dialog-content p:not(.eyebrow) {
+    font-size: 13.5px;
+    line-height: 1.7;
+  }
+}
+
+@media (max-width: 600px) {
+  .fleet-slide-back-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .fleet-slide-back-btn span {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-subtitle-break {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .glass-lab-lens-wrap .glass-lab-glass-content {
+    white-space: normal;
+    padding: 16px 18px;
+  }
+}

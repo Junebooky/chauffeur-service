@@ -157,15 +157,18 @@ export default function AddressSearch({
       const rect = input.current?.getBoundingClientRect()
       if (!rect) return
       const viewportHeight = window.visualViewport?.height || innerHeight
+      const viewportWidth = window.visualViewport?.width || innerWidth
       const below = viewportHeight - rect.bottom - 16
       const above = rect.top - 16
       const upwards = below < 180 && above > below
-      const maxHeight = Math.min(430, upwards ? above : below)
+      const maxHeight = Math.max(100, Math.min(430, upwards ? above : below))
+      const width = Math.min(rect.width, viewportWidth - 24)
+      const left = Math.max(12, Math.min(rect.left, viewportWidth - width - 12))
       setPosition({
-        left: rect.left,
-        width: rect.width,
-        top: upwards ? rect.top - maxHeight - 6 : rect.bottom + 6,
-        maxHeight: Math.max(100, maxHeight),
+        left,
+        width,
+        top: upwards ? Math.max(8, rect.top - maxHeight - 6) : rect.bottom + 6,
+        maxHeight,
       })
     }
     const outside = (e: PointerEvent) => {
@@ -179,11 +182,13 @@ export default function AddressSearch({
     window.addEventListener('scroll', reposition, true)
     window.addEventListener('resize', reposition)
     window.visualViewport?.addEventListener('resize', reposition)
+    window.visualViewport?.addEventListener('scroll', reposition)
     document.addEventListener('pointerdown', outside)
     return () => {
       window.removeEventListener('scroll', reposition, true)
       window.removeEventListener('resize', reposition)
       window.visualViewport?.removeEventListener('resize', reposition)
+      window.visualViewport?.removeEventListener('scroll', reposition)
       document.removeEventListener('pointerdown', outside)
     }
   }, [open])
