@@ -10488,12 +10488,12 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
 }
 
 .booking-screen .service-tone.service-tone-airport {
-  color: rgba(222, 232, 244, 0.84) !important;
+  color: rgba(213, 221, 230, 0.90) !important;
   font-weight: 400;
 }
 
 .booking-screen .service-tone.service-tone-day {
-  color: rgba(237, 232, 223, 0.78) !important;
+  color: rgba(182, 177, 165, 0.90) !important;
   font-weight: 500;
 }
 .booking-glass-stage.is-expanded .journey-summary.is-details-summary .summary-journey-date {
