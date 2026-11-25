@@ -342,7 +342,12 @@ export default function Booking({
   const currentService = catalog.services.find((s) => s.id === service)!
   const bookableServices = catalog.services
     .filter((item) => item.id === 'airport' || item.id === 'day')
-    .map((item) => ({ value: item.id, label: item.name, meta: item.unit }))
+    .map((item) => ({
+      value: item.id,
+      label: item.name,
+      meta: item.unit,
+      labelClassName: `service-tone service-tone-${item.id}`,
+    }))
   // One field works for international names and keeps the existing API stable.
   const nameReady = name.trim().length >= 2
   const emailReady = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())

@@ -5,6 +5,8 @@ import { Check, ChevronDown } from 'lucide-react'
 export type GlassSelectOption = {
   value: string
   label: string
+  /** Optional semantic styling shared by the selected value and menu label. */
+  labelClassName?: string
   meta?: string
   disabled?: boolean
 }
@@ -216,7 +218,7 @@ export default function GlassSelect({
         onClick={() => !disabled && setOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
       >
-        <span className="glass-select-value">
+        <span className={['glass-select-value', selectedOption?.labelClassName].filter(Boolean).join(' ')}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         {selectedOption?.meta && !compact && (
@@ -261,7 +263,7 @@ export default function GlassSelect({
                   onClick={() => commit(option)}
                 >
                   <span className="glass-select-option-main">
-                    <span className="glass-select-option-label">
+                    <span className={['glass-select-option-label', option.labelClassName].filter(Boolean).join(' ')}>
                       {option.label}
                     </span>
                     {option.meta && (

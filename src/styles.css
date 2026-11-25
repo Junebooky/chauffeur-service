@@ -10481,18 +10481,19 @@ body:has(.fleet-full-slide-deck.is-open) .site-header {
   column-gap: 12px;
 }
 
-/* Inline service labels: quiet silver tones and a weight distinction,
-   without extra badges or icons that crowd the daily itinerary. */
-.booking-screen .service-tone {
+/* Liquid Metal service labels share one palette across the itinerary,
+   trigger and portaled dropdown (the latter is mounted under document.body).
+   Only explicit service-tone labels opt in; unrelated selects stay neutral. */
+:is(.booking-screen, .glass-select-menu) .service-tone {
   font-weight: 400;
 }
 
-.booking-screen .service-tone.service-tone-airport {
+:is(.booking-screen, .glass-select-menu) .service-tone.service-tone-airport {
   color: rgba(213, 221, 230, 0.90) !important;
   font-weight: 400;
 }
 
-.booking-screen .service-tone.service-tone-day {
+:is(.booking-screen, .glass-select-menu) .service-tone.service-tone-day {
   color: rgba(182, 177, 165, 0.90) !important;
   font-weight: 500;
 }
