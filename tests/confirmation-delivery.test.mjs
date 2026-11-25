@@ -87,3 +87,25 @@ test('reservation confirmation contact link opens a blank draft',()=>{
   assert.match(booking,/href=\{customQuoteEmail\(\)\}/)
   assert.doesNotMatch(booking,/I have a question about my reservation request/)
 })
+
+test('branded A4 confirmation embeds the existing email banner and fits a standard three-day itinerary on one page',()=>{
+ const airport={name:'Incheon Airport - Terminal 1',address:'272 Gonghang-ro, Jung-gu, Incheon, South Korea'}
+ const hotel={name:'Hotel in Seoul Gangnam',address:'231 Teheran-ro, Gangnam-gu, Seoul, South Korea'}
+ const route=(a,b)=>({pickup:a.address,destination:b.address,pickupPlace:{name:a.name},destinationPlace:{name:b.name}})
+ const pdf=buildConfirmationPdf({...sample,total:930000,journeys:[
+  {date:'2027-01-10',time:'10:00',service:'airport',vehicle:'carnival_limousine',...route(airport,hotel),flight:'KE123',total:200000},
+  {date:'2027-01-11',time:'20:00',service:'day',vehicle:'sprinter_319',...route(hotel,hotel),stops:[{location:'Coex Mall'}],total:530000},
+  {date:'2027-01-12',time:'06:30',service:'airport',vehicle:'staria',...route(hotel,airport),total:200000}
+ ]})
+ const raw=pdf.toString('latin1')
+ assert.match(raw,/\/Type \/Pages \/Count 1\b/)
+ assert.match(raw,/\/Subtype \/Image/)
+ assert.match(raw,/\/Banner Do Q/)
+ assert.match(raw,/\/BaseFont \/Symbol/)
+ assert.ok(raw.includes(Buffer.from('GUEST DETAILS').toString('hex')))
+ assert.ok(raw.includes(Buffer.from('KRW 930,000').toString('hex')))
+ assert.ok(raw.includes(Buffer.from('Coex Mall').toString('hex')))
+ assert.ok(raw.includes(Buffer.from('Tax excluded').toString('hex')))
+ const match=raw.match(/startxref\n(\d+)\n%%EOF/)
+ assert.equal(raw.slice(Number(match[1]),Number(match[1])+4),'xref')
+})
