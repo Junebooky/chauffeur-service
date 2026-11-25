@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {gmailStart,gmailCallback,gmailStatus,gmailList,gmailRead,gmailSend} from '../server/gmail.mjs'
+import {gmailStart,gmailCallback,gmailStatus,gmailList,gmailRead,gmailSend,prepareAutomaticMail,automaticMailReady} from '../server/gmail.mjs'
 const id='a3cf6400-d7b5-4056-b47b-e9d49ee8a0a3',staff={id,role:'owner'},redirect='http://localhost:5173/api/gmail/callback'
 const settings={SUPABASE_URL:'https://test.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_TEST',GOOGLE_OAUTH_CLIENT_ID:'test-client',GOOGLE_OAUTH_CLIENT_SECRET:'test-secret',GOOGLE_OAUTH_REDIRECT_URI:redirect,GMAIL_TOKEN_ENCRYPTION_KEY:'a'.repeat(64),GMAIL_ALLOWED_EMAIL:'owner@example.invalid'}
 const response=()=>({headers:{},code:0,setHeader(k,v){this.headers[k]=v},status(n){this.code=n;return this},end(){return this}})
@@ -57,5 +57,11 @@ test('owner-only OAuth uses PKCE, single-use state, browser cookie, exact accoun
   await assert.rejects(gmailSend(staff,{to:'guest@example.invalid',subject:'Hello',message:'Hello'}),/확인/)
   const sent=await gmailSend(staff,{to:'guest@example.invalid',subject:'Hello',message:'Hello',confirm:true})
   assert.equal(sent.id,'sent-id');assert.match(raw,/To: guest@example.invalid/)
+  assert.equal(await automaticMailReady(),true)
+  const automatic=await prepareAutomaticMail({to:'guest@example.invalid',subject:'Confirmation',html:'<h1>Confirmed</h1>',text:'Confirmed',attachments:[{filename:'Confirmation.pdf',content:Buffer.from('%PDF-test'),contentType:'application/pdf'}]})
+  assert.equal((await automatic()).id,'sent-id')
+  assert.match(raw,/From: Chauffeur Service <owner@example.invalid>/)
+  assert.match(raw,/Content-Type: application\/pdf/)
+  assert.match(raw,/Confirmation\.pdf/)
  }finally{globalThis.fetch=original;for(const [k,v] of Object.entries(old)){if(v===undefined)delete process.env[k];else process.env[k]=v}}
 })

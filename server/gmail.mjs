@@ -1,5 +1,6 @@
 import { randomBytes,createHash,createCipheriv,createDecipheriv,timingSafeEqual } from 'node:crypto'
 import MailComposer from 'nodemailer/lib/mail-composer/index.js'
+import addressparser from 'nodemailer/lib/addressparser/index.js'
 import { db,ApiError,validUuid } from './chauffeur-supabase.mjs'
 const AUTH='https://accounts.google.com/o/oauth2/v2/auth',TOKEN='https://oauth2.googleapis.com/token'
 const GMAIL='https://gmail.googleapis.com/gmail/v1/users/me/'
@@ -13,6 +14,7 @@ const config=()=>{
  if(!clientId||!secret||!REDIRECTS.has(redirect)||!/^[0-9a-f]{64}$/i.test(key||'')||!email)return null
  return {clientId,secret,redirect,key:Buffer.from(key,'hex'),email}
 }
+export const gmailConfigured=()=>Boolean(config())
 const requireConfig=()=>{const c=config();if(!c)throw new ApiError(503,'Gmail 연결 환경을 먼저 설정해 주세요.');return c}
 const owner=staff=>{if(staff?.role!=='owner'||!validUuid(staff.id))throw new ApiError(403,'Gmail은 소유자 계정만 연결하고 사용할 수 있어요.')}
 const connectionQuery=(staff,c)=>'gmail_connections?owner_id=eq.'+staff.id+'&redirect_uri=eq.'+enc(c.redirect)
@@ -47,6 +49,48 @@ async function accessFor(staff,c){
  const data=await token(c,{grant_type:'refresh_token',refresh_token:refresh})
  if(data.refresh_token)await db(connectionQuery(staff,c),{method:'PATCH',body:{encrypted_refresh_token:encrypt(data.refresh_token,staff.id,c)},prefer:'return=minimal'})
  return data.access_token
+}
+// Automatic reservation mail may run without a browser session. Resolve only
+// an active owner connection for the configured company mailbox/environment.
+// Multiple owners are ambiguous and must be resolved, not silently selected.
+async function automaticOwner(c){
+ const rows=await db('gmail_connections?select=owner_id&email=eq.'+enc(c.email)+'&redirect_uri=eq.'+enc(c.redirect)+'&limit=20')
+ const owners=[]
+ for(const row of rows||[]){
+  if(!validUuid(row.owner_id))continue
+  const members=await db('staff_members?select=role,active&user_id=eq.'+row.owner_id+'&limit=1')
+  if(members?.[0]?.active&&members[0].role==='owner')owners.push({id:row.owner_id,role:'owner'})
+ }
+ if(owners.length!==1)throw new ApiError(409,'회사 Gmail을 소유자 계정으로 연결해 주세요.')
+ return owners[0]
+}
+export async function automaticMailReady(){
+ try{const c=requireConfig();const staff=await automaticOwner(c);const rows=await db(connectionQuery(staff,c)+'&select=email,encrypted_refresh_token&limit=1');return Boolean(rows?.[0]?.email===c.email&&decrypt(rows[0].encrypted_refresh_token,staff.id,c))}
+ catch{return false}
+}
+export class GmailDeliveryError extends Error {
+ constructor(uncertain){super(uncertain?'Gmail delivery outcome is unknown.':'Gmail rejected the message.');this.uncertain=uncertain}
+}
+// Compile MIME (including CID images and PDFs) before transmission. A timeout
+// or invalid success response AFTER send is ambiguous; never retry blindly.
+async function prepareSend(access,c,mail,threadId){
+ const raw=await new MailComposer({...mail,from:{name:'Chauffeur Service',address:c.email},disableFileAccess:true,disableUrlAccess:true}).compile().build()
+ if(raw.length>25*1024*1024)throw new ApiError(400,'메일 첨부파일이 너무 커요.')
+ return async()=>{
+  let res
+  try{res=await fetch(GMAIL+'messages/send',{method:'POST',headers:{Authorization:'Bearer '+access,'Content-Type':'application/json'},body:JSON.stringify({raw:raw.toString('base64url'),...(threadId?{threadId}:{})}),signal:AbortSignal.timeout(15000),cache:'no-store'})}
+  catch{throw new GmailDeliveryError(true)}
+  if(!res.ok)throw new GmailDeliveryError(![400,401,403,404,413,429].includes(res.status))
+  let result
+  try{result=await res.json()}catch{throw new GmailDeliveryError(true)}
+  if(!result?.id)throw new GmailDeliveryError(true)
+  return {id:result.id,threadId:result.threadId}
+ }
+}
+export async function prepareAutomaticMail(mail){
+ const c=requireConfig(),staff=await automaticOwner(c),access=await accessFor(staff,c)
+ // Do not allow callers to override the configured company sender.
+ return prepareSend(access,c,{...mail,replyTo:mail.replyTo||c.email})
 }
 export async function gmailStatus(staff){
  owner(staff)
@@ -92,16 +136,29 @@ async function labelId(access){
  return (data.labels||[]).find(l=>l.name==='CHAUFFEUR'&&l.type==='user')?.id||null
 }
 const header=(message,name)=>(message.payload?.headers||[]).find(h=>h.name?.toLowerCase()===name.toLowerCase())?.value||''
-const allowed=(m,label)=>m.labelIds?.includes(label)&&!m.labelIds.some(l=>['SPAM','TRASH'].includes(l))
-const metadata=m=>({id:m.id,threadId:m.threadId,from:header(m,'From'),subject:header(m,'Subject'),date:header(m,'Date'),snippet:m.snippet||'',unread:m.labelIds?.includes('UNREAD')||false})
-const msgId=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(id)
-export async function gmailList(staff){
- owner(staff);const c=requireConfig(),access=await accessFor(staff,c),label=await labelId(access)
- if(!label)return {labelFound:false,messages:[],hasMore:false}
- const list=await gmail(access,'messages?labelIds='+enc(label)+'&q='+enc('-in:spam -in:trash')+'&maxResults=20')
- const messages=await Promise.all((list.messages||[]).filter(m=>msgId(m.id)).map(m=>gmail(access,'messages/'+m.id+'?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date')))
- return {labelFound:true,messages:messages.filter(m=>allowed(m,label)).map(metadata),hasMore:!!list.nextPageToken}
+const safeMessage=m=>Array.isArray(m.labelIds)&&!m.labelIds.some(l=>['SPAM','TRASH'].includes(l))
+const allowed=(m,label)=>safeMessage(m)&&(m.labelIds.includes('INBOX')||m.labelIds.includes('SENT')||Boolean(label&&m.labelIds.includes(label)))
+const replyAddress=m=>{
+ if(m.labelIds?.includes('SENT'))return ''
+ const value=header(m,'Reply-To')||header(m,'From')
+ if(/[\r\n]/.test(value))return ''
+ const parsed=addressparser(value,{flatten:true})
+ const addr=parsed.length===1?parsed[0].address:''
+ return /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(addr||'')?addr:''
 }
+const metadata=m=>({id:m.id,threadId:m.threadId,from:header(m,'From'),subject:header(m,'Subject'),date:header(m,'Date'),snippet:m.snippet||'',replyTo:replyAddress(m),unread:m.labelIds?.includes('UNREAD')||false})
+const msgId=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(id)
+export async function gmailList(staff,folder='business',pageToken=''){
+ owner(staff);if(!['business','inbox','sent','review'].includes(folder)||typeof pageToken!=='string'||pageToken.length>1500)throw new ApiError(400,'메일함을 다시 선택해 주세요.')
+ const c=requireConfig(),access=await accessFor(staff,c),label=await labelId(access)
+ if(folder==='business'&&!label)return {labelFound:false,messages:[],hasMore:false,nextPageToken:null}
+ const selectedLabel=folder==='business'?label:folder==='sent'?'SENT':'INBOX'
+ const q='-in:spam -in:trash'+(folder==='inbox'?' -category:promotions -category:social':folder==='review'?' {category:promotions category:social}':'')
+ const list=await gmail(access,'messages?'+new URLSearchParams({labelIds:selectedLabel,q,maxResults:'20',...(pageToken?{pageToken}:{})}))
+ const messages=await Promise.all((list.messages||[]).filter(m=>msgId(m.id)).map(m=>gmail(access,'messages/'+m.id+'?format=metadata&metadataHeaders=From&metadataHeaders=Reply-To&metadataHeaders=Subject&metadataHeaders=Date')))
+ return {labelFound:!!label,messages:messages.filter(m=>safeMessage(m)&&m.labelIds.includes(selectedLabel)).map(metadata),hasMore:!!list.nextPageToken,nextPageToken:list.nextPageToken||null}
+}
+
 function plain(part){
  if(!part||part.filename)return ''
  if(part.mimeType==='text/plain'&&part.body?.data)return Buffer.from(part.body.data,'base64url').toString('utf8')
@@ -110,7 +167,6 @@ function plain(part){
 export async function gmailRead(staff,id){
  owner(staff);if(!msgId(id))throw new ApiError(400,'메일을 다시 선택해 주세요.')
  const access=await accessFor(staff,requireConfig()),label=await labelId(access)
- if(!label)throw new ApiError(404,'업무 메일 라벨을 먼저 확인해 주세요.')
  const meta=await gmail(access,'messages/'+id+'?format=metadata')
  if(!allowed(meta,label))throw new ApiError(404,'업무 라벨이 지정된 메일만 열 수 있어요.')
  const message=await gmail(access,'messages/'+id+'?format=full')
@@ -122,7 +178,18 @@ export async function gmailSend(staff,b){
  const to=typeof b.to==='string'?b.to.trim():'',subject=typeof b.subject==='string'?b.subject.trim():'',body=typeof b.message==='string'?b.message:''
  if(b.confirm!==true||!/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(to)||to.length>254||!subject||subject.length>200||/[\r\n]/.test(subject)||!body.trim()||body.length>10000)throw new ApiError(400,'받는 사람, 제목, 본문을 다시 확인해 주세요.')
  const access=await accessFor(staff,c)
- const raw=await new MailComposer({from:c.email,to,subject,text:body}).compile().build()
- const result=await gmail(access,'messages/send',{raw:raw.toString('base64url')})
- return {id:result.id,threadId:result.threadId}
+ let mail={to,subject,text:body},threadId
+ if(b.replyId){
+  if(!msgId(b.replyId))throw new ApiError(400,'답장할 메일을 다시 선택해 주세요.')
+  const label=await labelId(access),original=await gmail(access,'messages/'+b.replyId+'?format=metadata')
+  const address=replyAddress(original),id=header(original,'Message-ID')
+  if(!allowed(original,label)||!address||address.toLowerCase()!==to.toLowerCase()||!/^<[^<>\s]+>$/.test(id)||!msgId(original.threadId))throw new ApiError(409,'원본 메일 또는 답장 주소를 다시 확인해 주세요.')
+  const expected=/^re:/i.test(header(original,'Subject'))?header(original,'Subject'):'Re: '+header(original,'Subject')
+  if(subject!==expected.trim())throw new ApiError(400,'답장 제목은 원본과 같아야 해요.')
+  const refs=(header(original,'References').match(/<[^<>\s]+>/g)||[]).slice(-20)
+  mail={...mail,inReplyTo:id,references:[...refs,id]}
+  threadId=original.threadId
+ }
+ try{return await (await prepareSend(access,c,mail,threadId))()}
+ catch(error){if(error instanceof GmailDeliveryError)throw new ApiError(409,error.uncertain?'발송 결과를 확인할 수 없어요. 보낸 메일을 확인한 뒤 다시 시도해 주세요.':'Gmail이 발송 요청을 거절했어요. 연결 상태를 확인해 주세요.');throw error}
 }

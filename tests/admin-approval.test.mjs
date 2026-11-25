@@ -32,8 +32,8 @@ test('public cannot perform booking approval without a staff session',async()=>w
 }))
 test('owner can confirm a booking without supplier and driver assignment, even if mail is unavailable',async()=>withEnv(async()=>{
   const original=globalThis.fetch
-  const savedUser=process.env.SMTP_USER
-  delete process.env.SMTP_USER
+  const savedUser=process.env.GOOGLE_OAUTH_CLIENT_ID
+  delete process.env.GOOGLE_OAUTH_CLIENT_ID
   const calls=[]
   globalThis.fetch=async(url,options)=>{
     calls.push({url:String(url),body:options?.body?JSON.parse(options.body):null})
@@ -63,7 +63,7 @@ test('owner can confirm a booking without supplier and driver assignment, even i
     assert.equal(rpc.body.p_reservation_id,bookingId)
     assert.ok(!calls.some(call=>call.url.includes('assignments')))
     assert.ok(calls.some(call=>call.body?.status==='failed'))
-  }finally{globalThis.fetch=original;if(savedUser===undefined)delete process.env.SMTP_USER;else process.env.SMTP_USER=savedUser}
+  }finally{globalThis.fetch=original;if(savedUser===undefined)delete process.env.GOOGLE_OAUTH_CLIENT_ID;else process.env.GOOGLE_OAUTH_CLIENT_ID=savedUser}
 }))
 test('stale booking approval is rejected instead of overwriting latest state',async()=>withEnv(async()=>{
   const original=globalThis.fetch

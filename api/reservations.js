@@ -2,7 +2,7 @@ import catalog from '../src/catalog.json' with { type: 'json' }
 import { createHash } from 'node:crypto'
 import { validatePlaceSelection } from '../server/places-serverless.mjs'
 import { requestableDays } from '../server/requestable-availability.mjs'
-import { createOperatorNotifier } from '../server/notifications.mjs'
+import { sendBookingNotification } from '../server/booking-notification.mjs'
 import { db, ApiError, fail, hasDatabase, noCache, onlyString } from '../server/chauffeur-supabase.mjs'
 
 const asBody = req => typeof req.body === 'string' ? JSON.parse(req.body) : req.body
@@ -120,21 +120,8 @@ export default async function handler(req, res) {
       }
     })
     if (result?.created) {
-      const notifier=createOperatorNotifier()
-      if (notifier.enabled) {
-        try {
-          await notifier.deliver({
-            reference:result.reference,status:'pending',
-            total:quoteRequired?null:total,details
-          })
-          await db('notification_outbox?reservation_id=eq.'+result.id,{
-            method:'PATCH',prefer:'return=minimal',
-            body:{status:'sent',sent_at:new Date().toISOString(),attempts:1}
-          })
-        } catch (error) {
-          console.error('Booking saved; operator notification not yet confirmed:',error?.code||'UNKNOWN')
-        }
-      }
+      try{await sendBookingNotification(result.id)}
+      catch{console.error('Booking saved; operator email requires review.')}
     }
     return res.status(result?.created?201:200).json({
       reference:result.reference,status:'pending',total:quoteRequired?null:total,

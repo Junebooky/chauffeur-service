@@ -1,4 +1,4 @@
-export const OPERATOR_EMAIL = 'gotoward7@gmail.com'
+export const OPERATOR_EMAIL = 'topcs2026@gmail.com'
 
 export function composeEmail(subject: string, body = '') {
   const params = new URLSearchParams({ subject })

@@ -46,7 +46,7 @@ test('server-generated PDF has valid byte offsets, multi-page support and comple
   assert.throws(()=>confirmationPreview({...sample,quoteRequired:true}),/최종/)
   assert.throws(()=>confirmationPreview({...sample,email:'guest@example.invalid,other@example.invalid'}),/이메일/)
 })
-test('SMTP delivery attaches PDF, uses customer as sole recipient, and never silently repeats ambiguous sends',async()=>{
+test('Gmail delivery attaches PDF, uses customer as sole recipient, and never silently repeats ambiguous sends',async()=>{
   const keys=['SUPABASE_URL','SUPABASE_SECRET_KEY','SMTP_USER','SMTP_APP_PASSWORD','SMTP_FROM_EMAIL']
   const before=Object.fromEntries(keys.map(k=>[k,process.env[k]]))
   Object.assign(process.env,{SUPABASE_URL:'https://example.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_TEST',SMTP_USER:'operator@example.invalid',SMTP_APP_PASSWORD:'fake-test-password',SMTP_FROM_EMAIL:'operator@example.invalid'})
@@ -67,17 +67,14 @@ test('SMTP delivery attaches PDF, uses customer as sole recipient, and never sil
   }
   try{
     let sent
-    const status=await sendQueuedConfirmation(id,id,{createTransport:()=>({sendMail:async mail=>{
-      sent=mail;return {accepted:[sample.email]}
-    }})})
+    const status=await sendQueuedConfirmation(id,id,{configured:()=>true,prepare:async mail=>async()=>{sent=mail;return {id:'gmail-sent'}}})
     assert.equal(status,'sent')
     assert.equal(sent.to,sample.email)
-    assert.equal(sent.replyTo,'operator@example.invalid')
     assert.ok(sent.attachments.some(a=>a.filename.endsWith('-Confirmation.pdf')&&a.content.subarray(0,5).equals(Buffer.from('%PDF-'))))
     assert.ok(updates.some(x=>x.status==='sent'))
-    await assert.rejects(sendQueuedConfirmation(id,id,{createTransport:()=>{throw Error('duplicate')}}),/이미 발송/)
+    await assert.rejects(sendQueuedConfirmation(id,id,{configured:()=>true,prepare:async()=>{throw Error('duplicate')}}),/이미 발송/)
     claimable=true
-    const uncertain=await sendQueuedConfirmation(id,id,{createTransport:()=>({sendMail:async()=>{throw Object.assign(new Error('Network'),{code:'ETIMEDOUT'})}})})
+    const uncertain=await sendQueuedConfirmation(id,id,{configured:()=>true,prepare:async()=>async()=>{throw new Error('Network')}})
     assert.equal(uncertain,'uncertain')
     assert.ok(updates.some(x=>x.status==='uncertain'))
   }finally{globalThis.fetch=original;for(const [k,v] of Object.entries(before)){if(v===undefined)delete process.env[k];else process.env[k]=v}}

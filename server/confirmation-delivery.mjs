@@ -1,10 +1,10 @@
-import nodemailer from 'nodemailer'
+import { gmailConfigured,automaticMailReady,prepareAutomaticMail,GmailDeliveryError } from './gmail.mjs'
 import { buildCustomerConfirmation } from './notifications.mjs'
 import { buildConfirmationPdf } from './confirmation-pdf.mjs'
 import { db, ApiError } from './chauffeur-supabase.mjs'
 
 const validPayment=method=>['on_site','separate'].includes(method)
-export const mailConfigured=()=>Boolean(process.env.SMTP_USER?.trim()&&process.env.SMTP_APP_PASSWORD?.replace(/\s+/g,'')&&(process.env.SMTP_FROM_EMAIL||process.env.SMTP_USER)?.trim())
+export const mailConfigured=gmailConfigured
 export function validateConfirmation(snapshot){
   if(!snapshot)throw new ApiError(404,'예약을 찾을 수 없어요.')
   if(snapshot.quoteRequired||snapshot.total==null||snapshot.taxIncluded==null)throw new ApiError(409,'먼저 최종 예약 금액과 세금 조건을 확인해 주세요.')
@@ -25,7 +25,7 @@ export function confirmationPreview(snapshot){
 export async function getConfirmationPreview(id,method){
   if(!validPayment(method))throw new ApiError(400,'결제 안내를 선택해 주세요.')
   const snapshot=await db('rpc/confirmation_snapshot_v1',{method:'POST',body:{p_reservation_id:id,p_payment_method:method}})
-  return confirmationPreview(snapshot)
+  return {...confirmationPreview(snapshot),mailConfigured:await automaticMailReady()}
 }
 const statusError=reason=>{
   if(reason==='not_found')return new ApiError(404,'예약을 찾을 수 없어요.')
@@ -48,48 +48,35 @@ export async function confirmAndSend({id,expectedStatus,updatedAt,paymentMethod,
   try{return {status:'confirmed',delivery:await sendQueuedConfirmation(id,staffId)}}
   catch{return {status:'confirmed',delivery:'pending'}}
 }
-export async function sendQueuedConfirmation(id,staffId,{createTransport=nodemailer.createTransport}={}){
+export async function sendQueuedConfirmation(id,staffId,{prepare=prepareAutomaticMail,configured=mailConfigured}={}){
   const claim=await db('rpc/claim_confirmation_v1',{method:'POST',body:{p_reservation_id:id,p_actor_user_id:staffId}})
   if(!claim?.ok)throw statusError(claim?.reason)
   const path='confirmation_deliveries?reservation_id=eq.'+id+'&status=eq.sending'
   const update=body=>db(path,{method:'PATCH',prefer:'return=minimal',body:{...body,updated_at:new Date().toISOString()}})
   let attempted=false
   try{
-    if(!mailConfigured()){
-      await update({status:'failed',last_error_code:'SMTP_NOT_CONFIGURED'})
+    if(!configured()){
+      await update({status:'failed',last_error_code:'GMAIL_NOT_CONFIGURED'})
       return 'failed'
     }
     validateConfirmation(claim.snapshot)
     const snapshot=claim.snapshot
     const email=buildCustomerConfirmation(snapshot)
     const pdf=claim.pdf_base64?Buffer.from(claim.pdf_base64,'base64'):buildConfirmationPdf(snapshot)
-    const username=process.env.SMTP_USER.trim()
-    const sender=(process.env.SMTP_FROM_EMAIL||username).trim()
-    const messageId='<chauffeur.confirmation.'+id+'@'+(username.split('@')[1]||'gmail.com')+'>'
+    const messageId='<chauffeur.confirmation.'+id+'@gmail.com>'
     await update({pdf_base64:pdf.toString('base64'),message_id:messageId})
-    const secure=(process.env.SMTP_SECURE||'true').toLowerCase()==='true'
-    const transport=createTransport({
-      host:process.env.SMTP_HOST||'smtp.gmail.com',port:Number(process.env.SMTP_PORT||465),secure,requireTLS:!secure,
-      auth:{user:username,pass:process.env.SMTP_APP_PASSWORD.replace(/\s+/g,'')},
-      connectionTimeout:7000,greetingTimeout:7000,socketTimeout:12000,
-    })
-    attempted=true
-    const info=await transport.sendMail({
-      from:{name:'Chauffeur Service',address:sender},to:snapshot.email,replyTo:sender,
-      subject:email.subject,text:email.text,html:email.html,
+    const send=await prepare({
+      to:snapshot.email,subject:email.subject,text:email.text,html:email.html,
       attachments:[...email.attachments,{filename:snapshot.reference+'-Confirmation.pdf',content:pdf,contentType:'application/pdf'}],
       messageId,
     })
-    if(!Array.isArray(info?.accepted)||!info.accepted.some(a=>String(a).toLowerCase()===snapshot.email.toLowerCase())){
-      await update({status:'failed',last_error_code:'RECIPIENT_REJECTED'})
-      return 'failed'
-    }
+    attempted=true
+    await send()
     await update({status:'sent',sent_at:new Date().toISOString(),last_error_code:null})
     return 'sent'
   }catch(error){
-    // SMTP timeouts/disconnects can occur AFTER acceptance. Never retry blindly.
-    const clearlyRejected=error?.code==='EAUTH'||error?.code==='EENVELOPE'
-    const status=attempted&&!clearlyRejected?'uncertain':'failed'
+    // A failure before transmission or explicit Gmail rejection is retryable.
+    const status=attempted&&(!(error instanceof GmailDeliveryError)||error.uncertain)?'uncertain':'failed'
     try{await update({status,last_error_code:status==='uncertain'?'DELIVERY_UNKNOWN':'SEND_FAILED'})}catch{/* DB remains sending; manual reconciliation required */}
     return status
   }

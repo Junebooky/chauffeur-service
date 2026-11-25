@@ -23,7 +23,8 @@ type Journey = {
   flight_number:string|null;quoted_amount:number|null;stops?:Array<{location:string;place?:{name?:string}}>;
 }
 type Delivery = {reservation_id:string;status:'pending'|'sending'|'sent'|'failed'|'uncertain';attempts:number;sent_at:string|null;claimed_at:string|null}
-type Snapshot = {role:string;reservations:Reservation[];days:Journey[];deliveries:Delivery[]}
+type Notification = Pick<Delivery,'reservation_id'|'status'|'attempts'|'sent_at'>
+type Snapshot = {role:string;reservations:Reservation[];days:Journey[];deliveries:Delivery[];notifications:Notification[]}
 type Preview = {subject:string;html:string;to:string;reference:string;total:number;taxIncluded:boolean;updatedAt:string;pdfBase64:string;filename:string;mailConfigured:boolean;paymentMethod:'on_site'|'separate'}
 const deliveryLabels:Record<string,string>={pending:'발송 대기',sending:'발송 결과 확인 필요',sent:'발송 완료',failed:'발송 실패',uncertain:'발송 결과 확인 필요'}
 function downloadConfirmation(preview:Preview){
@@ -187,10 +188,11 @@ export default function Admin(){
       const s=await api('GET') as Snapshot
       const id=selectedRef.current||s.reservations[0]?.id||''
       if(id){
-        const full=(await api('POST',{action:'booking_detail',reservation_id:id})).data as {reservation:Reservation;days:Journey[];deliveries:Delivery[]}
+        const full=(await api('POST',{action:'booking_detail',reservation_id:id})).data as {reservation:Reservation;days:Journey[];deliveries:Delivery[];notifications:Notification[]}
         s.reservations=[...s.reservations.filter(r=>r.id!==id),full.reservation].sort((a,b)=>b.created_at.localeCompare(a.created_at))
         s.days=[...s.days.filter(d=>d.reservation_id!==id),...full.days]
         s.deliveries=[...s.deliveries.filter(d=>d.reservation_id!==id),...full.deliveries]
+        s.notifications=[...(s.notifications||[]).filter(d=>d.reservation_id!==id),...full.notifications]
       }
       setSnapshot(s);selectedRef.current=id;setSelectedId(id);setScheduleRevision(v=>v+1)
     }catch(err){setError(err instanceof Error?err.message:'예약을 불러오지 못했어요.')}
@@ -210,6 +212,7 @@ export default function Admin(){
   const current=reservations.find(r=>r.id===selectedId)||null
   const days=(snapshot?.days||[]).filter(d=>d.reservation_id===selectedId).sort((a,b)=>a.position-b.position)
   const delivery=(snapshot?.deliveries||[]).find(d=>d.reservation_id===selectedId)
+  const operatorNotice=(snapshot?.notifications||[]).find(d=>d.reservation_id===selectedId)
   const canEdit=!!snapshot&&['owner','admin','operator'].includes(snapshot.role)
   const canRevise=canEdit&&!!current&&['requested','reviewing','quoted','awaiting_deposit'].includes(current.status)&&!delivery
   const selectBooking=async(id:string,keepFilter=false)=>{
@@ -218,9 +221,9 @@ export default function Admin(){
     setTab('reservations');if(!keepFilter){setFilter('all');setSearch('')}setPreview(null);setPaymentMethod('on_site')
     setLoading(true);setError('')
     try{
-      const full=(await api('POST',{action:'booking_detail',reservation_id:id})).data as {reservation:Reservation;days:Journey[];deliveries:Delivery[]}
+      const full=(await api('POST',{action:'booking_detail',reservation_id:id})).data as {reservation:Reservation;days:Journey[];deliveries:Delivery[];notifications:Notification[]}
       if(request!==detailRequest.current)return
-      setSnapshot(prev=>prev?{...prev,reservations:[...prev.reservations.filter(r=>r.id!==id),full.reservation].sort((a,b)=>b.created_at.localeCompare(a.created_at)),days:[...prev.days.filter(d=>d.reservation_id!==id),...full.days],deliveries:[...prev.deliveries.filter(d=>d.reservation_id!==id),...full.deliveries]}:prev)
+      setSnapshot(prev=>prev?{...prev,reservations:[...prev.reservations.filter(r=>r.id!==id),full.reservation].sort((a,b)=>b.created_at.localeCompare(a.created_at)),days:[...prev.days.filter(d=>d.reservation_id!==id),...full.days],deliveries:[...prev.deliveries.filter(d=>d.reservation_id!==id),...full.deliveries],notifications:[...(prev.notifications||[]).filter(d=>d.reservation_id!==id),...full.notifications]}:prev)
       selectedRef.current=id;setSelectedId(id)
     }catch(err){if(request===detailRequest.current)setError(err instanceof Error?err.message:'예약을 불러오지 못했어요.')}
     finally{if(request===detailRequest.current)setLoading(false)}
@@ -259,6 +262,16 @@ export default function Admin(){
       setMessage(res.data.delivery==='sent'?'예약을 확정하고 고객에게 확인서를 보냈어요.':'예약은 확정됐어요. 이메일 발송 상태를 확인해 주세요.')
       await refresh()
     }catch(err){setError(err instanceof Error?err.message:'확정 결과를 확인하지 못했어요. 새로고침해 주세요.');setPreview(null);await refresh()}
+    finally{setPending(false)}
+  }
+  const retryOperator=async()=>{
+    if(!current||pending)return
+    setPending(true);setError('');setMessage('')
+    try{
+      const res=await api('POST',{action:'retry_booking_notification',reservation_id:current.id})
+      setMessage(res.data.delivery==='sent'?'회사 Gmail에 예약 접수 안내를 보냈어요.':'접수 이메일 발송 상태를 확인해 주세요.')
+      await refresh()
+    }catch(err){setError(err instanceof Error?err.message:'다시 시도해 주세요.');await refresh()}
     finally{setPending(false)}
   }
   const retry=async()=>{
@@ -318,6 +331,10 @@ export default function Admin(){
                     {canRevise&&<EditJourney key={d.id+current.updated_at} day={d} reservation={current} save={saveEdit} busy={pending}/>}
                   </div>)}</section>
                   <section className="admin-section"><h3>예약 요금</h3><div className="admin-money"><span>서비스 금액 · {current.tax_included===true?'세금 포함':current.tax_included===false?'세금 별도':'세금 확인 필요'}</span><strong>{moneyKo(current.quoted_total)}</strong></div>{current.quote_required&&<p className="admin-ko-caption">날짜별 최종 요금과 세금 조건을 저장하면 예약을 확정할 수 있어요.</p>}{!canRevise&&<p className="admin-ko-caption">확정 이후의 일정·요금 변경은 기존 확인서와 일치하도록 별도 변경 절차가 필요해요.</p>}</section>
+                  {operatorNotice&&<section className="admin-section"><h3><Mail size={16}/> 회사 접수 이메일</h3><div className="admin-money"><span>예약 접수 알림</span><strong>{deliveryLabels[operatorNotice.status]}</strong></div>
+                    {operatorNotice.status==='sending'&&<p className="admin-ko-caption">중복 발송을 막기 위해 보낸 메일부터 확인해 주세요.</p>}
+                    {canEdit&&['pending','failed'].includes(operatorNotice.status)&&<button type="button" className="admin-secondary" disabled={pending} onClick={()=>void retryOperator()}>접수 이메일 보내기</button>}
+                  </section>}
                   {['confirmed','in_progress','completed','cancelled'].includes(current.status)&&<section className="admin-section"><h3><Mail size={16}/> 고객에게 보낸 안내</h3>
                     {delivery?<><div className="admin-money"><span>확정 이메일</span><strong>{deliveryLabels[delivery.status]||delivery.status}</strong></div>
                       {delivery.sent_at&&<p className="admin-ko-caption">{dateKo(delivery.sent_at)} 발송 요청이 Gmail에 전달됐어요.</p>}

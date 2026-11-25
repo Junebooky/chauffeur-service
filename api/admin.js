@@ -6,6 +6,8 @@ import { scheduleWindow, bookingDetail } from '../server/booking-schedule.mjs'
 
 import { gmailStatus,gmailStart,gmailList,gmailRead,gmailSend } from '../server/gmail.mjs'
 
+import { sendBookingNotification } from '../server/booking-notification.mjs'
+
 const writeRoles = new Set(['owner','admin','operator'])
 const financeRoles = new Set(['owner','admin','finance'])
 const ownerRoles = new Set(['owner','admin'])
@@ -40,11 +42,12 @@ export default async function handler(req,res) {
       const reservations=await db('reservations?select=*&order=created_at.desc&limit=150')
       const ids=reservations.map(r=>r.id).filter(validUuid)
       const selection='in.('+ids.join(',')+')'
-      const [days,deliveries]=ids.length?await Promise.all([
+      const [days,deliveries,notifications]=ids.length?await Promise.all([
         db('reservation_days?select=*&reservation_id='+selection+'&order=position.asc&limit=10000'),
-        db('confirmation_deliveries?select=reservation_id,status,attempts,sent_at,claimed_at&reservation_id='+selection)
-      ]):[[],[]]
-      return res.status(200).json({role:staff.role,reservations,days,deliveries})
+        db('confirmation_deliveries?select=reservation_id,status,attempts,sent_at,claimed_at&reservation_id='+selection),
+        db('notification_outbox?select=reservation_id,status,attempts,sent_at&event_type=eq.booking_requested&reservation_id='+selection)
+      ]):[[],[],[]]
+      return res.status(200).json({role:staff.role,reservations,days,deliveries,notifications})
     }
     const b=getBody(req)
     if(!b || typeof b!=='object' || Array.isArray(b) || JSON.stringify(b).length>15000)
@@ -53,10 +56,13 @@ export default async function handler(req,res) {
     let data
     if(action==='gmail_status') data=await gmailStatus(staff)
     else if(action==='gmail_start') data=await gmailStart(staff,res)
-    else if(action==='gmail_list') data=await gmailList(staff)
+    else if(action==='gmail_list') data=await gmailList(staff,b.folder,b.pageToken)
     else if(action==='gmail_read') data=await gmailRead(staff,b.id)
     else if(action==='gmail_send') data=await gmailSend(staff,b)
-    else if(action==='schedule_window') {
+    else if(action==='retry_booking_notification') {
+      roleCheck(staff.role,writeRoles)
+      data={delivery:await sendBookingNotification(requireId(b.reservation_id))}
+    } else if(action==='schedule_window') {
       data=await scheduleWindow(b.from,b.to)
     } else if(action==='booking_detail') {
       data=await bookingDetail(requireId(b.reservation_id))
