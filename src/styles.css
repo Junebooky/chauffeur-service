@@ -11262,7 +11262,7 @@ h3 {
   }
 
   .slide-overview .fleet-slide-bg {
-    top: 52%;
+    top: 56%;
     bottom: auto;
     left: 0;
     right: 0;
@@ -11296,18 +11296,23 @@ h3 {
     background: linear-gradient(
       180deg,
       #050608 0%,
-      rgba(5, 6, 8, 0.88) 18%,
-      rgba(5, 6, 8, 0.25) 36%,
-      transparent 48%,
-      transparent 62%,
-      rgba(5, 6, 8, 0.45) 74%,
-      rgba(5, 6, 8, 0.92) 88%,
+      rgba(5, 6, 8, 0.9) 22%,
+      rgba(5, 6, 8, 0.25) 38%,
+      transparent 46%,
+      transparent 66%,
+      rgba(5, 6, 8, 0.45) 78%,
+      rgba(5, 6, 8, 0.92) 90%,
       #050608 100%
     );
   }
 
   .fleet-overview-header {
-    margin-top: clamp(4px, 1.2dvh, 16px);
+    margin-top: clamp(56px, 9dvh, 92px);
+  }
+
+  .section-numeral,
+  .mobile-nav > button > span {
+    display: none;
   }
 
   .fleet-eyebrow-wrap {
@@ -11406,7 +11411,7 @@ h3 {
   }
 
   .slide-overview .fleet-slide-bg {
-    top: 40%;
+    top: 56%;
   }
 
   .fleet-vehicle-stage-layer,
@@ -11744,4 +11749,5 @@ h3 {
 .pricing-carousel-marker[aria-current='true'] .pricing-carousel-marker-dot {
   width: 26px;
   background: #f4f5f7;
+  box-shadow: 0 0 10px rgba(244, 245, 247, 0.55);
 }

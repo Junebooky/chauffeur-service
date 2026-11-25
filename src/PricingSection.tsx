@@ -83,6 +83,7 @@ export default function PricingSection({
 }: PricingSectionProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const pendingTargetRef = useRef<number | null>(null)
+  const pendingClearTimerRef = useRef(0)
   const settledIndexRef = useRef(0)
   const [activePlanIndex, setActivePlanIndex] = useState(0)
   const [statusAnnouncement, setStatusAnnouncement] = useState('')
@@ -94,12 +95,14 @@ export default function PricingSection({
     const nearestIndex = () => {
       const slides = Array.from(track.children) as HTMLElement[]
       if (!slides.length) return 0
-      const center = track.scrollLeft + track.clientWidth / 2
+      const trackRect = track.getBoundingClientRect()
+      const trackCenter = trackRect.left + trackRect.width / 2
       let bestIndex = 0
       let bestDist = Infinity
       slides.forEach((slide, index) => {
-        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2
-        const dist = Math.abs(slideCenter - center)
+        const slideRect = slide.getBoundingClientRect()
+        const slideCenter = slideRect.left + slideRect.width / 2
+        const dist = Math.abs(slideCenter - trackCenter)
         if (dist < bestDist) {
           bestDist = dist
           bestIndex = index
@@ -112,8 +115,13 @@ export default function PricingSection({
     let settleTimer = 0
     const hasScrollEnd = 'onscrollend' in window
 
-    const handleSettle = () => {
+    const clearPending = () => {
       pendingTargetRef.current = null
+      window.clearTimeout(pendingClearTimerRef.current)
+    }
+
+    const handleSettle = () => {
+      clearPending()
       const index = nearestIndex()
       setActivePlanIndex(index)
       if (index !== settledIndexRef.current) {
@@ -131,19 +139,24 @@ export default function PricingSection({
           setActivePlanIndex(nearestIndex())
         })
       }
-      if (!hasScrollEnd) {
-        window.clearTimeout(settleTimer)
-        settleTimer = window.setTimeout(handleSettle, 140)
-      }
+      window.clearTimeout(settleTimer)
+      settleTimer = window.setTimeout(handleSettle, 140)
     }
 
     track.addEventListener('scroll', handleScroll, { passive: true })
+    track.addEventListener('touchstart', clearPending, { passive: true })
+    track.addEventListener('pointerdown', clearPending, { passive: true })
+    track.addEventListener('wheel', clearPending, { passive: true })
     if (hasScrollEnd) track.addEventListener('scrollend', handleSettle)
 
     return () => {
       cancelAnimationFrame(raf)
       window.clearTimeout(settleTimer)
+      window.clearTimeout(pendingClearTimerRef.current)
       track.removeEventListener('scroll', handleScroll)
+      track.removeEventListener('touchstart', clearPending)
+      track.removeEventListener('pointerdown', clearPending)
+      track.removeEventListener('wheel', clearPending)
       if (hasScrollEnd) track.removeEventListener('scrollend', handleSettle)
     }
   }, [])
@@ -151,13 +164,26 @@ export default function PricingSection({
   const scrollToPlan = (index: number) => {
     const track = trackRef.current
     const slide = track?.children[index] as HTMLElement | undefined
-    pendingTargetRef.current = index
     setActivePlanIndex(index)
     if (!track || !slide) return
-    const targetLeft = slide.offsetLeft - (track.clientWidth - slide.offsetWidth) / 2
+    const trackRect = track.getBoundingClientRect()
+    const slideRect = slide.getBoundingClientRect()
+    const targetLeft = Math.max(
+      0,
+      track.scrollLeft + (slideRect.left - trackRect.left) - (trackRect.width - slideRect.width) / 2,
+    )
+    window.clearTimeout(pendingClearTimerRef.current)
+    if (Math.abs(targetLeft - track.scrollLeft) < 2) {
+      pendingTargetRef.current = null
+      return
+    }
+    pendingTargetRef.current = index
+    pendingClearTimerRef.current = window.setTimeout(() => {
+      pendingTargetRef.current = null
+    }, 500)
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
     track.scrollTo({
-      left: Math.max(0, targetLeft),
+      left: targetLeft,
       behavior: reduce ? 'auto' : 'smooth',
     })
   }
@@ -218,7 +244,7 @@ export default function PricingSection({
             tabIndex={0}
             role="group"
             aria-label="Pricing plan slides"
-            className="pricing-carousel-track -mx-[clamp(20px,4.5vw,84px)] flex w-auto snap-x snap-mandatory gap-4 overflow-x-auto px-[clamp(20px,4.5vw,84px)] pb-2 lg:mx-0 lg:grid lg:w-full lg:snap-none lg:grid-cols-3 lg:gap-7 lg:overflow-visible lg:p-0 xl:gap-8"
+            className="pricing-carousel-track relative -mx-[clamp(20px,4.5vw,84px)] flex w-auto snap-x snap-mandatory gap-4 overflow-x-auto px-[clamp(20px,4.5vw,84px)] pb-2 lg:mx-0 lg:grid lg:w-full lg:snap-none lg:grid-cols-3 lg:gap-7 lg:overflow-visible lg:p-0 xl:gap-8"
           >
             {PRICING_PLANS.map((plan, index) => (
               <article

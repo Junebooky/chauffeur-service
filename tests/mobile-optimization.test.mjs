@@ -31,6 +31,8 @@ test('Pricing cards use horizontal touch carousel on mobile while retaining touc
   const css = read('src/styles.css')
   assert.match(pricing, /pricing-carousel-track/)
   assert.match(pricing, /snap-x snap-mandatory/)
+  assert.match(pricing, /getBoundingClientRect\(\)/)
+  assert.match(pricing, /addEventListener\('touchstart', clearPending/)
   assert.match(pricing, /pricing-carousel-markers/)
   assert.match(pricing, /aria-current=\{activePlanIndex === index \? 'true' : undefined\}/)
   assert.match(pricing, /min-h-\[clamp\(380px,49dvh,525px\)\]/)
@@ -40,17 +42,19 @@ test('Pricing cards use horizontal touch carousel on mobile while retaining touc
   assert.match(css, /\.pricing-carousel-track\s*\{[\s\S]*?overscroll-behavior-x:\s*contain;/)
 })
 
-test('mobile optimizations cover left-aligned vertical footer, overview gradient framing, and upper hero heading', () => {
+test('mobile optimizations cover left-aligned vertical footer, overview gradient framing, hidden numerals, and upper hero heading', () => {
   const css = read('src/styles.css')
   const pricing = read('src/PricingSection.tsx')
   const mobileLayer = css.slice(css.indexOf('/* === MOBILE OPTIMIZATION LAYER === */'))
   assert.match(mobileLayer, /\.site-footer\s*\{\s*flex-direction:\s*column;\s*align-items:\s*flex-start;/)
   assert.match(mobileLayer, /\.site-footer > span:first-child\s*\{\s*order:\s*3;/)
   assert.match(mobileLayer, /\.fleet-eyebrow-wrap\s*\{\s*display:\s*none;\s*\}/)
+  assert.match(mobileLayer, /\.section-numeral,\s*\.mobile-nav > button > span\s*\{\s*display:\s*none;\s*\}/)
+  assert.match(mobileLayer, /\.fleet-overview-header\s*\{\s*margin-top:\s*clamp\(56px, 9dvh, 92px\);/)
   assert.match(mobileLayer, /\.fleet-card > \.fleet-card-beam-ring\s*\{\s*opacity:\s*0\.94;/)
   assert.match(pricing, /max-lg:opacity-90 \[@media\(hover:none\)\]:opacity-90/)
   assert.match(mobileLayer, /\.hero-backdrop-img\s*\{[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
-  assert.match(mobileLayer, /\.slide-overview \.fleet-slide-bg\s*\{[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
+  assert.match(mobileLayer, /\.slide-overview \.fleet-slide-bg\s*\{[\s\S]*?top:\s*56%;[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
   assert.match(mobileLayer, /\.hero-book-link\s*\{\s*margin-top:\s*auto;\s*align-self:\s*flex-end;/)
 })
 
