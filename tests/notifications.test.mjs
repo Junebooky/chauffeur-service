@@ -95,7 +95,7 @@ test('Gmail SMTP uses secure Nodemailer transport and sends branded HTML plus te
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
-    user: 'gotoward7@gmail.com',
+    user: 'topcs2026@gmail.com',
     appPassword: 'abcd efgh ijkl mnop',
     createTransport: (config) => {
       transports.push(config)
@@ -120,7 +120,7 @@ test('Gmail SMTP uses secure Nodemailer transport and sends branded HTML plus te
   }), true)
   assert.equal(deliveries.length, 1)
   assert.deepEqual(deliveries[0].from, {
-    name: 'Chauffeur Service', address: 'gotoward7@gmail.com',
+    name: 'Chauffeur Service', address: 'topcs2026@gmail.com',
   })
   assert.equal(deliveries[0].to, DEFAULT_OPERATOR_EMAIL)
   assert.equal(deliveries[0].replyTo, details.email)
@@ -132,7 +132,7 @@ test('Gmail SMTP uses secure Nodemailer transport and sends branded HTML plus te
 test('missing SMTP credentials cannot attempt a network send', async () => {
   let created = 0
   const sender = createOperatorNotifier({
-    user: 'gotoward7@gmail.com',
+    user: 'topcs2026@gmail.com',
     appPassword: '',
     createTransport: () => { created++; throw new Error('must not connect') },
   })
@@ -146,7 +146,7 @@ test('missing SMTP credentials cannot attempt a network send', async () => {
 test('Gmail SMTP recipient rejection is retried instead of marking a notification sent', async () => {
   let count = 0
   const sender = createOperatorNotifier({
-    user: 'gotoward7@gmail.com',
+    user: 'topcs2026@gmail.com',
     appPassword: 'abcdefghijklmnop',
     createTransport: () => ({
       sendMail: async () => {

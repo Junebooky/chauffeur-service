@@ -11,7 +11,7 @@ const EMAIL_HEADER_BUFFER = existsSync(EMAIL_HEADER_BG_PATH)
   ? readFileSync(EMAIL_HEADER_BG_PATH)
   : null
 
-export const DEFAULT_OPERATOR_EMAIL = 'gotoward7@gmail.com'
+export const DEFAULT_OPERATOR_EMAIL = 'topcs2026@gmail.com'
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
