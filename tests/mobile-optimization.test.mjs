@@ -26,12 +26,27 @@ test('Fleet section supports mobile horizontal touch swipes', () => {
   assert.match(fleet, /className=\{`fleet-carousel-viewport[\s\S]*?onTouchEnd=/)
 })
 
-test('Pricing cards grow safely on mobile while retaining touch targets and desktop height', () => {
+test('Pricing cards use horizontal touch carousel on mobile while retaining touch targets and desktop height', () => {
   const pricing = read('src/PricingSection.tsx')
+  const css = read('src/styles.css')
+  assert.match(pricing, /pricing-carousel-track/)
+  assert.match(pricing, /snap-x snap-mandatory/)
+  assert.match(pricing, /pricing-carousel-markers/)
+  assert.match(pricing, /aria-current=\{activePlanIndex === index \? 'true' : undefined\}/)
   assert.match(pricing, /min-h-\[clamp\(380px,49dvh,525px\)\]/)
   assert.match(pricing, /lg:h-\[clamp\(400px,49dvh,525px\)\]/)
   assert.match(pricing, /env\(safe-area-inset-bottom/)
   assert.match(pricing, /min-h-\[44px\]/)
+  assert.match(css, /\.pricing-carousel-track\s*\{[\s\S]*?overscroll-behavior-x:\s*contain;/)
+})
+
+test('mobile optimizations cover left-aligned vertical footer, overview gradient framing, and upper hero heading', () => {
+  const css = read('src/styles.css')
+  const mobileLayer = css.slice(css.indexOf('/* === MOBILE OPTIMIZATION LAYER === */'))
+  assert.match(mobileLayer, /\.site-footer\s*\{\s*flex-direction:\s*column;\s*align-items:\s*flex-start;/)
+  assert.match(mobileLayer, /\.site-footer > span:first-child\s*\{\s*order:\s*3;/)
+  assert.match(mobileLayer, /\.slide-overview \.fleet-slide-bg\s*\{[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
+  assert.match(mobileLayer, /\.hero-book-link\s*\{\s*margin-top:\s*auto;\s*align-self:\s*flex-end;/)
 })
 
 test('dropdown and address popups respond to visualViewport scroll and clamp to viewport width', () => {
@@ -53,5 +68,4 @@ test('mobile optimization stylesheet covers touch targets, snap disabling, input
   assert.match(mobileLayer, /\.fleet-bottom-dock \{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/)
   assert.match(mobileLayer, /\.booking-glass-stage\.is-expanded \.field input,[\s\S]*?font-size:\s*16px !important;/)
   assert.match(mobileLayer, /\.booking-glass-stage\.is-expanded \.booking-fields \{\s*padding-top:\s*56px !important;/)
-  assert.match(mobileLayer, /\.site-footer \{\s*font-size:\s*11px;/)
 })

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import catalog from './catalog.json'
 import { money } from './utils'
 import { customQuoteEmail } from './contact'
@@ -80,6 +81,87 @@ export default function PricingSection({
   onSelectService,
   goTo,
 }: PricingSectionProps) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const pendingTargetRef = useRef<number | null>(null)
+  const settledIndexRef = useRef(0)
+  const [activePlanIndex, setActivePlanIndex] = useState(0)
+  const [statusAnnouncement, setStatusAnnouncement] = useState('')
+
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+
+    const nearestIndex = () => {
+      const slides = Array.from(track.children) as HTMLElement[]
+      if (!slides.length) return 0
+      const center = track.scrollLeft + track.clientWidth / 2
+      let bestIndex = 0
+      let bestDist = Infinity
+      slides.forEach((slide, index) => {
+        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2
+        const dist = Math.abs(slideCenter - center)
+        if (dist < bestDist) {
+          bestDist = dist
+          bestIndex = index
+        }
+      })
+      return bestIndex
+    }
+
+    let raf = 0
+    let settleTimer = 0
+    const hasScrollEnd = 'onscrollend' in window
+
+    const handleSettle = () => {
+      pendingTargetRef.current = null
+      const index = nearestIndex()
+      setActivePlanIndex(index)
+      if (index !== settledIndexRef.current) {
+        settledIndexRef.current = index
+        setStatusAnnouncement(
+          `Slide ${index + 1} of ${PRICING_PLANS.length}: ${PRICING_PLANS[index].lines.join(' ')}`,
+        )
+      }
+    }
+
+    const handleScroll = () => {
+      if (pendingTargetRef.current === null) {
+        cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(() => {
+          setActivePlanIndex(nearestIndex())
+        })
+      }
+      if (!hasScrollEnd) {
+        window.clearTimeout(settleTimer)
+        settleTimer = window.setTimeout(handleSettle, 140)
+      }
+    }
+
+    track.addEventListener('scroll', handleScroll, { passive: true })
+    if (hasScrollEnd) track.addEventListener('scrollend', handleSettle)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.clearTimeout(settleTimer)
+      track.removeEventListener('scroll', handleScroll)
+      if (hasScrollEnd) track.removeEventListener('scrollend', handleSettle)
+    }
+  }, [])
+
+  const scrollToPlan = (index: number) => {
+    const track = trackRef.current
+    const slide = track?.children[index] as HTMLElement | undefined
+    pendingTargetRef.current = index
+    setActivePlanIndex(index)
+    if (!track || !slide) return
+    const targetLeft = slide.offsetLeft - (track.clientWidth - slide.offsetWidth) / 2
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    track.scrollTo({
+      left: Math.max(0, targetLeft),
+      behavior: reduce ? 'auto' : 'smooth',
+    })
+  }
+
   const navigateToReservation = (serviceId: 'airport' | 'day' | null) => {
     if (serviceId === null) {
       window.location.href = customQuoteEmail()
@@ -124,13 +206,28 @@ export default function PricingSection({
           </p>
         </div>
 
-        {/* Three equally sized editorial cards; stacked on smaller screens. */}
-        <div className="grid w-full grid-cols-1 gap-5 lg:my-auto lg:grid-cols-3 lg:gap-7 xl:gap-8">
-          {PRICING_PLANS.map((plan) => (
-            <article
-              key={plan.id}
-              className="group relative flex min-h-[clamp(380px,49dvh,525px)] flex-col justify-between rounded-[18px] border border-[#e5dfd5]/35 bg-[#050608] shadow-[0_26px_60px_rgba(0,0,0,0.84),inset_0_1px_0_rgba(255,250,242,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-[#f4f5f7]/30 focus-within:-translate-y-1 focus-within:border-[#f4f5f7]/40 lg:h-[clamp(400px,49dvh,525px)]"
-            >
+        {/* Three equally sized editorial cards; horizontal touch carousel on mobile. */}
+        <div
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Pricing plans"
+          className="lg:my-auto"
+        >
+          <div
+            ref={trackRef}
+            tabIndex={0}
+            role="group"
+            aria-label="Pricing plan slides"
+            className="pricing-carousel-track -mx-[clamp(20px,4.5vw,84px)] flex w-auto snap-x snap-mandatory gap-4 overflow-x-auto px-[clamp(20px,4.5vw,84px)] pb-2 lg:mx-0 lg:grid lg:w-full lg:snap-none lg:grid-cols-3 lg:gap-7 lg:overflow-visible lg:p-0 xl:gap-8"
+          >
+            {PRICING_PLANS.map((plan, index) => (
+              <article
+                key={plan.id}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${index + 1} of ${PRICING_PLANS.length}`}
+                className="group relative flex min-h-[clamp(380px,49dvh,525px)] w-[82dvw] max-w-[360px] shrink-0 snap-center snap-always flex-col justify-between rounded-[18px] border border-[#e5dfd5]/35 bg-[#050608] shadow-[0_26px_60px_rgba(0,0,0,0.84),inset_0_1px_0_rgba(255,250,242,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-[#f4f5f7]/30 focus-within:-translate-y-1 focus-within:border-[#f4f5f7]/40 lg:h-[clamp(400px,49dvh,525px)] lg:w-auto lg:max-w-none lg:shrink lg:snap-none"
+              >
               {/* Clockwise Border Beam Halo (subtle soft bloom on hover/focus) */}
               <span
                 aria-hidden="true"
@@ -252,6 +349,27 @@ export default function PricingSection({
               </div>
             </article>
           ))}
+          </div>
+          <p className="sr-only" role="status" aria-live="polite">
+            {statusAnnouncement}
+          </p>
+          <nav
+            className="pricing-carousel-markers mt-4 flex items-center justify-center gap-1 lg:hidden"
+            aria-label="Choose a pricing plan"
+          >
+            {PRICING_PLANS.map((plan, index) => (
+              <button
+                key={plan.id}
+                type="button"
+                className="pricing-carousel-marker"
+                aria-label={`Show ${plan.lines.join(' ')} (${index + 1} of ${PRICING_PLANS.length})`}
+                aria-current={activePlanIndex === index ? 'true' : undefined}
+                onClick={() => scrollToPlan(index)}
+              >
+                <span className="pricing-carousel-marker-dot" aria-hidden="true" />
+              </button>
+            ))}
+          </nav>
         </div>
       </div>
     </section>

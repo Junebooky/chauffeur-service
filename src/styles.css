@@ -11175,6 +11175,99 @@ h3 {
     display: none;
   }
 
+  .hero-backdrop-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(7, 8, 10, 0.72) 0%,
+      rgba(7, 8, 10, 0.42) 28%,
+      rgba(7, 8, 10, 0.14) 52%,
+      rgba(7, 8, 10, 0.24) 74%,
+      rgba(7, 8, 10, 0.76) 100%
+    );
+  }
+
+  .hero-heading {
+    top: calc(var(--header) + env(safe-area-inset-top, 0px) + clamp(24px, 4.5dvh, 48px));
+    bottom: max(30px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+    left: max(var(--gutter), env(safe-area-inset-left, 0px));
+    right: max(var(--gutter), env(safe-area-inset-right, 0px));
+    transform: none;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-heading h1 {
+    margin-bottom: clamp(0.75rem, 1.6dvh, 1.125rem);
+  }
+
+  .hero-subtitle {
+    margin-bottom: 0;
+    max-width: 30ch;
+  }
+
+  .hero-book-link {
+    margin-top: auto;
+    align-self: flex-end;
+    gap: 1.5rem;
+    min-height: 44px;
+    padding: 10px 0 8px;
+  }
+
+  .slide-overview {
+    background: #050608;
+  }
+
+  .slide-overview .fleet-slide-bg {
+    top: 52%;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    transform: translateY(-50%);
+    object-fit: contain;
+    object-position: center center;
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.55) 14%,
+      #000 28%,
+      #000 74%,
+      rgba(0, 0, 0, 0.55) 88%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.55) 14%,
+      #000 28%,
+      #000 74%,
+      rgba(0, 0, 0, 0.55) 88%,
+      transparent 100%
+    );
+  }
+
+  .slide-overview .fleet-slide-overlay {
+    background: linear-gradient(
+      180deg,
+      #050608 0%,
+      rgba(5, 6, 8, 0.88) 18%,
+      rgba(5, 6, 8, 0.25) 36%,
+      transparent 48%,
+      transparent 62%,
+      rgba(5, 6, 8, 0.45) 74%,
+      rgba(5, 6, 8, 0.92) 88%,
+      #050608 100%
+    );
+  }
+
+  .fleet-overview-header {
+    margin-top: clamp(4px, 1.2dvh, 16px);
+  }
+
   #collection.fleet-apple-section {
     height: auto;
     min-height: 100dvh;
@@ -11256,25 +11349,6 @@ h3 {
   :root {
     --header: 66px;
     --gutter: 20px;
-  }
-
-  .hero-backdrop-overlay {
-    background: linear-gradient(
-      180deg,
-      rgba(7, 8, 10, 0.56) 0%,
-      rgba(7, 8, 10, 0.34) 45%,
-      rgba(7, 8, 10, 0.68) 100%
-    );
-  }
-
-  .hero-heading {
-    top: 48%;
-    max-width: 100%;
-  }
-
-  .hero-book-link {
-    min-height: 44px;
-    padding: 10px 0;
   }
 
   .fleet-bottom-dock {
@@ -11476,21 +11550,40 @@ h3 {
   }
 
   .site-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 4px;
     font-size: 11px;
-    gap: 10px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
-  }
-
-  .site-footer > span:first-child,
-  .site-footer > span:last-child {
-    font-size: 11px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
   }
 
   .site-footer > button {
-    font-size: 11px;
+    order: 1;
+    font-size: 12px;
     min-height: 44px;
+    padding: 0;
     display: inline-flex;
     align-items: center;
+    gap: 6px;
+  }
+
+  .site-footer > span:last-child {
+    order: 2;
+    margin-left: 0;
+    width: auto;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 2px 0 4px;
+  }
+
+  .site-footer > span:first-child {
+    order: 3;
+    width: auto;
+    font-size: 11px;
+    line-height: 1.5;
   }
 
   .info-dialog {
@@ -11538,4 +11631,44 @@ h3 {
     white-space: normal;
     padding: 16px 18px;
   }
+}
+
+.pricing-carousel-track {
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
+
+.pricing-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pricing-carousel-track {
+    scroll-behavior: smooth;
+  }
+}
+
+.pricing-carousel-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 44px;
+  padding: 0;
+  touch-action: manipulation;
+}
+
+.pricing-carousel-marker-dot {
+  width: 8px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(244, 245, 247, 0.34);
+  transition: width 0.25s ease, background-color 0.25s ease;
+}
+
+.pricing-carousel-marker[aria-current='true'] .pricing-carousel-marker-dot {
+  width: 26px;
+  background: #f4f5f7;
 }
