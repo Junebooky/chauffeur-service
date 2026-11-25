@@ -4,7 +4,7 @@ export default function AdminBrand() {
     <div className="admin-logo">
       <img
         className="admin-brand-mark"
-        src="/media/brand/chauffeur-mark.png"
+        src="/media/brand/logo_brand.webp"
         alt=""
         width={34}
         height={34}

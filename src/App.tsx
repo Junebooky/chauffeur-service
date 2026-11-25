@@ -27,7 +27,7 @@ function Brand({ onClick }: { onClick: () => void }) {
     >
       <img
         className="brand-mark"
-        src="/media/brand/chauffeur-mark.png"
+        src="/media/brand/logo_brand.webp"
         alt=""
         width={38}
         height={38}

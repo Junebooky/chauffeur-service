@@ -9,10 +9,10 @@ const booking = readFileSync(join(root, 'src', 'Booking.tsx'), 'utf8')
 
 test('itinerary PDF/PNG export paints the subtle bg_003 header backdrop and J Production brand lockup', () => {
   assert.equal(existsSync(join(root, 'public', 'media', 'hero', 'bg_003.png')), true)
-  assert.equal(existsSync(join(root, 'public', 'media', 'brand', 'chauffeur-mark.png')), true)
+  assert.equal(existsSync(join(root, 'public', 'media', 'brand', 'logo_brand.webp')), true)
 
   assert.match(exporter, /HEADER_BG_SRC\s*=\s*'\/media\/hero\/bg_003\.png'/)
-  assert.match(exporter, /BRAND_MARK_SRC\s*=\s*'\/media\/brand\/chauffeur-mark\.png'/)
+  assert.match(exporter, /BRAND_MARK_SRC\s*=\s*'\/media\/brand\/logo_brand\.webp'/)
   assert.match(exporter, /DISPLAY_FONT_STACK\s*=\s*'Pretendard, "Chauffeur Manrope"/)
   assert.match(exporter, /'J Production'[\s\S]*200[\s\S]*DISPLAY_FONT_STACK/)
   assert.match(exporter, /'Team of Premium Chauffeur Service'/)

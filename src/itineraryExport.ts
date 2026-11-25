@@ -12,7 +12,7 @@ export type ExportItinerary = {
 const W = 1240, H = 1754, HEADER_H = 375, PAGE_W = 595, PAGE_H = 842
 const olive = '#899766'
 const HEADER_BG_SRC = '/media/hero/bg_003.png'
-const BRAND_MARK_SRC = '/media/brand/chauffeur-mark.png'
+const BRAND_MARK_SRC = '/media/brand/logo_brand.webp'
 const DISPLAY_FONT_STACK = 'Pretendard, "Chauffeur Manrope", "Noto Sans KR", Arial, sans-serif'
 const BODY_FONT_STACK = 'Pretendard, "Chauffeur Manrope", Arial, "Noto Sans KR", sans-serif'
 
