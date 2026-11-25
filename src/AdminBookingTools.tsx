@@ -41,7 +41,7 @@ export function AdminNotes({reservation:r,save,loadHistory,busy,canEdit}:{reserv
     <label>관리자만 볼 수 있어요<textarea name="note" maxLength={4000} defaultValue={r.internal_note||''} placeholder="고객 요청이나 확인할 사항을 적어 주세요." rows={3}/></label>
     <button className="admin-secondary" disabled={busy}>메모 저장</button>
   </form>:<p>{r.internal_note||'아직 메모가 없어요.'}</p>}
-  <div className="admin-history"><button className="admin-text-link" disabled={loading} onClick={async()=>{if(history){setHistory(null);return}setLoading(true);setError('');try{setHistory(await loadHistory())}catch{setError('처리 이력을 불러오지 못했어요.')}finally{setLoading(false)}}>{history?'처리 이력 닫기':loading?'불러오고 있어요…':'처리 이력 보기'}</button>
+  <div className="admin-history"><button className="admin-text-link" disabled={loading} onClick={async()=>{if(history){setHistory(null);return}setLoading(true);setError('');try{setHistory(await loadHistory())}catch{setError('처리 이력을 불러오지 못했어요.')}finally{setLoading(false)}}}>{history?'처리 이력 닫기':loading?'불러오고 있어요…':'처리 이력 보기'}</button>
    {error&&<p role="alert">{error}</p>}
    {history&&(!history.length?<p className="admin-ko-caption">아직 기록된 이력이 없어요.</p>:history.map((h,i)=><div className="admin-history-row" key={h.created_at+i}><span>{historyLabels[h.event_type]||h.event_type}</span><small>{dateKo(h.created_at)}</small></div>))}
   </div>
