@@ -8,3 +8,6 @@ dist/
 test-results/
 *.log
 .DS_Store
+
+# Downloaded Google OAuth credentials
+client_secret*.json

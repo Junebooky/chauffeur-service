@@ -13,6 +13,7 @@ import { hasDatabase } from './chauffeur-supabase.mjs'
 import liveBooking from '../api/reservations.js'
 import liveAvailability from '../api/availability.js'
 import liveAdmin from '../api/admin.js'
+import gmailCallback from '../api/gmail/callback.js'
 import liveOverview from '../api/admin-overview.js'
 
 export function createApp({
@@ -69,6 +70,7 @@ export function createApp({
     app.all('/api/admin', (req, res) => { void liveAdmin(req, res) })
   }
   // This public summary never contains personal customer details.
+  app.all('/api/gmail/callback', (req,res)=>{void gmailCallback(req,res)})
   app.all('/api/admin-overview', (req, res) => { void liveOverview(req, res) })
 
   const places = createPlaces({ now, ...placesOptions })

@@ -115,3 +115,6 @@
 .admin-history-row{display:flex;gap:10px;justify-content:space-between;padding:10px 0;border-top:1px solid #343a42;color:#c1cad4;font-size:11px}
 .admin-history-row small{color:#9ba5b1}
 @media(max-width:600px){.admin-ops-panel{padding:13px}.admin-calendar-grid>button{min-height:58px;padding:5px}.admin-schedule-row{flex-wrap:wrap}.admin-edit-grid{grid-template-columns:1fr}}
+
+/* Owner-only Gmail desk, using the operations card and form styles. */
+.admin-mail-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.admin-mail-heading h2{margin:0}.admin-mail-row>span{flex:1;min-width:0;display:grid;gap:5px}.admin-mail-row small{display:block;color:#9da6b1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-mail-detail{border-top:1px solid #303640;margin-top:18px;padding-top:18px}.admin-mail-detail pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.65;color:#d5dbe2;max-height:440px;overflow:auto}.admin-mail-detail h2{overflow-wrap:anywhere}

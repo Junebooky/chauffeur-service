@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown, ClipboardList, Copy, FileText, LayoutDashboard, LogOut, Mail, RefreshCw, Search, ShieldCheck, X } from 'lucide-react'
 import AdminSchedule from './AdminSchedule'
+import AdminMail from './AdminMail'
 import { AdminNotes, EditContact, EditJourney, dispatchSummary } from './AdminBookingTools'
 import AdminBrand from './components/ui/AdminBrand'
 import DisplayHeading from './components/ui/DisplayHeading'
@@ -133,7 +134,7 @@ export default function Admin(){
   const [scheduleRevision,setScheduleRevision]=useState(0)
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('all')
-  const [tab,setTab]=useState<'home'|'reservations'|'calendar'>('home')
+  const [tab,setTab]=useState<'home'|'reservations'|'calendar'|'mail'>(()=>new URLSearchParams(window.location.search).has('gmail')?'mail':'home')
   const [paymentMethod,setPaymentMethod]=useState<'on_site'|'separate'>('on_site')
   const [preview,setPreview]=useState<Preview|null>(null)
   const [previewId,setPreviewId]=useState('')
@@ -285,14 +286,15 @@ export default function Admin(){
       <button className={tab==='home'?'selected':''} type="button" onClick={()=>setTab('home')}><LayoutDashboard size={17}/> 홈</button>
       <button className={tab==='reservations'?'selected':''} type="button" onClick={()=>setTab('reservations')}><ClipboardList size={17}/> 예약 관리</button>
       <button className={tab==='calendar'?'selected':''} type="button" onClick={()=>setTab('calendar')}><CalendarDays size={17}/> 일정</button>
+      {snapshot?.role==='owner'&&<button className={tab==='mail'?'selected':''} type="button" onClick={()=>setTab('mail')}><Mail size={17}/> 메일함</button>}
       <div className="admin-sidebar-bottom"><span><ShieldCheck size={14}/> 관리자 권한 · {snapshot?.role||'확인 중'}</span><a href="/admin">예약 현황만 보기 <ArrowRight size={13}/></a><button onClick={signOut}><LogOut size={15}/> 로그아웃</button></div>
     </aside>
     <main className="admin-main">
-      <header className="admin-topbar"><span>CHAUFFEUR / {tab==='home'?'홈':tab==='calendar'?'일정':'예약 관리'}</span><button disabled={loading} onClick={()=>void refresh()}><RefreshCw size={14}/> 새로고침</button></header>
+      <header className="admin-topbar"><span>CHAUFFEUR / {tab==='home'?'홈':tab==='calendar'?'일정':tab==='mail'?'메일함':'예약 관리'}</span><button disabled={loading} onClick={()=>void refresh()}><RefreshCw size={14}/> 새로고침</button></header>
       <div className="admin-content">
         {error&&<div className="admin-error admin-banner" role="alert">{error}<button onClick={()=>setError('')}>닫기</button></div>}
         {message&&<div className="admin-success admin-banner" role="status">{message}<button onClick={()=>setMessage('')}>닫기</button></div>}
-        {tab!=='reservations'?<AdminSchedule mode={tab} reservations={reservations} api={api} revision={scheduleRevision} deliveries={snapshot?.deliveries||[]} openBooking={id=>void selectBooking(id)} openFilter={openFilter} loading={loading}/>:<>
+        {tab==='mail'?<AdminMail api={api} role={snapshot?.role}/>:tab!=='reservations'?<AdminSchedule mode={tab} reservations={reservations} api={api} revision={scheduleRevision} deliveries={snapshot?.deliveries||[]} openBooking={id=>void selectBooking(id)} openFilter={openFilter} loading={loading}/>:<>
           <div className="admin-heading"><div><SectionEyebrow>예약 운영</SectionEyebrow><DisplayHeading as="h1">예약 업무, 여기서 끝내요.</DisplayHeading><p>새 예약을 확인하고 고객에게 확정 안내를 보내 주세요.</p></div><span className="admin-count">실제 예약 {reservations.length}건</span></div>
           <div className="admin-stats">{stats.map(([label,count])=><div key={label}><span>{label}</span><strong>{count}</strong></div>)}</div>
           <div className="admin-board">

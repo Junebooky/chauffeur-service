@@ -4,6 +4,8 @@ import { confirmAndSend, getConfirmationPreview, sendQueuedConfirmation, confirm
 
 import { scheduleWindow, bookingDetail } from '../server/booking-schedule.mjs'
 
+import { gmailStatus,gmailStart,gmailList,gmailRead,gmailSend } from '../server/gmail.mjs'
+
 const writeRoles = new Set(['owner','admin','operator'])
 const financeRoles = new Set(['owner','admin','finance'])
 const ownerRoles = new Set(['owner','admin'])
@@ -49,7 +51,12 @@ export default async function handler(req,res) {
       throw new ApiError(400,'Invalid request body.')
     const action=b.action
     let data
-    if(action==='schedule_window') {
+    if(action==='gmail_status') data=await gmailStatus(staff)
+    else if(action==='gmail_start') data=await gmailStart(staff,res)
+    else if(action==='gmail_list') data=await gmailList(staff)
+    else if(action==='gmail_read') data=await gmailRead(staff,b.id)
+    else if(action==='gmail_send') data=await gmailSend(staff,b)
+    else if(action==='schedule_window') {
       data=await scheduleWindow(b.from,b.to)
     } else if(action==='booking_detail') {
       data=await bookingDetail(requireId(b.reservation_id))
