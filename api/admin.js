@@ -2,6 +2,8 @@ import { ApiError, db, fail, hasDatabase, noCache, onlyString, requireStaff, val
 
 import { confirmAndSend, getConfirmationPreview, sendQueuedConfirmation, confirmationPreview } from '../server/confirmation-delivery.mjs'
 
+import { scheduleWindow, bookingDetail } from '../server/booking-schedule.mjs'
+
 const writeRoles = new Set(['owner','admin','operator'])
 const financeRoles = new Set(['owner','admin','finance'])
 const ownerRoles = new Set(['owner','admin'])
@@ -47,7 +49,11 @@ export default async function handler(req,res) {
       throw new ApiError(400,'Invalid request body.')
     const action=b.action
     let data
-    if(action==='edit_booking') {
+    if(action==='schedule_window') {
+      data=await scheduleWindow(b.from,b.to)
+    } else if(action==='booking_detail') {
+      data=await bookingDetail(requireId(b.reservation_id))
+    } else if(action==='edit_booking') {
       roleCheck(staff.role,writeRoles)
       const patch=b.patch
       if(typeof b.expected_updated_at!=='string'||!Number.isFinite(Date.parse(b.expected_updated_at))||

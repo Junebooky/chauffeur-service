@@ -128,6 +128,9 @@ export default function Admin(){
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
   const [selectedId,setSelectedId]=useState('')
+  const selectedRef=useRef('')
+  const detailRequest=useRef(0)
+  const [scheduleRevision,setScheduleRevision]=useState(0)
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('all')
   const [tab,setTab]=useState<'home'|'reservations'|'calendar'>('home')
@@ -152,7 +155,7 @@ export default function Admin(){
     const type=query.get('error_description')
     if(type)setError('로그인 링크가 만료되었어요. 다시 요청해 주세요.')
   },[])
-  const signOut=()=>{sessionStorage.removeItem(SESSION_KEY);setSession(null);setSnapshot(null);setPreview(null)}
+  const signOut=()=>{sessionStorage.removeItem(SESSION_KEY);setSession(null);setSnapshot(null);setPreview(null);selectedRef.current='';detailRequest.current++;setSelectedId('');setTab('home')}
   const api=useCallback(async(method:'GET'|'POST',body?:Record<string,unknown>)=>{
     if(!session)throw new Error('로그인이 필요해요.')
     const call=async(token:string)=>fetch('/api/admin',{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},...(body?{body:JSON.stringify(body)}:{})})
@@ -181,8 +184,14 @@ export default function Admin(){
     setLoading(true)
     try{
       const s=await api('GET') as Snapshot
-      setSnapshot(s)
-      setSelectedId(prev=>s.reservations.some(r=>r.id===prev)?prev:s.reservations[0]?.id||'')
+      const id=selectedRef.current||s.reservations[0]?.id||''
+      if(id){
+        const full=(await api('POST',{action:'booking_detail',reservation_id:id})).data as {reservation:Reservation;days:Journey[];deliveries:Delivery[]}
+        s.reservations=[...s.reservations.filter(r=>r.id!==id),full.reservation].sort((a,b)=>b.created_at.localeCompare(a.created_at))
+        s.days=[...s.days.filter(d=>d.reservation_id!==id),...full.days]
+        s.deliveries=[...s.deliveries.filter(d=>d.reservation_id!==id),...full.deliveries]
+      }
+      setSnapshot(s);selectedRef.current=id;setSelectedId(id);setScheduleRevision(v=>v+1)
     }catch(err){setError(err instanceof Error?err.message:'예약을 불러오지 못했어요.')}
     finally{setLoading(false)}
   },[api,session])
@@ -202,8 +211,20 @@ export default function Admin(){
   const delivery=(snapshot?.deliveries||[]).find(d=>d.reservation_id===selectedId)
   const canEdit=!!snapshot&&['owner','admin','operator'].includes(snapshot.role)
   const canRevise=canEdit&&!!current&&['requested','reviewing','quoted','awaiting_deposit'].includes(current.status)&&!delivery
-  const selectBooking=(id:string)=>{setSelectedId(id);setFilter('all');setSearch('');setPreview(null);setPaymentMethod('on_site');setTab('reservations')}
-  const openFilter=(status:string)=>{setFilter(status);setSearch('');const match=reservations.find(r=>r.status===status||status==='reviewing'&&['quoted','awaiting_deposit'].includes(r.status));setSelectedId(match?.id||'');setTab('reservations')}
+  const selectBooking=async(id:string,keepFilter=false)=>{
+    if(pending)return
+    const request=++detailRequest.current
+    setTab('reservations');if(!keepFilter){setFilter('all');setSearch('')}setPreview(null);setPaymentMethod('on_site')
+    setLoading(true);setError('')
+    try{
+      const full=(await api('POST',{action:'booking_detail',reservation_id:id})).data as {reservation:Reservation;days:Journey[];deliveries:Delivery[]}
+      if(request!==detailRequest.current)return
+      setSnapshot(prev=>prev?{...prev,reservations:[...prev.reservations.filter(r=>r.id!==id),full.reservation].sort((a,b)=>b.created_at.localeCompare(a.created_at)),days:[...prev.days.filter(d=>d.reservation_id!==id),...full.days],deliveries:[...prev.deliveries.filter(d=>d.reservation_id!==id),...full.deliveries]}:prev)
+      selectedRef.current=id;setSelectedId(id)
+    }catch(err){if(request===detailRequest.current)setError(err instanceof Error?err.message:'예약을 불러오지 못했어요.')}
+    finally{if(request===detailRequest.current)setLoading(false)}
+  }
+  const openFilter=(status:string)=>{setFilter(status);setSearch('');const match=reservations.find(r=>r.status===status||status==='reviewing'&&['quoted','awaiting_deposit'].includes(r.status));setTab('reservations');if(match)void selectBooking(match.id,true);else{selectedRef.current='';setSelectedId('')}}
   const saveEdit=async(patch:Record<string,unknown>)=>{
     if(!current||pending)return false
     return mutate({action:'edit_booking',reservation_id:current.id,expected_updated_at:current.updated_at,patch},'변경 사항을 저장했어요.')
@@ -228,7 +249,7 @@ export default function Admin(){
     finally{setPreviewPending(false)}
   }
   const sendConfirmation=async()=>{
-    if(!current||!preview||current.id!==previewId||pending||!preview.mailConfigured)return
+    if(!current||!preview||current.id!==previewId||pending)return
     setPending(true);setError('');setMessage('')
     try{
       const res=await api('POST',{action:'confirm_and_send',reservation_id:current.id,expected_status:current.status,
@@ -271,17 +292,17 @@ export default function Admin(){
       <div className="admin-content">
         {error&&<div className="admin-error admin-banner" role="alert">{error}<button onClick={()=>setError('')}>닫기</button></div>}
         {message&&<div className="admin-success admin-banner" role="status">{message}<button onClick={()=>setMessage('')}>닫기</button></div>}
-        {tab!=='reservations'?<AdminSchedule mode={tab} reservations={reservations} days={snapshot?.days||[]} deliveries={snapshot?.deliveries||[]} openBooking={selectBooking} openFilter={openFilter} loading={loading}/>:<>
+        {tab!=='reservations'?<AdminSchedule mode={tab} reservations={reservations} api={api} revision={scheduleRevision} deliveries={snapshot?.deliveries||[]} openBooking={id=>void selectBooking(id)} openFilter={openFilter} loading={loading}/>:<>
           <div className="admin-heading"><div><SectionEyebrow>예약 운영</SectionEyebrow><DisplayHeading as="h1">예약 업무, 여기서 끝내요.</DisplayHeading><p>새 예약을 확인하고 고객에게 확정 안내를 보내 주세요.</p></div><span className="admin-count">실제 예약 {reservations.length}건</span></div>
           <div className="admin-stats">{stats.map(([label,count])=><div key={label}><span>{label}</span><strong>{count}</strong></div>)}</div>
           <div className="admin-board">
             <section className="admin-list">
               <div className="admin-panel-heading"><h2>예약 요청</h2><span>최신 {reservations.length}건</span></div>
               <div className="admin-filters"><div className="admin-search"><Search size={15}/><input aria-label="예약 검색" placeholder="예약번호 또는 고객명 검색" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="admin-select-wrap"><select value={filter} aria-label="예약 상태" onChange={e=>setFilter(e.target.value)}><option value="all">전체 상태</option>{Object.entries(bookingStatusKo).filter(([status])=>!['quoted','awaiting_deposit'].includes(status)).map(([status,name])=><option value={status} key={status}>{name}</option>)}</select><ChevronDown size={14}/></div></div>
-              {loading&&!snapshot?<Empty>예약을 불러오고 있어요…</Empty>:!items.length?<Empty>{reservations.length?'조건에 맞는 예약이 없어요.':'아직 접수된 예약이 없어요.'}</Empty>:<div className="admin-booking-list">{items.map(r=><button key={r.id} className={'admin-booking '+(r.id===selectedId?'active':'')} onClick={()=>{setSelectedId(r.id);setPreview(null);setPaymentMethod('on_site')}}><div><strong>{r.reference}</strong><span>{r.customer_name}</span><small>{dateKo(r.created_at)}</small></div><div className="admin-booking-right"><span className={'admin-status '+r.status}>{bookingStatusKo[r.status]||r.status}</span></div></button>)}</div>}
+              {loading&&!snapshot?<Empty>예약을 불러오고 있어요…</Empty>:!items.length?<Empty>{reservations.length?'조건에 맞는 예약이 없어요.':'아직 접수된 예약이 없어요.'}</Empty>:<div className="admin-booking-list">{items.map(r=><button key={r.id} className={'admin-booking '+(r.id===selectedId?'active':'')} disabled={loading||pending} onClick={()=>void selectBooking(r.id,true)}><div><strong>{r.reference}</strong><span>{r.customer_name}</span><small>{dateKo(r.created_at)}</small></div><div className="admin-booking-right"><span className={'admin-status '+r.status}>{bookingStatusKo[r.status]||r.status}</span></div></button>)}</div>}
             </section>
             <section className="admin-detail">
-              {!current?<Empty>왼쪽에서 예약을 선택해 주세요.</Empty>:<>
+              {loading?<Empty>예약 정보를 불러오고 있어요…</Empty>:!current?<Empty>왼쪽에서 예약을 선택해 주세요.</Empty>:<>
                 <div className="admin-panel-heading"><div><span className="admin-eyebrow">예약 상세</span><h2>{current.reference}</h2></div><span className={'admin-status '+current.status}>{bookingStatusKo[current.status]||current.status}</span></div>
                 <div className="admin-detail-scroll">
                   <section className="admin-section admin-ko-step"><span className="admin-ko-eyebrow">지금 할 일</span><h3>{current.status==='requested'?'새 예약이 도착했어요.':current.status==='confirmed'?'예약이 확정됐어요.':current.status==='completed'?'서비스가 완료됐어요.':'예약 진행 상태를 확인해 주세요.'}</h3>
@@ -318,7 +339,7 @@ export default function Admin(){
         {!previewReadOnly&&<label className="admin-confirmation-payment">결제 안내<select value={paymentMethod} disabled={previewPending||pending} onChange={e=>{const method=e.target.value as 'on_site'|'separate';setPaymentMethod(method);void openPreview(false,method)}}><option value="on_site">현장결제</option><option value="separate">고객과 별도 협의</option></select></label>}
         <iframe title="고객용 확정 이메일 미리보기" sandbox="" srcDoc={preview.html} className="admin-confirmation-email"/>
         <button className="admin-secondary" type="button" onClick={()=>downloadConfirmation(preview)}><FileText size={16}/> {preview.filename} 확인서 받기</button>
-        {!previewReadOnly&&<><p className="admin-ko-caption">{preview.mailConfigured?'확정 후 이메일이 전송돼요. 차량·기사 배정은 필요하지 않아요.':'이메일 발송 환경을 먼저 설정해 주세요.'}</p><button className="admin-primary" type="button" disabled={pending||previewPending||!preview.mailConfigured} onClick={()=>void sendConfirmation()}>{pending?'예약을 확정하고 있어요…':'예약 확정하고 이메일 보내기'} <ArrowRight size={15}/></button></>}
+        {!previewReadOnly&&<><p className="admin-ko-caption">{preview.mailConfigured?'확정 후 이메일이 전송돼요. 차량·기사 배정은 필요하지 않아요.':'메일 설정이 아직 없어요. 예약은 먼저 확정하고, 설정 후 다시 보내면 돼요.'}</p><button className="admin-primary" type="button" disabled={pending||previewPending} onClick={()=>void sendConfirmation()}>{pending?'예약을 확정하고 있어요…':preview.mailConfigured?'예약 확정하고 이메일 보내기':'예약 먼저 확정하기'} <ArrowRight size={15}/></button></>}
     </dialog>}
   </div>
 }

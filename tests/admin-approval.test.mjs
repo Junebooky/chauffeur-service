@@ -146,3 +146,25 @@ test('minimal operations workspace uses real reservation data and keeps dispatch
   assert.match(migration,/confirmation_deliveries/)
   assert.match(migration,/revoke all on function chauffeur.edit_booking_v1/)
 })
+
+test('calendar requests query their actual date range instead of the recent booking list',async()=>withEnv(async()=>{
+ const original=globalThis.fetch
+ const calls=[]
+ globalThis.fetch=async(url,options)=>{
+  calls.push(String(url))
+  if(String(url).includes('/auth/v1/user'))return json({id:staffId})
+  if(String(url).includes('staff_members?'))return json([{active:true,role:'operator'}])
+  if(String(url).includes('reservation_days?'))return json(String(url).includes('offset=0')?Array.from({length:500},()=>({id:bookingId})):[])
+  throw Error('Unexpected request')
+ }
+ try{
+  const res=response()
+  await handler({method:'POST',headers:{authorization:'Bearer TEST'},body:{action:'schedule_window',from:'2026-12-01',to:'2026-12-31'}},res)
+  assert.equal(res.statusCode,200)
+  assert.equal(res.data.data.length,500)
+  assert.ok(calls.some(c=>c.includes('reservations!inner')&&c.includes('offset=500')))
+  const invalid=response()
+  await handler({method:'POST',headers:{authorization:'Bearer TEST'},body:{action:'schedule_window',from:'2026-12-01',to:'2027-04-01'}},invalid)
+  assert.equal(invalid.statusCode,400)
+ }finally{globalThis.fetch=original}
+}))
