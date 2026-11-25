@@ -18,18 +18,26 @@ export default function FleetInteriorGallery({
   fallbackImage,
   active,
 }: FleetInteriorGalleryProps) {
+  const imagesKey = images.join('|')
   const [availableImages, setAvailableImages] = useState<string[]>([])
+  const [resolvedKey, setResolvedKey] = useState<string | null>(null)
   const [photoIndex, setPhotoIndex] = useState(0)
 
+  // Verify interior uploads as soon as this vehicle mounts so entering Interior
+  // never flashes the legacy fallback image while assets are still loading.
   useEffect(() => {
-    if (!active) return
-
     let cancelled = false
     const checks = images.map(
       (src) =>
         new Promise<string | null>((resolve) => {
           const image = new Image()
-          image.onload = () => resolve(src)
+          image.onload = () => {
+            if (typeof image.decode === 'function') {
+              void image.decode().catch(() => undefined).then(() => resolve(src))
+            } else {
+              resolve(src)
+            }
+          }
           image.onerror = () => resolve(null)
           image.src = src
         }),
@@ -38,16 +46,24 @@ export default function FleetInteriorGallery({
     void Promise.all(checks).then((verified) => {
       if (cancelled) return
       setAvailableImages(verified.filter((src): src is string => src !== null))
+      setResolvedKey(imagesKey)
       setPhotoIndex(0)
     })
 
     return () => {
       cancelled = true
     }
-  }, [active, images])
+  }, [images, imagesKey])
 
-  const photos = availableImages.length > 0 ? availableImages : [fallbackImage]
-  const currentIndex = Math.min(photoIndex, photos.length - 1)
+  useEffect(() => {
+    if (active) setPhotoIndex(0)
+  }, [active])
+
+  const isResolved = resolvedKey === imagesKey
+  const photos = isResolved
+    ? (availableImages.length > 0 ? availableImages : [fallbackImage])
+    : []
+  const currentIndex = Math.min(photoIndex, Math.max(0, photos.length - 1))
 
   return (
     <>
