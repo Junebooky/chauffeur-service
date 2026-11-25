@@ -51,5 +51,6 @@ test('All operations screens use the real shared brand mark, not a placeholder J
   assert.doesNotMatch(admin + overview + adminCss, /admin-ko-mark/)
   assert.match(adminCss, /\.admin-brand-mark\{[^}]*object-fit:contain/)
   const html = readFileSync(join(root, 'index.html'), 'utf8')
-  assert.match(html, /<link rel="icon" type="image\/webp" href="\/media\/brand\/logo_brand\.webp" \/>/)
+  assert.equal(existsSync(join(root, 'public/media/brand/favicon.png')), true)
+  assert.match(html, /<link rel="icon" type="image\/png" href="\/media\/brand\/favicon\.png" \/>/)
 })
