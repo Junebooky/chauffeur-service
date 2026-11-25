@@ -42,9 +42,14 @@ test('Pricing cards use horizontal touch carousel on mobile while retaining touc
 
 test('mobile optimizations cover left-aligned vertical footer, overview gradient framing, and upper hero heading', () => {
   const css = read('src/styles.css')
+  const pricing = read('src/PricingSection.tsx')
   const mobileLayer = css.slice(css.indexOf('/* === MOBILE OPTIMIZATION LAYER === */'))
   assert.match(mobileLayer, /\.site-footer\s*\{\s*flex-direction:\s*column;\s*align-items:\s*flex-start;/)
   assert.match(mobileLayer, /\.site-footer > span:first-child\s*\{\s*order:\s*3;/)
+  assert.match(mobileLayer, /\.fleet-eyebrow-wrap\s*\{\s*display:\s*none;\s*\}/)
+  assert.match(mobileLayer, /\.fleet-card > \.fleet-card-beam-ring\s*\{\s*opacity:\s*0\.94;/)
+  assert.match(pricing, /max-lg:opacity-90 \[@media\(hover:none\)\]:opacity-90/)
+  assert.match(mobileLayer, /\.hero-backdrop-img\s*\{[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
   assert.match(mobileLayer, /\.slide-overview \.fleet-slide-bg\s*\{[\s\S]*?object-fit:\s*contain;[\s\S]*?mask-image:/)
   assert.match(mobileLayer, /\.hero-book-link\s*\{\s*margin-top:\s*auto;\s*align-self:\s*flex-end;/)
 })
@@ -65,7 +70,7 @@ test('mobile optimization stylesheet covers touch targets, snap disabling, input
   assert.match(mobileLayer, /@media \(pointer: coarse\) \{[\s\S]*?--target-size:\s*44px;/)
   assert.match(mobileLayer, /@media \(max-width: 1023px\) \{[\s\S]*?\.journey-scroll \{\s*scroll-snap-type:\s*none;/)
   assert.match(mobileLayer, /\.booking-cta-pill\.fleet-right-tab-btn \{\s*min-width:\s*0;/)
-  assert.match(mobileLayer, /\.fleet-bottom-dock \{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/)
+  assert.match(mobileLayer, /\.fleet-bottom-dock \{\s*display:\s*grid;\s*grid-template-columns:\s*minmax\(0, 1fr\);/)
   assert.match(mobileLayer, /\.booking-glass-stage\.is-expanded \.field input,[\s\S]*?font-size:\s*16px !important;/)
   assert.match(mobileLayer, /\.booking-glass-stage\.is-expanded \.booking-fields \{\s*padding-top:\s*56px !important;/)
 })

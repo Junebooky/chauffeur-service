@@ -232,7 +232,7 @@ export default function PricingSection({
               <span
                 aria-hidden="true"
                 style={BEAM_MASK_STYLE}
-                className="pointer-events-none absolute -inset-[1px] z-20 overflow-hidden rounded-[19px] p-[1.5px] opacity-0 blur-[2px] transition-opacity duration-300 group-hover:opacity-45 group-focus-within:opacity-45"
+                className="pointer-events-none absolute -inset-[1px] z-20 overflow-hidden rounded-[19px] p-[1.5px] opacity-0 blur-[2px] transition-opacity duration-300 group-hover:opacity-45 group-focus-within:opacity-45 max-lg:opacity-40 [@media(hover:none)]:opacity-40"
               >
                 <span
                   className={`absolute top-1/2 left-1/2 aspect-square w-[260%] motion-safe:animate-border-beam ${BEAM_GRADIENT}`}
@@ -243,7 +243,7 @@ export default function PricingSection({
               <span
                 aria-hidden="true"
                 style={BEAM_MASK_STYLE}
-                className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[18px] p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100"
+                className="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[18px] p-[1px] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 max-lg:opacity-90 [@media(hover:none)]:opacity-90"
               >
                 <span
                   className={`absolute top-1/2 left-1/2 aspect-square w-[260%] motion-safe:animate-border-beam ${BEAM_GRADIENT}`}
