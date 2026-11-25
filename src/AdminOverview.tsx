@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowRight, CalendarDays, Check, ClipboardList, Database, RefreshCw, Search, ShieldCheck, Truck } from 'lucide-react'
+import AdminBrand from './components/ui/AdminBrand'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
 import { bookingStatusKo, serviceKo, vehicleKo, dateKo } from './admin-locale'
@@ -68,7 +69,7 @@ export default function AdminOverview(){
   ] as const
   return <div className="admin-root admin-overview admin-ko">
     <aside className="admin-sidebar">
-      <div className="admin-logo"><span className="admin-ko-mark">J</span><span>CHAUFFEUR <small>OPERATIONS</small></span></div>
+      <AdminBrand />
       <p className="admin-sidebar-eyebrow">운영 현황</p>
       <button className="selected" type="button"><ClipboardList size={16}/> 예약 현황</button>
       <button type="button" onClick={()=>setManage(true)}><Truck size={16}/> 예약 처리하기 <ArrowRight size={12}/></button>

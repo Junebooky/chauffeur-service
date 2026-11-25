@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, ChevronDown, ClipboardList, FileText, LogOut, Mail, RefreshCw, Search, ShieldCheck, X } from 'lucide-react'
+import AdminBrand from './components/ui/AdminBrand'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
 import { bookingStatusKo, serviceKo, vehicleKo, moneyKo, dateKo, dayKo, nextActions } from './admin-locale'
@@ -98,7 +99,7 @@ function AuthGate({onLogin}:{onLogin:(session:Session)=>void}) {
   }
   return <div className="admin-root admin-login admin-ko">
     <section className="admin-login-card admin-auth-card">
-      <div className="admin-logo"><span className="admin-ko-mark">J</span><span>CHAUFFEUR <small>OPERATIONS</small></span></div>
+      <AdminBrand />
       <SectionEyebrow>관리자 전용</SectionEyebrow>
       <DisplayHeading as="h1">예약을 처리해 볼까요?</DisplayHeading>
       <p>고객 정보와 예약 승인 내용은 관리자만 볼 수 있어요. 비밀번호 대신 이메일로 로그인할 수 있어요.</p>
@@ -243,7 +244,7 @@ export default function Admin(){
   if(!session)return <AuthGate onLogin={s=>{setStored(s);setSession(s);setSnapshot(null)}}/>
   return <div className="admin-root admin-ko">
     <aside className="admin-sidebar">
-      <div className="admin-logo"><span className="admin-ko-mark">J</span><span>CHAUFFEUR <small>OPERATIONS</small></span></div>
+      <AdminBrand />
       <p className="admin-sidebar-eyebrow">운영 관리</p>
       <button className="selected" type="button"><ClipboardList size={17}/> 예약 관리</button>
       <div className="admin-sidebar-bottom"><span><ShieldCheck size={14}/> 관리자 권한 · {snapshot?.role||'확인 중'}</span><a href="/admin">예약 현황만 보기 <ArrowRight size={13}/></a><button onClick={signOut}><LogOut size={15}/> 로그아웃</button></div>

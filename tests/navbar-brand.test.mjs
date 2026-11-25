@@ -36,3 +36,17 @@ test('Brand lockup remains legible on tablet, mobile, and narrow phones', () => 
   assert.match(css, /@media \(max-width: 380px\) \{[\s\S]*?\.brand-wordmark\s*\{/)
   assert.match(css, /\.brand:focus-visible\s*\{/)
 })
+
+test('All operations screens use the real shared brand mark, not a placeholder J', () => {
+  const admin = readFileSync(join(root, 'src/Admin.tsx'), 'utf8')
+  const overview = readFileSync(join(root, 'src/AdminOverview.tsx'), 'utf8')
+  const brand = readFileSync(join(root, 'src/components/ui/AdminBrand.tsx'), 'utf8')
+  const adminCss = readFileSync(join(root, 'src/admin-korean.css'), 'utf8')
+  assert.equal((admin.match(/<AdminBrand \/>/g) || []).length, 2)
+  assert.equal((overview.match(/<AdminBrand \/>/g) || []).length, 1)
+  assert.match(brand, /src="\/media\/brand\/chauffeur-mark\.png"/)
+  assert.match(brand, /className="admin-brand-mark"/)
+  assert.match(brand, /CHAUFFEUR <small>OPERATIONS<\/small>/)
+  assert.doesNotMatch(admin + overview + adminCss, /admin-ko-mark/)
+  assert.match(adminCss, /\.admin-brand-mark\{[^}]*object-fit:contain/)
+})
