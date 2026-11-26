@@ -28,6 +28,11 @@ export async function journalSitemap(now=new Date().toISOString(),database=db){
  }
  return '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+[...new Set(urls)].map(u=>'<url><loc>'+esc(u)+'</loc></url>').join('')+'</urlset>'
 }
+export async function journalRss(lang,now=new Date().toISOString(),database=db){
+ const rows=(await publicArticles(lang,'',now,database)).slice(0,50)
+ const title=lang==='ko'?'Chauffeur Journal — 의전 서비스 가이드':'Chauffeur Journal — Private Travel Guides'
+ return '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>'+esc(title)+'</title><link>'+urlFor(lang)+'</link><description>'+esc(title)+'</description><language>'+lang+'</language>'+rows.map(r=>'<item><title>'+esc(r.title)+'</title><link>'+urlFor(lang,r.slug)+'</link><guid isPermaLink="true">'+urlFor(lang,r.slug)+'</guid><description>'+esc(r.description)+'</description><pubDate>'+new Date(r.publish_at).toUTCString()+'</pubDate></item>').join('')+'</channel></rss>'
+}
 export function validateDraft(b){
  if(!slugOk(b.slug)||!langOk(b.lang))throw new ApiError(400,'Check article slug and language.')
  if(!Array.isArray(b.sections)||b.sections.length<2||b.sections.length>12)throw new ApiError(400,'Add 2–12 sections.')
@@ -70,5 +75,5 @@ export function renderJournal(lang,rows,slug='',alternate=false){
  const serviceLabels=lang==='ko'?['서울 VIP 의전','인천공항 픽업·샌딩','서울 기사 포함 차량']:['Seoul Chauffeur Service','Incheon Airport Transfer','Private Driver in Seoul']
  const serviceLinks='<nav aria-label="Services">'+services.map((s,i)=>'<p><a href="/'+(lang==='ko'?'ko/':'')+'services/'+s+'/">'+serviceLabels[i]+'</a></p>').join('')+'</nav>'
  const schema=item?'<script type="application/ld+json">'+JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:item.title,description:item.description,url:canonical,datePublished:item.publish_at,inLanguage:lang,author:{'@type':'Organization',name:'JP Chauffeur Korea'},publisher:{'@type':'Organization',name:'JP Chauffeur Korea'}}).replace(/</g,'\\u003c')+'</script>':''
- return '<!doctype html><html lang="'+lang+'"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+' | JP Chauffeur Korea</title><meta name="description" content="'+esc(description)+'"><link rel="canonical" href="'+canonical+'">'+alternateTags+schema+'<style>'+style+'</style><script defer src="/analytics.js"></script></head><body><header><a href="/'+lang+'/">JP CHAUFFEUR KOREA</a><a href="'+pathFor(lang)+'">Journal</a></header><main>'+body+'<p><a href="/'+lang+'/#reservation">'+(lang==='ko'?'예약 요청하기':'Request a reservation')+'</a></p>'+serviceLinks+'</main><footer>JP Chauffeur Korea</footer></body></html>'
+ return '<!doctype html><html lang="'+lang+'"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+' | JP Chauffeur Korea</title><meta name="description" content="'+esc(description)+'"><link rel="canonical" href="'+canonical+'">'+alternateTags+'<link rel="alternate" type="application/rss+xml" title="Journal RSS" href="'+urlFor(lang)+'rss.xml">'+schema+'<style>'+style+'</style><script defer src="/analytics.js"></script></head><body><header><a href="/'+lang+'/">JP CHAUFFEUR KOREA</a><a href="'+pathFor(lang)+'">Journal</a></header><main>'+body+'<p><a href="/'+lang+'/#reservation">'+(lang==='ko'?'예약 요청하기':'Request a reservation')+'</a></p>'+serviceLinks+'</main><footer>JP Chauffeur Korea</footer></body></html>'
 }

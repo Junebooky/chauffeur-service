@@ -17,3 +17,5 @@
 - feature/seo-integration에 최신 main의 다국어 기능과 SEO/Journal 통합. main 병합/배포 미실행. 예약 링크는 /en/#reservation, /ko/#reservation. Journal 내 서비스 링크 및 홈 Journal 링크 추가.
 - 공식 HTTPS 공개 페이지에서만 분석 동의 후 GTM 로드. 로컬/preview/admin 제외. 이벤트에 고객 개인정보, 예약 ID, 주소, 날짜, 가격, 원본 쿼리를 포함하지 않음. 동의 철회 시 GA disable, consent update 및 추가 이벤트 중지. 실제 GTM 설정 및 쿠키 제거 정책은 공개 전 검토.
 - GTM 콘솔: Google tag G-8VWZ2SPG0Q, analytics_storage 동의 조건 적용. 자동 page_view 중복 방지, 사이트 검색/폼 상호작용/외부 링크 등 자동 수집 및 page_referrer 검토. chauffeur_page_view -> GA4 page_view, view_vehicle/select_service/begin_booking/booking_step/generate_lead -> 동일 GA 이벤트. 데이터 영역 변수는 page_location, language, vehicle, service, booking_step, journey_type. generate_lead를 주요 이벤트로 지정. Tag Assistant 및 DebugView에서 실제 검증 필요. 응답 유실 후 200 재시도 시 전환이 누락될 수 있음. 실제 고객 예약을 테스트용으로 만들지 않음.
+
+- 최신 main의 영어 기본 진입 정책을 병합함. 서비스별 sitemap hreflang 쌍 생성. Journal RSS: /journal/rss.xml, /ko/journal/rss.xml. 승인 및 시각 도래 글만 포함. Search Console, 네이버 사이트맵/RSS 수집은 배포 후 등록.

@@ -44,7 +44,13 @@ export function buildSearchPages(outDir=join(root,'dist')){
  for(const p of pages)for(const lang of ['en','ko']){
   const path=pathFor(p.slug,lang),dir=join(outDir,path.slice(1));mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'index.html'),render(p,lang));locations.push(domain+path)
  }
- const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+[...new Set(locations)].map(loc=>'  <url><loc>'+esc(loc)+'</loc></url>').join('\n')+'\n</urlset>\n'
+ const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'+[...new Set(locations)].map(loc=>{
+  const page=pages.find(p=>['en','ko'].some(l=>urlFor(p.slug,l)===loc))
+  const path=new URL(loc).pathname
+  const pair=page?[urlFor(page.slug,'en'),urlFor(page.slug,'ko')]:['/','/en/','/ko/'].includes(path)?[domain+'/en/',domain+'/ko/']:null
+  const alternate=pair&&pair.every(u=>locations.includes(u))?'<xhtml:link rel="alternate" hreflang="en" href="'+esc(pair[0])+'"/><xhtml:link rel="alternate" hreflang="ko" href="'+esc(pair[1])+'"/><xhtml:link rel="alternate" hreflang="x-default" href="'+esc(page?pair[0]:domain+'/')+'"/>':''
+  return '  <url><loc>'+esc(loc)+'</loc>'+alternate+'</url>'
+ }).join('\n')+'\n</urlset>\n'
  writeFileSync(join(outDir,'sitemap.xml'),xml)
  let robots='User-agent: *\nDisallow: /api/\n\nSitemap: '+domain+'/sitemap.xml\n'
  try{robots=readFileSync(join(outDir,'robots.txt'),'utf8')}catch{}

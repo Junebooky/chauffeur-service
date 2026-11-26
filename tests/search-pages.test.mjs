@@ -24,6 +24,7 @@ test('bilingual search pages are readable without JS and use self-canonical lang
   const sitemap=readFileSync(join(dir,'sitemap.xml'),'utf8')
   assert.match(sitemap,/<loc>https:\/\/www.jpchauffeurkorea.com\/ko\/<\/loc>/)
   assert.doesNotMatch(sitemap,/\/admin\/live/)
+  assert.match(sitemap,/<xhtml:link rel="alternate" hreflang="ko" href="https:\/\/www.jpchauffeurkorea.com\/ko\/services\/seoul-chauffeur-service\/"/)
   assert.deepEqual(buildSearchPages(dir),urls)
  }finally{rmSync(dir,{recursive:true,force:true})}
 })

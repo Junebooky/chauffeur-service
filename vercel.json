@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/journal/rss.xml",
+      "destination": "/api/journal?format=rss&lang=en"
+    },
+    {
+      "source": "/ko/journal/rss.xml",
+      "destination": "/api/journal?format=rss&lang=ko"
+    },
+    {
       "source": "/journal/sitemap.xml",
       "destination": "/api/journal?format=sitemap"
     },
