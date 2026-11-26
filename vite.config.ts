@@ -16,6 +16,7 @@ export default defineConfig({
           if (parts[0] === 'journal' && parts[1] === 'sitemap.xml') return '/api/journal?format=sitemap'
           const ko = parts[0] === 'ko'
           const slug = parts[ko ? 2 : 1]
+          if (slug === 'rss.xml') return '/api/journal?format=rss&lang=' + (ko ? 'ko' : 'en')
           return '/api/journal?lang=' + (ko ? 'ko' : 'en') + (slug ? '&slug=' + encodeURIComponent(slug) : '')
         },
       },
