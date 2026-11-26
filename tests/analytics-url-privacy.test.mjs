@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
 import { ga4InlineSnippet } from '../server/analytics-snippet.mjs'
 
-function mockBrowser(script, pathname) {
-  const location = { hostname: 'www.jpchauffeurkorea.com', origin: 'https://www.jpchauffeurkorea.com', pathname, search: '?email=private@example.com', href: 'https://www.jpchauffeurkorea.com'+pathname+'?email=private@example.com#secret' }
+function mockBrowser(script, pathname, search = '?email=private@example.com') {
+  const location = { hostname: 'www.jpchauffeurkorea.com', origin: 'https://www.jpchauffeurkorea.com', pathname, search, href: 'https://www.jpchauffeurkorea.com'+pathname+search+'#secret' }
   const window = { location }
   let click
   const document = {
@@ -44,4 +44,26 @@ test('standalone page and content click use sanitized public paths', () => {
   assert.equal(clicks.length, 1)
   assert.equal(clicks[0][2].link_path, '/ko/services/incheon-airport-transfer/')
   assert.doesNotMatch(JSON.stringify(calls), /private|secret/)
+})
+
+test('home and standalone preserve only the exact public ChatGPT source marker', () => {
+  const home = readFileSync(new URL('../index.html', import.meta.url), 'utf8').match(/<script>([\s\S]*?)<\/script>/)[1]
+  const standalone = ga4InlineSnippet({pageType:'service_page',locale:'en',slug:'seoul-chauffeur-service'}).slice(8,-9)
+  for (const [script,path] of [[home,'/en/'],[standalone,'/services/seoul-chauffeur-service/']]) {
+    for (const search of ['?utm_source=chatgpt.com&email=private@example.com&utm_campaign=secret', '?utm_source=chatgpt.com&utm_medium=referral']) {
+      const {window} = mockBrowser(script,path,search)
+      const cfg = Array.from(window.dataLayer.find(x=>x[0]==='config'))[2]
+      assert.equal(cfg.campaign_source,'chatgpt.com')
+      assert.equal(cfg.campaign_medium,'referral')
+      assert.equal(cfg.page_location,'https://www.jpchauffeurkorea.com'+path)
+      assert.doesNotMatch(JSON.stringify(window.dataLayer),/private|secret|utm_campaign|utm_source/)
+    }
+    for (const search of ['?utm_source=chatgpt.com.evil.test','?utm_source=private@example.com','?utm_source=chatgpt.com&utm_source=private','?utm_source=chatgpt.com&utm_medium=cpc','?utm_source=chatgpt.com&utm_medium=referral&utm_medium=private']) {
+      const {window} = mockBrowser(script,path,search)
+      const cfg = Array.from(window.dataLayer.find(x=>x[0]==='config'))[2]
+      assert.equal(cfg.campaign_source,undefined)
+      assert.equal(cfg.campaign_medium,undefined)
+      assert.doesNotMatch(JSON.stringify(window.dataLayer),/private|evil|secret/)
+    }
+  }
 })

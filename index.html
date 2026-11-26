@@ -59,6 +59,12 @@
           window.dataLayer.push(arguments);
         };
         window.gtag('js', new Date());
+        // ChatGPT Search attaches this fixed UTM source. Preserve only that
+        // public marker, never arbitrary campaign parameters or raw URLs.
+        var aiSource = params.getAll('utm_source');
+        var aiMedium = params.getAll('utm_medium');
+        var aiReferral = aiSource.length === 1 && aiSource[0] === 'chatgpt.com' &&
+          (aiMedium.length === 0 || (aiMedium.length === 1 && aiMedium[0] === 'referral'));
         window.gtag(
           'config',
           'G-8VWZ2SPG0Q',
@@ -68,6 +74,7 @@
             page_referrer: referrer,
             allow_google_signals: false,
             allow_ad_personalization_signals: false,
+            ...(aiReferral ? { campaign_source: 'chatgpt.com', campaign_medium: 'referral' } : {}),
             ...(debug ? { debug_mode: true } : {})
           }
         );
