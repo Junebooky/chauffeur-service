@@ -1,3 +1,4 @@
+import { documentCopy, documentDate } from './i18n/document-copy.mjs'
 // Browser-side A4 PDF/PNG export with no paid service or new dependencies.
 export type ExportDay = {
   date: string; time: string; service: string; vehicle: string;
@@ -8,6 +9,7 @@ export type ExportDay = {
 export type ExportItinerary = {
   reference: string; status: string; total: number | null;
   journeys: ExportDay[];
+  preferredLocale?: 'ko' | 'en';
 }
 const W = 1240, H = 1754, HEADER_H = 375, PAGE_W = 595, PAGE_H = 842
 const olive = '#899766'
@@ -125,7 +127,8 @@ const shorten = (ctx: CanvasRenderingContext2D, value: string, max: number) => {
   }
   return copy + '…'
 }
-function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets) {
+function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets, locale?: 'ko' | 'en') {
+  const t = (english: string) => documentCopy(locale, english)
   ctx.save()
   ctx.beginPath()
   ctx.rect(0, 0, W, HEADER_H)
@@ -194,7 +197,7 @@ function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets) {
 
   drawText(
     ctx,
-    'YOUR RESERVATION REQUEST',
+    t('YOUR RESERVATION REQUEST'),
     100,
     235,
     21,
@@ -205,7 +208,7 @@ function drawHeaderBanner(ctx: CanvasRenderingContext2D, assets: HeaderAssets) {
   )
   drawText(
     ctx,
-    'Chauffeur Itinerary',
+    t('Chauffeur Itinerary'),
     100,
     304,
     49,
@@ -228,22 +231,25 @@ function drawPage(
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Image export is not supported in this browser.')
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H)
-  drawHeaderBanner(ctx, assets)
+  const locale = data.preferredLocale
+  const t = (english: string) => documentCopy(locale, english)
+  const date = (value: string) => locale === 'ko' ? documentDate(locale,value) : prettyDate(value)
+  drawHeaderBanner(ctx, assets, locale)
   ctx.strokeStyle = '#d9deda'
   ctx.beginPath(); ctx.moveTo(100, 465); ctx.lineTo(W - 100, 465); ctx.stroke()
-  drawText(ctx, 'Reference', 100, 422, 23, '#727e78')
-  drawText(ctx, data.reference, 228, 422, 24, '#222a27', 600)
+  drawText(ctx, t('Reference'), 100, 422, 23, '#727e78')
+  drawText(ctx, data.reference, locale === 'ko' ? 245 : 228, 422, 24, '#222a27', 600)
   ctx.textAlign = 'right'
-  drawText(ctx, 'Saved · Awaiting confirmation', W - 100, 422, 22, olive, 600)
+  drawText(ctx, t('Saved · Awaiting confirmation'), W - 100, 422, 22, olive, 600)
   ctx.textAlign = 'left'
   const sections = [
-    [data.journeys.length === 1 ? 'DATE' : 'DATES', data.journeys.length > 1
-      ? prettyDate(data.journeys[0].date) + ' – ' +
-        prettyDate(data.journeys[data.journeys.length - 1].date)
-      : prettyDate(data.journeys[0]?.date || '')],
-    ['DURATION', String(data.journeys.length) +
-      (data.journeys.length === 1 ? ' day' : ' service days')],
-    ['TIME ZONE', 'KST · UTC+9'],
+    [t(data.journeys.length === 1 ? 'DATE' : 'DATES'), data.journeys.length > 1
+      ? date(data.journeys[0].date) + ' – ' +
+        date(data.journeys[data.journeys.length - 1].date)
+      : date(data.journeys[0]?.date || '')],
+    [t('DURATION'), String(data.journeys.length) +
+      (locale === 'ko' ? '일' : data.journeys.length === 1 ? ' day' : ' service days')],
+    [t('TIME ZONE'), 'KST · UTC+9'],
   ]
   ctx.strokeStyle = '#dfe4df'; ctx.strokeRect(100, 505, W - 200, 130)
   sections.forEach(([label, value], i) => {
@@ -255,7 +261,7 @@ function drawPage(
     ctx.font = '600 24px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, value, 305), x, 595, 24, '#242c27', 600)
   })
-  drawText(ctx, 'Daily Itinerary', 100, 712, 31, '#222a26', 500, DISPLAY_FONT_STACK)
+  drawText(ctx, t('Daily Itinerary'), 100, 712, 31, '#222a26', 500, DISPLAY_FONT_STACK)
   let y = 748
   days.forEach((day, idx) => {
     const absoluteIndex = page * 3 + idx
@@ -263,7 +269,7 @@ function drawPage(
     ctx.beginPath(); ctx.moveTo(100, y); ctx.lineTo(W - 100, y); ctx.stroke()
     drawText(ctx, 'DAY ' + String(absoluteIndex + 1).padStart(2, '0'), 100, y + 50,
       19, olive, 700)
-    drawText(ctx, prettyDate(day.date), 100, y + 85, 19, '#758176')
+    drawText(ctx, date(day.date), 100, y + 85, 19, '#758176')
     const x = 255
     ctx.font = '600 24px ' + BODY_FONT_STACK
     drawText(ctx, shorten(ctx, day.service + ' · ' + day.time + ' KST', 540),
@@ -283,19 +289,19 @@ function drawPage(
       x, y + 144, 17, '#7e8981')
     if (day.stops?.length) {
       ctx.font = '400 17px ' + BODY_FONT_STACK
-      drawText(ctx, shorten(ctx, 'Via ' + day.stops.join(' · '), 870),
+      drawText(ctx, shorten(ctx, t('Via') + ' ' + day.stops.join(' · '), 870),
         x, y + 183, 17, '#7e8981')
     }
     y += 230
   })
   ctx.strokeStyle = '#d0d9ce'
   ctx.beginPath(); ctx.moveTo(100, 1472); ctx.lineTo(W - 100, 1472); ctx.stroke()
-  drawText(ctx, 'Estimated total · Tax excluded', 100, 1530, 24, '#758078')
+  drawText(ctx, t('Estimated total · Tax excluded'), 100, 1530, 24, '#758078')
   ctx.textAlign = 'right'
-  drawText(ctx, money(data.total), W - 100, 1542, 38, '#1e2721', 600)
+  drawText(ctx, data.total === null ? t('Quote on request') : money(data.total), W - 100, 1542, 38, '#1e2721', 600)
   ctx.textAlign = 'left'
   ctx.fillStyle = '#f3f6f1'; ctx.fillRect(100, 1580, W - 200, 91)
-  drawText(ctx, 'Reservation request saved · Awaiting confirmation · No payment taken',
+  drawText(ctx, t('Reservation request saved · Awaiting confirmation · No payment taken'),
     122, 1636, 20, '#59685b', 500)
   drawText(ctx, 'J Production', 100, 1712, 18, '#59675f', 500, DISPLAY_FONT_STACK)
   ctx.textAlign = 'right'

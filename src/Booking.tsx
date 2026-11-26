@@ -62,6 +62,7 @@ const timeOptions = Array.from({ length: 48 }, (_, i) => {
 })
 
 type Result = {
+  preferredLocale?: 'en' | 'ko'
   reference: string
   status: string
   total: number | null
@@ -806,6 +807,7 @@ export default function Booking({
       setExportError('')
       setResult({
         ...data,
+        preferredLocale: locale,
         journeys: data.journeys.map((day: Result['journeys'][number], i: number) => ({
           ...day,
           pickupName: journeys[i]?.pickupPlace?.name || day.pickup,
@@ -835,7 +837,7 @@ export default function Booking({
     if (!result) return
     try {
       setExportError('')
-      await exportItineraryPdf(result)
+      await exportItineraryPdf({ ...result, preferredLocale: locale })
     } catch {
       setExportError('Could not save the PDF. Please try again.')
     }
@@ -844,7 +846,7 @@ export default function Booking({
     if (!result) return
     try {
       setExportError('')
-      await exportItineraryPng(result)
+      await exportItineraryPng({ ...result, preferredLocale: locale })
     } catch {
       setExportError('Could not save the image. Please try again.')
     }

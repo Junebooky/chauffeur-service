@@ -106,3 +106,17 @@ test('branded A4 confirmation embeds the existing email banner and fits a standa
  const match=raw.match(/startxref\n(\d+)\n%%EOF/)
  assert.equal(raw.slice(Number(match[1]),Number(match[1])+4),'xref')
 })
+
+ test('Korean customer confirmation preserves brand, escapes user values and renders Korean PDF labels',()=>{
+  const ko={...sample,preferredLocale:'ko'}
+  const email=buildCustomerConfirmation(ko)
+  assert.match(email.subject,/예약 확정/)
+  assert.match(email.html,/<html lang="ko">/)
+  assert.match(email.html,/예약이 확정되었습니다/)
+  assert.match(email.html,/Guest &lt;Team&gt;/)
+  assert.match(email.html,/Genesis G90/)
+  assert.match(email.text,/확정 이용 금액/)
+  const pdf=buildConfirmationPdf(ko).toString('latin1')
+  assert.ok(pdf.includes(Buffer.from('예약 확정','utf16le').swap16().toString('hex')) || pdf.includes(Buffer.from('예약','utf16le').swap16().toString('hex')))
+  assert.match(buildOperatorEmail({reference:sample.reference,total:sample.total,details:ko}).html,/<html lang="en">/)
+ })

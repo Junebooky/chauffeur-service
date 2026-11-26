@@ -1,0 +1,53 @@
+const ko = Object.freeze({
+  "Booking Confirmed": "예약 확정",
+  "RESERVATION CONFIRMED": "예약 확정",
+  "Your journey is confirmed.": "예약이 확정되었습니다.",
+  "Reference": "예약 번호",
+  "Confirmed": "예약 확정",
+  "GUEST DETAILS": "예약자 정보",
+  "Thank you for choosing CHAUFFEUR. We look forward to welcoming you.": "CHAUFFEUR를 이용해 주셔서 감사합니다.",
+  "DAILY ITINERARY": "일자별 운행 일정",
+  "Add-ons": "추가 옵션",
+  "None": "없음",
+  "Confirmed service total": "확정 이용 금액",
+  "Tax included": "부가세 포함",
+  "Tax excluded": "부가세 별도",
+  "Payment on the day of your service.": "이용 당일 결제해 주세요.",
+  "Payment as agreed with our team.": "담당자와 협의한 방식으로 결제해 주세요.",
+  "Your reservation confirmation is attached.": "예약 확정서를 첨부했습니다.",
+  "We will share the vehicle and chauffeur details before your journey.": "운행 전 차량 및 의전기사 정보를 안내드리겠습니다.",
+  "We will share your chauffeur and vehicle details before your journey.": "운행 전 차량 및 의전기사 정보를 안내드리겠습니다.",
+  "Please reply to this email with any questions.": "문의 사항은 이 이메일로 회신해 주세요.",
+  "For questions or changes, please reply to your confirmation email.": "문의 및 일정 변경은 예약 확정 이메일로 회신해 주세요.",
+  "If you have questions or need to make changes, simply reply to this email.": "문의 사항이나 일정 변경이 있으시면 이 이메일로 회신해 주세요.",
+  "Warm regards,": "감사합니다.",
+  "The CHAUFFEUR Team": "CHAUFFEUR 운영팀",
+  "Flight": "항공편명",
+  "Via": "경유지",
+  "Stop": "경유지",
+  "Name": "예약자 성함",
+  "Email": "이메일",
+  "Status": "예약 상태",
+  "Page": "페이지",
+  "Itinerary continued": "운행 일정 (계속)",
+  "CONT.": "계속",
+  "Quote on request": "별도 견적",
+  "English-Speaking Chauffeur": "영어 가능 의전기사",
+  "Additional Stop": "경유지 추가",
+  "YOUR RESERVATION REQUEST": "예약 요청 내역",
+  "Chauffeur Itinerary": "운행 일정표",
+  "Saved · Awaiting confirmation": "접수 완료 · 확정 대기",
+  "DATE": "이용 날짜",
+  "DATES": "이용 날짜",
+  "DURATION": "이용 기간",
+  "TIME ZONE": "시간대",
+  "Daily Itinerary": "일자별 운행 일정",
+  "Estimated total · Tax excluded": "예상 이용 금액 · 부가세 별도",
+  "Reservation request saved · Awaiting confirmation · No payment taken": "예약 요청 접수 완료 · 확정 대기 · 결제 내역 없음"
+})
+export function documentCopy(locale, english) {
+  return locale === 'ko' && Object.hasOwn(ko, english) ? ko[english] : english
+}
+export function documentDate(locale, value) {
+  return locale === 'ko' ? String(value ?? '').replace(/-/g,'.') : String(value ?? '')
+}

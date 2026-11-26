@@ -1,3 +1,4 @@
+import { documentCopy, documentDate } from '../src/i18n/document-copy.mjs'
 // Branded A4 confirmation: same banner asset, palette and itinerary hierarchy as the email.
 // A lightweight server PDF renderer, without a browser or network dependencies.
 import { readFileSync } from 'node:fs'
@@ -50,6 +51,7 @@ function jpegSize(buf){
 let banner
 try{banner=readFileSync(new URL('./assets/email-header-bg.jpg',import.meta.url))}catch{/* text fallback */}
 export function buildConfirmationPdf(snapshot){
+ const locale=snapshot.preferredLocale==='ko'?'ko':'en',t=s=>documentCopy(locale,s)
  const objects=[null],add=value=>{objects.push(Buffer.isBuffer(value)?value:Buffer.from(value,'ascii'));return objects.length-1}
  const font=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')
  const bold=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>')
@@ -87,14 +89,14 @@ export function buildConfirmationPdf(snapshot){
    rect(0,H-h,W,h,palette.dark)
    if(image)commands.push('q '+W+' 0 0 '+bh.toFixed(2)+' 0 '+(H-bh).toFixed(2)+' cm /Banner Do Q')
    else{line('J Production',M,H-30,18,palette.white);line('Team of Premium Chauffeur Service',M,H-44,9,'#c4cbd4')}
-   line('RESERVATION CONFIRMED',M,H-bh-15,9,palette.lightOlive,true)
-   line('Your journey is confirmed.',M,H-bh-39,24,palette.white)
-   line('Reference '+snapshot.reference+' · Confirmed',M,H-bh-62,10,'#d5dcd5')
+   line(t('RESERVATION CONFIRMED'),M,H-bh-15,9,palette.lightOlive,true)
+   line(t('Your journey is confirmed.'),M,H-bh-39,24,palette.white)
+   line(t('Reference')+' '+snapshot.reference+' · '+t('Confirmed'),M,H-bh-62,10,'#d5dcd5')
    y=H-h-27
   }else{
    rect(0,H-64,W,64,palette.dark)
-   line('J Production | RESERVATION CONFIRMED',M,H-25,11,palette.white,true)
-   line('Reference '+snapshot.reference+' | Itinerary continued',M,H-44,9,palette.lightOlive)
+   line('J Production | '+t('RESERVATION CONFIRMED'),M,H-25,11,palette.white,true)
+   line(t('Reference')+' '+snapshot.reference+' | '+t('Itinerary continued'),M,H-44,9,palette.lightOlive)
    y=H-83
   }
  }
@@ -104,21 +106,21 @@ export function buildConfirmationPdf(snapshot){
  }
  const heading=(s)=>{ensure(24);line(s,M,y,10,palette.olive,true);y-=20}
  start(true)
- heading('GUEST DETAILS')
+ heading(t('GUEST DETAILS'))
  para(snapshot.name,17,palette.ink,true,20)
- para('Thank you for choosing CHAUFFEUR. We look forward to welcoming you.',10,palette.body,false,14)
+ para(t('Thank you for choosing CHAUFFEUR. We look forward to welcoming you.'),10,palette.body,false,14)
  y-=12
- heading('DAILY ITINERARY · '+snapshot.journeys.length+' '+(snapshot.journeys.length===1?'DAY':'DAYS'))
+ heading(t('DAILY ITINERARY')+' · '+snapshot.journeys.length+(locale==='ko'?'일':' '+(snapshot.journeys.length===1?'DAY':'DAYS')))
  const linesFor=d=>{
   const lines=[]
   const addLines=(value,size,color,heavy=false,space=0)=>{const rows=wrap(value,TW,size,heavy);rows.forEach((t,i)=>lines.push({t,size,color,heavy,leading:size+3,space:i===0?space:0}))}
-  addLines(date(d.date)+' · '+d.time+' KST',12,palette.ink,true)
+  addLines((locale==='ko'?documentDate(locale,d.date):date(d.date))+' · '+d.time+' KST',12,palette.ink,true)
   addLines(nameOf(catalog.services,d.service)+' · '+nameOf(catalog.vehicles,d.vehicle),10,palette.body,false,2)
   const pickup=d.pickupPlace?.name||d.pickup||'',destination=d.destinationPlace?.name||d.destination||''
   addLines(pickup+' → '+destination,10,palette.ink,false,5)
   if(d.pickup!==pickup||d.destination!==destination)addLines([d.pickup,d.destination].filter(Boolean).join(' → '),8.5,palette.muted,false,1)
-  if(d.flight)addLines('Flight '+d.flight,9,palette.muted,false,3)
-  for(const stop of d.stops||[])addLines('Via: '+(stop.place?.name||stop.location||''),9,palette.muted,false,2)
+  if(d.flight)addLines(t('Flight')+' '+d.flight,9,palette.muted,false,3)
+  for(const stop of d.stops||[])addLines(t('Via')+': '+(stop.place?.name||stop.location||''),9,palette.muted,false,2)
   return lines
  }
  for(const [i,d] of snapshot.journeys.entries()){
@@ -136,14 +138,14 @@ export function buildConfirmationPdf(snapshot){
   }
   y-=3;rule(y);y-=15
  }
- const options=(snapshot.options||[]).map(id=>nameOf(catalog.options,id)).join(', ')||'None'
- const notes=[snapshot.paymentMethod==='on_site'?'Payment on the day of your service.':'Payment as agreed with our team.','We will share your chauffeur and vehicle details before your journey.','For questions or changes, please reply to your confirmation email.']
- const summaryHeight=wrap('Add-ons: '+options,R-M,9).length*13+44+notes.reduce((n,t)=>n+wrap(t,R-M,9).length*13,0)+14
+ const options=(snapshot.options||[]).map(id=>t(nameOf(catalog.options,id))).join(', ')||t('None')
+ const notes=[snapshot.paymentMethod==='on_site'?t('Payment on the day of your service.'):t('Payment as agreed with our team.'),t('We will share your chauffeur and vehicle details before your journey.'),t('For questions or changes, please reply to your confirmation email.')]
+ const summaryHeight=wrap(t('Add-ons')+': '+options,R-M,9).length*13+44+notes.reduce((n,t)=>n+wrap(t,R-M,9).length*13,0)+14
  ensure(Math.min(summaryHeight,650))
- para('Add-ons: '+options,9,palette.body,false,13)
+ para(t('Add-ons')+': '+options,9,palette.body,false,13)
  y-=4;rule(y,'#d7ded4');y-=24
  const total=money(snapshot.total)
- line('Confirmed service total · '+(snapshot.taxIncluded?'Tax included':'Tax excluded'),M,y,10,palette.body)
+ line(t('Confirmed service total')+' · '+(snapshot.taxIncluded?t('Tax included'):t('Tax excluded')),M,y,10,palette.body)
  line(total,R-measure(total,17,true),y,17,palette.ink,true)
  y-=24
  for(const note of notes)para(note,9,palette.muted,false,13)

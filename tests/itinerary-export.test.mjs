@@ -20,7 +20,7 @@ test('itinerary PDF/PNG export paints the subtle bg_003 header backdrop and J Pr
   assert.match(exporter, /ctx\.globalAlpha\s*=\s*0\.\d+/)
   assert.match(exporter, /export async function exportItineraryPdf/)
   assert.match(exporter, /export async function exportItineraryPng/)
-  assert.match(booking, /await exportItineraryPdf\(result\)/)
+  assert.match(booking, /await exportItineraryPdf\(\{ \.\.\.result, preferredLocale: locale \}\)/)
 })
 
 test('exports load self-hosted Playfair Display and use consistent request document labels',()=>{
@@ -32,6 +32,6 @@ test('exports load self-hosted Playfair Display and use consistent request docum
   assert.match(exporter,/'Chauffeur Itinerary'/)
   assert.match(exporter,/'Daily Itinerary'/)
   assert.match(exporter,/data\.journeys\.length === 1 \? 'DATE' : 'DATES'/)
-  assert.match(exporter,/\['DURATION', String\(data\.journeys\.length\)/)
+  assert.match(exporter,/\[t\('DURATION'\), String\(data\.journeys\.length\)/)
   assert.doesNotMatch(exporter,/'Journey itinerary'|\['JOURNEYS',/)
 })
