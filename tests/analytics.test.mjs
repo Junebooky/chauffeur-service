@@ -130,7 +130,7 @@ test('SPA provider and customer funnel components wire Direct GA4 helpers', () =
   assert.match(read('src/Booking.tsx'), /trackBookingLead\(/)
   assert.match(read('src/Booking.tsx'), /trackItineraryExport\('pdf'/)
   assert.match(read('src/Booking.tsx'), /trackItineraryExport\('png'/)
-  assert.match(read('src/App.tsx'), /trackCtaClick\('journal_nav'/)
+  assert.doesNotMatch(read('src/App.tsx'), /journal-nav-link|trackCtaClick\('journal_nav'/)
 })
 
 test('SEO service and journal pages embed Direct GA4 without blocking or GTM', () => {
