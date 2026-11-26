@@ -73,6 +73,7 @@ test('trackPageView deduplicates identical paths and passes canonical parameters
       {
         page_path: '/ko/',
         page_location: 'https://www.jpchauffeurkorea.com/ko/',
+        page_referrer: '',
         page_title: 'CHAUFFEUR — 한국어',
         locale: 'ko',
       },
@@ -116,7 +117,7 @@ test('SPA provider and customer funnel components wire Direct GA4 helpers', () =
   assert.match(html, /https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-8VWZ2SPG0Q/)
   assert.doesNotMatch(html, /GTM-PTN9FZCL/)
 
-  assert.match(read('src/i18n/provider.tsx'), /trackPageView\('\/' \+ locale \+ '\/' \+ location\.search/)
+  assert.match(read('src/i18n/provider.tsx'), /trackPageView\('\/' \+ locale \+ '\/', meta\.title, locale\)/)
   assert.match(read('src/i18n/provider.tsx'), /trackLanguageSwitch\(locale, next\)/)
   assert.match(read('src/App.tsx'), /trackSectionView\(id, locale\)/)
   assert.match(read('src/App.tsx'), /trackCtaClick\('concierge_email', 'concierge_modal'\)/)
@@ -148,4 +149,15 @@ test('SEO service and journal pages embed Direct GA4 without blocking or GTM', (
   const searchScript = read('scripts/build-search-pages.mjs')
   assert.match(searchScript, /ga4InlineSnippet/)
   assert.doesNotMatch(searchScript, /\/analytics\.js/)
+})
+
+test('SPA page views ignore query strings and fragments, and reject non-public routes', () => {
+  withMockBrowser({ hostname: 'www.jpchauffeurkorea.com', pathname: '/en/', search: '?email=private@example.com' }, calls => {
+    trackPageView('/en/?email=private@example.com#secret', 'English', 'en')
+    trackPageView('/en/?phone=private', 'English', 'en')
+    trackPageView('/admin/live', 'Admin', 'en')
+    assert.equal(calls.length, 1)
+    assert.equal(calls[0][2].page_location, 'https://www.jpchauffeurkorea.com/en/')
+    assert.doesNotMatch(JSON.stringify(calls), /private|secret|admin/)
+  })
 })

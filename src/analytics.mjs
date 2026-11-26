@@ -42,13 +42,36 @@ function sanitizeParams(params) {
   return clean
 }
 
+function publicHomePath(path) {
+  if (typeof path !== 'string') return null
+  const clean = path.split(/[?#]/, 1)[0]
+  if (clean === '/') return '/'
+  if (/^\/(en|ko)\/?$/.test(clean)) return clean.replace(/\/?$/, '/')
+  return null
+}
+
+function safeReferrer() {
+  try {
+    const url = new URL(globalThis.document?.referrer || '')
+    return ['https:', 'http:'].includes(url.protocol) ? url.origin + '/' : ''
+  } catch {
+    return ''
+  }
+}
+
 function sendGtag(command, target, params = {}) {
   const win = globalThis.window
   if (typeof win === 'undefined' || !shouldTrackAnalytics(win.location)) return
   if (typeof win.gtag !== 'function') return
+  const path = publicHomePath(params.page_path ?? win.location.pathname)
+  if (!path) return false
   const payload = sanitizeParams(params)
+  payload.page_location = win.location.origin + path
+  payload.page_referrer = safeReferrer()
+  if (target === 'page_view') payload.page_path = path
   if (isDebugAnalytics(win.location.search)) payload.debug_mode = true
   win.gtag(command, target, payload)
+  return true
 }
 
 let lastTrackedPath = ''
@@ -60,18 +83,13 @@ export function resetAnalyticsSessionForTests() {
 }
 
 export function trackPageView(path, title, locale) {
-  if (!path || path === lastTrackedPath) return
-  lastTrackedPath = path
-  const win = globalThis.window
-  sendGtag('event', 'page_view', {
-    page_path: path,
-    page_location:
-      typeof win !== 'undefined' && win.location?.origin
-        ? `${win.location.origin}${path}`
-        : undefined,
+  const clean = publicHomePath(path)
+  if (!clean || clean === lastTrackedPath) return
+  if (sendGtag('event', 'page_view', {
+    page_path: clean,
     page_title: title,
     locale,
-  })
+  })) lastTrackedPath = clean
 }
 
 export function trackEvent(name, params = {}) {

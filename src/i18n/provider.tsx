@@ -42,7 +42,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[property="og:locale"]')?.setAttribute('content', meta.ogLocale)
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', origin + '/' + locale + '/')
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', origin + '/' + locale + '/')
-    trackPageView('/' + locale + '/' + location.search, meta.title, locale)
+    trackPageView('/' + locale + '/', meta.title, locale)
     return () => { document.documentElement.lang = 'en' }
   }, [locale])
   const t = useCallback((english: string) => locale === 'ko' ? (Object.hasOwn(ko, english) ? ko[english] : english) : english, [locale])
