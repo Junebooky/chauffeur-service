@@ -18,7 +18,9 @@
     }
   ],
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": {
+      "feature/seo-foundation": false
+    }
   },
   "headers": [
     {

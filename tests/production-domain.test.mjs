@@ -12,5 +12,7 @@ test('production domain metadata uses canonical www and keeps admin routes out o
  for(const path of ['/admin','/admin/','/admin/:path*','/api/:path*']){
   assert.ok(config.headers.find(h=>h.source===path)?.headers.some(h=>h.key==='X-Robots-Tag'&&h.value==='noindex, nofollow'))
  }
- assert.equal(config.git.deploymentEnabled,true)
+ assert.notEqual(config.git.deploymentEnabled,false)
+ assert.notEqual(config.git.deploymentEnabled?.main,false)
+ if(typeof config.git.deploymentEnabled==='object')assert.equal(config.git.deploymentEnabled['feature/seo-foundation'],false)
 })
