@@ -61,7 +61,7 @@ export const ko: Readonly<Record<string, string>> = {
   "Plan your journey": "예약하기",
   "Schedule": "이용 일정",
   "Details": "예약자 정보",
-  "Confirmation": "예약 요청 내역",
+  "Confirmation": "요청 내역",
   "Vehicle Selection": "차량 선택",
   "Select your schedule and route": "이용 일정과 운행 경로를 선택해 주세요.",
   "Single Day": "1일 이용",
@@ -210,5 +210,15 @@ export const ko: Readonly<Record<string, string>> = {
   "Included": "기본 포함",
   "Unavailable at this time": "현재 이용 불가",
   "Private chauffeur": "전담 의전기사",
-  "Click or swipe vehicles to select. Convex perspective adapts to your collection. Rates exclude TAX.": "차량을 클릭하거나 스와이프해 선택하세요. 요금은 부가세 별도입니다."
+  "Click or swipe vehicles to select. Convex perspective adapts to your collection. Rates exclude TAX.": "차량을 클릭하거나 스와이프해 선택하세요. 요금은 부가세 별도입니다.",
+  "Address search is unavailable. Please try again.": "주소 검색을 이용할 수 없습니다. 다시 시도해 주세요.",
+  "Address confirmation is unavailable. Please try again.": "주소를 확인할 수 없습니다. 다시 시도해 주세요.",
+  "Online reservations are temporarily unavailable.": "현재 온라인 예약 접수가 어렵습니다.",
+  "Please enter valid contact details.": "예약자 연락처를 확인해 주세요.",
+  "Please enter a valid email and phone number.": "이메일과 연락처를 확인해 주세요.",
+  "Please accept the reservation notice.": "예약 안내에 동의해 주세요.",
+  "Please select valid pickup and destination places.": "정확한 승차 및 하차 장소를 선택해 주세요.",
+  "Please select valid route stops.": "정확한 경유지를 선택해 주세요.",
+  "Please enter a valid flight number.": "항공편명을 확인해 주세요.",
+  "Too many requests. Please try again in a few minutes.": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."
 }

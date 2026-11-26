@@ -715,34 +715,35 @@ export default function Booking({
     requestAnimationFrame(() => heading.current?.focus())
   }
   const emailEnquiry = () => {
+    const mailLabel = (en: string, ko: string) => locale === 'ko' ? ko : en
     const itinerary = journeys.map((day, index) => [
       `Day ${String(index + 1).padStart(2, '0')}: ${displayDate(day.date)} · ${day.time} KST`,
-      `Service: ${catalog.services.find((item) => item.id === day.service)?.name || day.service}`,
-      `Vehicle: ${catalog.vehicles.find((item) => item.id === day.vehicle)?.name || day.vehicle}`,
-      `Pickup: ${day.pickup}`,
-      ...day.stops.map((stop, i) => `Stop ${i + 1}: ${stop.location}`),
-      `Destination: ${day.destination}`,
-      ...(day.flight ? [`Flight: ${day.flight}`] : []),
+      `${mailLabel("Service", "서비스")}: ${catalog.services.find((item) => item.id === day.service)?.name || day.service}`,
+      `${mailLabel("Vehicle", "차량")}: ${catalog.vehicles.find((item) => item.id === day.vehicle)?.name || day.vehicle}`,
+      `${mailLabel("Pickup", "승차 장소")}: ${day.pickup}`,
+      ...day.stops.map((stop, i) => `${mailLabel('Stop','경유지')} ${i + 1}: ${stop.location}`),
+      `${mailLabel("Destination", "하차 장소")}: ${day.destination}`,
+      ...(day.flight ? [`${mailLabel("Flight", "항공편명")}: ${day.flight}`] : []),
     ].join('\n')).join('\n\n')
     const additions = catalog.options
       .filter((option) => options.includes(option.id))
       .map((option) => option.name).join(', ') || 'None'
     const message = [
-      'Hello CHAUFFEUR,',
+      mailLabel('Hello CHAUFFEUR,','CHAUFFEUR 담당자님,'),
       '',
-      'Please review my booking enquiry. I understand this is not confirmed.',
+      mailLabel('Please review my booking enquiry. I understand this is not confirmed.','예약 문의드립니다. 아직 예약이 확정되지 않은 것을 확인했습니다.'),
       '',
-      `Name: ${name}`, `Email: ${email}`, `Phone: ${phone}`,
-      `Preferred contact: ${contactMethod}`,
-      ...(submittedMessengerContact ? [`Messenger: ${submittedMessengerContact}`] : []),
+      `${mailLabel("Name", "예약자 성함")}: ${name}`, `${mailLabel("Email", "이메일")}: ${email}`, `${mailLabel("Phone", "연락처")}: ${phone}`,
+      `${mailLabel("Preferred contact", "선호 연락 수단")}: ${contactMethod}`,
+      ...(submittedMessengerContact ? [`${mailLabel("Messenger", "메신저")}: ${submittedMessengerContact}`] : []),
       '',
-      'ITINERARY',
+      mailLabel('ITINERARY','운행 일정'),
       itinerary,
       '',
-      `Add-ons: ${additions}`,
-      `Estimated total (tax excluded): ${quoteRequired ? t('Quote on request') : money(total)}`,
+      `${mailLabel("Add-ons", "추가 옵션")}: ${additions}`,
+      `${mailLabel("Estimated total (tax excluded)", "예상 이용 금액 (부가세 별도)")}: ${quoteRequired ? t('Quote on request') : money(total)}`,
       '',
-      'Please confirm availability and follow up with me.',
+      mailLabel('Please confirm availability and follow up with me.','예약 가능 여부를 확인하신 후 연락 부탁드립니다.'),
     ].join('\n')
     setError('')
     setEmailDraftOpened(true)

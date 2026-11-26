@@ -26,7 +26,7 @@ test('Exact Korean station name can return instantly while unfamiliar places sti
   const curated = JSON.parse(read('server/popular-places.json'))
   assert.match(source, /exactCurated\.length > 0/)
   assert.match(source, /google\('places:autocomplete'/)
-  assert.match(source, /languageCode:\s*'en'/)
+  assert.match(source, /languageCode: req\.body\?\.locale === 'ko' \? 'ko' : 'en'/)
   assert.ok(curated.some((place) => place.id === 'curated:hyehwa-station'))
   assert.ok(!curated.some((place) => place.id === 'curated:seoul-station'))
   assert.ok(curated.slice(0, 6).some((place) => place.id === 'curated:josun-palace'))

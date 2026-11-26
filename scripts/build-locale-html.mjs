@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 import { localeSeo, origin } from '../src/i18n/seo.mjs'
 export function localeHtml(source, locale) {
   const meta=localeSeo[locale], url=origin+'/'+locale+'/'
@@ -11,7 +12,7 @@ export function localeHtml(source, locale) {
     .replace(/(<meta property="og:url" content=")[^"]*(")/, '$1'+url+'$2')
     .replace(/(<meta property="og:locale" content=")[^"]*(")/, '$1'+meta.ogLocale+'$2')
 }
-if (process.argv[1] && import.meta.url === new URL('file:'+process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const source=readFileSync('dist/index.html','utf8')
   for(const locale of ['en','ko']){
     mkdirSync('dist/'+locale,{recursive:true})
