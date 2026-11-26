@@ -46,3 +46,26 @@ test('article language link only points to the translated article when one is pu
  assert.doesNotMatch(untranslated,/hreflang="(?:ko|x-default)"/)
  assert.ok(untranslated.includes('lang="ko" href="/ko/journal/"'))
 })
+
+test('Journal links prioritize reviewed service topics and keep every link local and bilingual',()=>{
+ const expected={
+  'incheon-airport-pickup-checklist':'incheon-airport-transfer',
+  'seoul-executive-chauffeur-itinerary':'seoul-chauffeur-service',
+  'seoul-conference-delegation-transport':'seoul-chauffeur-service',
+  'chauffeur-vehicle-luggage-selection':'private-driver-seoul',
+  'unknown-article':'seoul-chauffeur-service',
+ }
+ const published=JSON.parse(readFileSync(new URL('../seo/service-pages.json',import.meta.url),'utf8')).map(p=>p.slug).sort()
+ for(const lang of ['en','ko'])for(const [slug,first] of Object.entries(expected)){
+  const row={slug,title:'Guide',description:'Description',intro:'Travel details',sections:[]}
+  const html=renderJournal(lang,[row],slug,false)
+  const nav=html.match(/<nav aria-label="(?:Related services|관련 서비스)">([\s\S]*?)<\/nav>/)?.[1]
+  assert.ok(nav)
+  const links=[...nav.matchAll(/href="(\/(?:ko\/)?services\/([a-z0-9-]+)\/)"/g)]
+  assert.equal(links.length,3)
+  assert.equal(links[0][2],first)
+  assert.deepEqual(links.map(m=>m[2]).sort(),published)
+  assert.ok(links.every(m=>m[1].startsWith(lang==='ko'?'/ko/services/':'/services/')))
+  assert.doesNotMatch(nav,/\/journal\/|\/admin\/|\/api\//)
+ }
+})
