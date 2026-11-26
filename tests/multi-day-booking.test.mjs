@@ -166,7 +166,7 @@ test('server rejects unresolved locations on an edited day while allowing identi
 
 test('Vehicle Selection and booking controls use concise labels while preserving daily assignment', () => {
   assert.match(bookingSource, /Use one vehicle for all days, or choose per day\./)
-  assert.match(bookingSource, /Applies to all \{dates\.length\} days\./)
+  assert.match(bookingSource, /Applies to all \$\{dates\.length\} days\./)
   assert.match(bookingSource, /Add-ons · Per Day/)
   assert.match(bookingSource, /Until \$\{displayDate\(dates\[dates\.length - 1\]\)\}/)
   assert.match(bookingSource, /Continue to Details/)

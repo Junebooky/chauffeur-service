@@ -897,7 +897,7 @@ export default function Booking({
                     <span className="booking-stepper-num">
                       {isComplete ? <Check size={14} /> : i + 1}
                     </span>
-                    <span className="booking-stepper-label">{t(label === 'Vehicle' ? 'Vehicle Selection' : label)}</span>
+                    <span className="booking-stepper-label">{locale === 'ko' && label === 'Vehicle' ? t('Vehicle Selection') : t(label)}</span>
                   </button>
                   {i < arr.length - 1 && (
                     <span

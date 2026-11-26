@@ -22,3 +22,16 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Install browser test dependencies
+        run: |
+          python3 -m pip install playwright
+          python3 -m playwright install --with-deps chromium
+      - name: Customer locale responsive checks
+        run: python3 scripts/customer-locale-browser.py
+      - name: Upload locale screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: customer-locale-screenshots
+          path: test-results/customer-locale/
+          if-no-files-found: ignore

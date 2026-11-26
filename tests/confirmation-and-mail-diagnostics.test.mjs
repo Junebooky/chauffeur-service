@@ -24,7 +24,7 @@ test('Confirmation has three equal columns with matching label/value baselines',
 })
 
 test('Confirmation uses thin subdued request label and puts time zone next to each service time', () => {
-  assert.match(booking, /className="booking-confirmation-kicker">YOUR RESERVATION REQUEST/)
+  assert.match(booking, /className="booking-confirmation-kicker">\{t\("YOUR RESERVATION REQUEST"\)\}/)
   assert.doesNotMatch(booking, /className="eyebrow">YOUR RESERVATION REQUEST/)
   assert.match(css, /\.booking-confirmation-heading \.booking-confirmation-kicker \{[^}]*font-weight: 300 !important;/s)
   assert.match(css, /\.booking-confirmation-heading \.booking-confirmation-kicker \{[^}]*color: rgba\(236, 241, 247, 0\.64\) !important;/s)

@@ -52,6 +52,6 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     }
     return () => { controller.abort(); window.removeEventListener('popstate', onPop) }
   }, [])
-  const t = useCallback((english: string) => locale === 'ko' ? ko[english] ?? english : english, [locale])
+  const t = useCallback((english: string) => locale === 'ko' ? (Object.hasOwn(ko, english) ? ko[english] : english) : english, [locale])
   return <Context.Provider value={{ locale, setLocale, t }}>{children}</Context.Provider>
 }

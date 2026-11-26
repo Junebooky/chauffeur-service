@@ -20,3 +20,6 @@ html[lang="ko"] .booking-confirmation-heading,
 html[lang="ko"] .field-note,
 html[lang="ko"] .booking-email-fallback-note,
 html[lang="ko"] .no-payment { letter-spacing: normal; word-break: keep-all; overflow-wrap: break-word; }
+
+/* Reserve the same header slot; the existing mobile navigation switch is used on narrow screens. */
+html[lang="ko"] .booking-stepper-label { white-space: nowrap; }
