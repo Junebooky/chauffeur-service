@@ -43,6 +43,7 @@ test('standalone page and content click use sanitized public paths', () => {
   const clicks = calls.filter(x => x[0] === 'event' && x[1] === 'seo_content_click')
   assert.equal(clicks.length, 1)
   assert.equal(clicks[0][2].link_path, '/ko/services/incheon-airport-transfer/')
+  assert.equal(clicks[0][2].content_slug, 'airport-guide')
   assert.doesNotMatch(JSON.stringify(calls), /private|secret/)
 })
 
@@ -66,4 +67,21 @@ test('home and standalone preserve only the exact public ChatGPT source marker',
       assert.doesNotMatch(JSON.stringify(window.dataLayer),/private|evil|secret/)
     }
   }
+})
+
+test('SEO contact and reservation clicks identify the public source without tracking external reservation links', () => {
+  const script=ga4InlineSnippet({pageType:'journal_article',locale:'en',slug:'airport-guide'}).slice(8,-9)
+  const browser=mockBrowser(script,'/journal/airport-guide/')
+  browser.click('/en/#reservation')
+  browser.click('/#reservation')
+  browser.click('/ko/#reservation')
+  browser.click('https://example.org/private#reservation')
+  browser.click('mailto:private@example.com?subject=secret')
+  const calls=browser.window.dataLayer.map(x=>Array.from(x))
+  const ctas=calls.filter(x=>x[0]==='event'&&x[1]==='cta_click')
+  const contacts=calls.filter(x=>x[0]==='event'&&x[1]==='contact_click')
+  assert.equal(ctas.length,3)
+  assert.equal(contacts.length,1)
+  for(const event of [...ctas,...contacts])assert.equal(event[2].content_slug,'airport-guide')
+  assert.doesNotMatch(JSON.stringify(calls),/private|secret/)
 })

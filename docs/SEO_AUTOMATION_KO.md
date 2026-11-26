@@ -52,3 +52,7 @@
 
 ## 운영 공개 사이트 읽기 전용 QA (2026-11-26)
 - GitHub Actions Public SEO smoke는 관련 PR과 수동 실행에서만 공식 도메인의 16개 GET 검증 및 Playwright client dataLayer 검사를 실행한다. main 병합이나 Vercel 배포는 수행하지 않는다. Playwright는 GA 라이브러리를 빈 스크립트로 대체하고 외부 요청, API 요청 및 모든 비-GET 요청을 차단/모킹한다. 실제 GA4 이벤트·예약 생성 없이 root EN, 언어 전환, 페이지 조회 중복, ChatGPT source, URL 정제 및 공개 서비스/Journal 이벤트 큐를 검증한다. GA4 실수신·자동 이벤트·보고서 반영은 별도 DebugView/실사용 데이터로 확인해야 한다.
+
+## Journal 전환 링크 최적화 (2026-11-26)
+- Reviewed slug-to-service priority map on article pages: airport checklist -> airport transfer; executive/conference -> Seoul chauffeur; vehicle selection -> private driver. All three existing public service links retained and same-language; unknown topics use default order. No draft article URLs linked, no CMS content edits. Journal list still uses default order. Visible heading/aria label localized. New drafts need review before publication.
+- Existing content_slug custom dimension is now included on standalone seo_content_click and contact_click events as well as page_view/cta_click. Reservation clicks only recognize the known relative home anchors; no raw href, query, email, or customer data is added. These are interactions, not leads; OpenSEO aggregate reports cannot query per-content custom dimensions directly. Use GA4 Exploration after data collection.
