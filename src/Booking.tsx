@@ -39,6 +39,14 @@ import SectionEyebrow from './components/ui/SectionEyebrow'
 import ReservationButton from './components/ui/ReservationButton'
 import BookingCtaBeam from './components/ui/BookingCtaBeam'
 import {
+  trackBookingEmailFallback,
+  trackBookingLead,
+  trackBookingOpen,
+  trackBookingStep,
+  trackContactClick,
+  trackItineraryExport,
+} from './analytics.mjs'
+import {
   DEFAULT_USD_RATE,
   moneyUsd,
   addDays,
@@ -670,6 +678,14 @@ export default function Booking({
   useEffect(() => {
     if (result) successHeading.current?.focus()
   }, [result])
+  const prevGlassOpenRef = useRef(false)
+  useEffect(() => {
+    if (glassOpen && !result && !prevGlassOpenRef.current) {
+      trackBookingOpen(service, vehicle, locale)
+    }
+    prevGlassOpenRef.current = glassOpen
+  }, [glassOpen, result, service, vehicle, locale])
+
   useEffect(() => {
     if (!glassOpen || result) return
     const frame = requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }))
@@ -691,6 +707,14 @@ export default function Booking({
         setError('')
         setEditingDate(dates[0])
         setDailyScheduleOpen(true)
+        trackBookingStep({
+          stepName: 'daily_schedule',
+          tripMode: 'multi_day',
+          dayCount: dates.length,
+          serviceId: journeys[0]?.service || service,
+          vehicleId: journeys[0]?.vehicle || vehicle,
+          locale,
+        })
         requestAnimationFrame(() => heading.current?.focus())
         return
       }
@@ -713,6 +737,16 @@ export default function Booking({
     // clearly labelled email enquiry fallback. Never call this availability.
     setError('')
     setStep(target)
+    if (target > step) {
+      trackBookingStep({
+        stepName: target === 1 ? 'vehicle' : 'details',
+        tripMode: multiDay ? 'multi_day' : 'single_day',
+        dayCount: journeys.length,
+        serviceId: journeys[0]?.service || service,
+        vehicleId: journeys[0]?.vehicle || vehicle,
+        locale,
+      })
+    }
     requestAnimationFrame(() => heading.current?.focus())
   }
   const emailEnquiry = () => {
@@ -748,6 +782,7 @@ export default function Booking({
     ].join('\n')
     setError('')
     setEmailDraftOpened(true)
+    trackBookingEmailFallback(journeys.length, locale)
     window.location.href = composeEmail('CHAUFFEUR · Booking enquiry', message)
   }
   const submit = async (event: React.FormEvent) => {
@@ -816,6 +851,16 @@ export default function Booking({
           destinationName: (journeys[i]?.destinationPlace && curatedLabels(journeys[i].destinationPlace!.id, locale)?.name) || journeys[i]?.destinationPlace?.name || day.destination,
         })),
       })
+      trackBookingLead({
+        total: typeof data.total === 'number' ? data.total : null,
+        serviceId: journeys[0]?.service || service,
+        vehicleId: journeys[0]?.vehicle || vehicle,
+        tripMode: journeys.length > 1 ? 'multi_day' : 'single_day',
+        dayCount: journeys.length,
+        optionCount: options.length,
+        contactMethod,
+        locale,
+      })
     } catch (error) {
       if (error instanceof TypeError) {
         setAvailabilityIssue({
@@ -840,6 +885,7 @@ export default function Booking({
     try {
       setExportError('')
       await exportItineraryPdf({ ...result, preferredLocale: locale })
+      trackItineraryExport('pdf', result.journeys.length, locale)
     } catch {
       setExportError('Could not save the PDF. Please try again.')
     }
@@ -849,6 +895,7 @@ export default function Booking({
     try {
       setExportError('')
       await exportItineraryPng({ ...result, preferredLocale: locale })
+      trackItineraryExport('png', result.journeys.length, locale)
     } catch {
       setExportError('Could not save the image. Please try again.')
     }
@@ -1061,8 +1108,11 @@ export default function Booking({
                     <button type="button" className="booking-confirmation-export" aria-label={t("Download PNG")} onClick={() => { void exportPng() }}>
                       <Image size={16} aria-hidden="true" /> PNG
                     </button>
-                    <a className="booking-confirmation-email"
-                      href={customQuoteEmail()}>
+                    <a
+                      className="booking-confirmation-email"
+                      href={customQuoteEmail()}
+                      onClick={() => trackContactClick('booking_confirmation', 'email')}
+                    >
                       <Mail size={16} aria-hidden="true" /> {t("Email Us")}
                     </a>
                   </div>

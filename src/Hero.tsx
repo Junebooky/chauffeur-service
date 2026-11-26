@@ -1,6 +1,7 @@
 import { useLocale } from './i18n/provider'
 import { useEffect, useState } from 'react'
 import { MoveRight } from 'lucide-react'
+import { trackCtaClick } from './analytics.mjs'
 
 const HERO_SLIDE_COUNT = 4
 const HERO_SLIDE_INTERVAL_MS = 5000
@@ -114,7 +115,10 @@ export default function Hero({
           <button
             type="button"
             className="hero-book-link"
-            onClick={() => goTo?.(3)}
+            onClick={() => {
+              trackCtaClick('book_now', 'hero')
+              goTo?.(3)
+            }}
           >
             <span>{t("Book Now")}</span>
             <MoveRight size={18} strokeWidth={1.25} aria-hidden="true" />

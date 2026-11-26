@@ -37,11 +37,31 @@
     <link rel="preload" as="image" href="/media/fleet/vehicles/g90/exterior.png" />
     <link rel="preload" as="image" href="/media/fleet/vehicles/sprinter/exterior.png" />
     <title>CHAUFFEUR — The art of arriving.</title>
-    <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-PTN9FZCL"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      (function () {
+        var path = window.location.pathname || '';
+        var params = new URLSearchParams(window.location.search || '');
+        var isAdminOrLab =
+          path === '/admin' || path.indexOf('/admin/') === 0 || params.get('glass-lab') === '1';
+        var host = window.location.hostname;
+        var debug = params.get('ga_debug') === '1';
+        var allowedHost = host === 'www.jpchauffeurkorea.com' || host === 'jpchauffeurkorea.com';
+        if (isAdminOrLab || (!allowedHost && !debug)) return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        window.gtag('js', new Date());
+        window.gtag(
+          'config',
+          'G-8VWZ2SPG0Q',
+          debug ? { send_page_view: false, debug_mode: true } : { send_page_view: false }
+        );
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-8VWZ2SPG0Q';
+        document.head.appendChild(s);
+      })();
     </script>
   </head>
   <body>

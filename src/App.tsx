@@ -17,6 +17,9 @@ import SectionEyebrow from './components/ui/SectionEyebrow'
 import { customQuoteEmail, OPERATOR_EMAIL } from './contact'
 import { useJourneyScroll } from './useJourneyScroll'
 import { DEFAULT_USD_RATE } from './utils'
+import { trackCtaClick, trackSectionView } from './analytics.mjs'
+
+const SECTION_IDS = ['welcome', 'collection', 'services', 'reservation'] as const
 
 function Brand({ onClick }: { onClick: () => void }) {
   return (
@@ -117,6 +120,10 @@ export default function App() {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [])
+  useEffect(() => {
+    const id = SECTION_IDS[active]
+    if (id) trackSectionView(id, locale)
+  }, [active, locale])
 
   return (
     <>
@@ -151,7 +158,7 @@ export default function App() {
           >
             {t("Your journey")}
           </button>
-          <button onClick={() => setModal('contact')}>
+          <button onClick={() => { trackCtaClick('concierge_open', 'header'); setModal('contact') }}>
             {t("Concierge")} <ArrowUpRight size={11} />
           </button>
         </nav>
@@ -212,6 +219,7 @@ export default function App() {
             </button>
             <button
               onClick={() => {
+                trackCtaClick('concierge_open', 'mobile_nav')
                 setModal('contact')
                 setMobileMenu(false)
               }}
@@ -283,7 +291,11 @@ export default function App() {
             <p className="dialog-note">
               {t("All journey requests are subject to confirmation. No upfront payment is taken.")}
             </p>
-            <a className="button gold-button" href={customQuoteEmail()}>
+            <a
+              className="button gold-button"
+              href={customQuoteEmail()}
+              onClick={() => trackCtaClick('concierge_email', 'concierge_modal')}
+            >
               {t("Write an email")} <ArrowRight size={16} aria-hidden="true" />
             </a>
           </>

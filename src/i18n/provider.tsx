@@ -4,6 +4,7 @@ import { resolveLocale } from './locale.mjs'
 import type { Locale } from './locale.mjs'
 import { ko } from './ko'
 import { localeSeo, origin } from './seo.mjs'
+import { trackLanguageSwitch, trackPageView } from '../analytics.mjs'
 
 function current() {
   return resolveLocale({ path: location.pathname })
@@ -20,8 +21,16 @@ export function useLocale() { return useContext(Context) }
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, update] = useState(() => current())
   const setLocale = useCallback((next: Locale) => {
+    trackLanguageSwitch(locale, next)
     changePath(next, false)
     update(next)
+  }, [locale])
+  useEffect(() => {
+    const onPop = () => update(current())
+    window.addEventListener('popstate', onPop)
+    // Keep the existing canonical English route, preserving query and hash.
+    if (location.pathname === '/') changePath('en', true)
+    return () => window.removeEventListener('popstate', onPop)
   }, [])
   useEffect(() => {
     document.documentElement.lang = locale
@@ -33,15 +42,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[property="og:locale"]')?.setAttribute('content', meta.ogLocale)
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', origin + '/' + locale + '/')
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', origin + '/' + locale + '/')
+    trackPageView('/' + locale + '/' + location.search, meta.title, locale)
     return () => { document.documentElement.lang = 'en' }
   }, [locale])
-  useEffect(() => {
-    const onPop = () => update(current())
-    window.addEventListener('popstate', onPop)
-    // Keep the existing canonical English route, preserving query and hash.
-    if (location.pathname === '/') changePath('en', true)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [])
   const t = useCallback((english: string) => locale === 'ko' ? (Object.hasOwn(ko, english) ? ko[english] : english) : english, [locale])
   return <Context.Provider value={{ locale, setLocale, t }}>{children}</Context.Provider>
 }

@@ -12,6 +12,11 @@ import BorderBeam from './components/ui/BorderBeam'
 import DisplayHeading from './components/ui/DisplayHeading'
 import SectionEyebrow from './components/ui/SectionEyebrow'
 import ReservationButton from './components/ui/ReservationButton'
+import {
+  trackCtaClick,
+  trackFleetVehicleSelect,
+  trackFleetViewOpen,
+} from './analytics.mjs'
 
 export interface FleetSectionProps {
   goTo: (index: number) => void
@@ -317,6 +322,8 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
   const activeVehicleFullName = [activeVehicle.name, activeVehicle.subName].filter(Boolean).join(' ')
 
   const handleCardClick = (id: VehicleInfo['id']) => {
+    const car = FLEET_DATA.find((v) => v.id === id)
+    if (car) trackFleetVehicleSelect(car.catalogId, car.name)
     setSelectedId(id)
     setIsSlideDetailOpen(false)
     setActiveSlideIndex(0)
@@ -327,7 +334,12 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
     setIsSlideDetailOpen(false)
   }
 
-  const handleOpenSlide = (index: number) => {
+  const handleOpenSlide = (
+    index: number,
+    vehicleId = activeVehicle.catalogId,
+    category = activeVehicle.slides[index]?.category,
+  ) => {
+    if (category) trackFleetViewOpen(vehicleId, category)
     setActiveSlideIndex(index)
     setIsSlideDetailOpen(true)
   }
@@ -338,14 +350,20 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
       setIsSlideDetailOpen(false)
       return
     }
+    const nextCat = activeVehicle.slides[activeSlideIndex - 1]?.category
+    if (nextCat) trackFleetViewOpen(activeVehicle.catalogId, nextCat)
     setActiveSlideIndex((prev) => prev - 1)
   }
 
   const handleNextSlide = () => {
-    setActiveSlideIndex((prev) => (prev + 1) % activeVehicle.slides.length)
+    const nextIdx = (activeSlideIndex + 1) % activeVehicle.slides.length
+    const nextCat = activeVehicle.slides[nextIdx]?.category
+    if (nextCat) trackFleetViewOpen(activeVehicle.catalogId, nextCat)
+    setActiveSlideIndex(nextIdx)
   }
 
   const handleReserve = (catalogId: string) => {
+    trackCtaClick('fleet_reserve', 'fleet_specs', { vehicle_id: catalogId })
     onSelectVehicle(catalogId)
     goTo(3)
   }
@@ -462,7 +480,10 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                 aria-selected={activeSlideIndex === idx}
                 className={`fleet-segment-pill ${activeSlideIndex === idx ? 'active' : ''
                   }`}
-                onClick={() => setActiveSlideIndex(idx)}
+                onClick={() => {
+                  trackFleetViewOpen(activeVehicle.catalogId, s.category)
+                  setActiveSlideIndex(idx)
+                }}
               >
                 {s.label}
               </button>
@@ -713,7 +734,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         data-liquid-glass="control"
                         onClick={() => {
                           setSelectedId(car.id)
-                          handleOpenSlide(sIdx)
+                          handleOpenSlide(sIdx, car.catalogId, s.category)
                         }}
                         aria-label={`Open detailed ${s.label} view of ${car.name}`}
                       >

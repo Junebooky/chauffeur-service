@@ -4,6 +4,7 @@ import catalog from './catalog.json'
 import { money } from './utils'
 import { customQuoteEmail } from './contact'
 import SectionEyebrow from './components/ui/SectionEyebrow'
+import { trackContactClick, trackPricingSelect } from './analytics.mjs'
 
 type PricingSectionProps = {
   onSelectService: (serviceId: string) => void
@@ -191,7 +192,15 @@ export default function PricingSection({
   }
 
   const navigateToReservation = (serviceId: 'airport' | 'day' | null) => {
+    const planId =
+      serviceId === 'airport'
+        ? 'pickup'
+        : serviceId === 'day'
+          ? 'schedule'
+          : 'custom'
+    trackPricingSelect(planId, serviceId)
     if (serviceId === null) {
+      trackContactClick('pricing_custom', 'email')
       window.location.href = customQuoteEmail()
       return
     }
