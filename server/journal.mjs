@@ -1,5 +1,6 @@
 import { db, ApiError, validUuid } from './chauffeur-supabase.mjs'
 import { ga4InlineSnippet } from './analytics-snippet.mjs'
+import { journalSchema, jsonLdScript } from './public-schema.mjs'
 const table='journal_articles'
 const select='id,slug,lang,title,description,intro,sections,publish_at,updated_at'
 const domain='https://www.jpchauffeurkorea.com'
@@ -123,6 +124,6 @@ export function renderJournal(lang,rows,slug='',alternate=false){
  const serviceLabels=lang==='ko'?['서울 VIP 의전','인천공항 픽업·샌딩','서울 기사 포함 차량']:['Seoul Chauffeur Service','Incheon Airport Transfer','Private Driver in Seoul']
  const serviceLinks='<nav aria-label="Services">'+services.map((s,i)=>'<p><a href="/'+(lang==='ko'?'ko/':'')+'services/'+s+'/">'+serviceLabels[i]+'</a></p>').join('')+'</nav>'
  const languageLink='<a lang="'+other+'"'+(!slug||alternate?' hreflang="'+other+'"':'')+' href="'+pathFor(other,alternate?slug:'')+'">'+esc(index.language)+'</a>'
- const schema=item?'<script type="application/ld+json">'+JSON.stringify({'@context':'https://schema.org','@type':'Article',headline:item.title,description:item.description,url:canonical,datePublished:item.publish_at,inLanguage:lang,author:{'@type':'Organization',name:'JP Chauffeur Korea'},publisher:{'@type':'Organization',name:'JP Chauffeur Korea'}}).replace(/</g,'\\u003c')+'</script>':''
+ const schema=jsonLdScript(journalSchema({url:canonical,lang,title,description,item}))
  return '<!doctype html><html lang="'+lang+'"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+' | JP Chauffeur Korea</title><meta name="description" content="'+esc(description)+'"><link rel="canonical" href="'+canonical+'">'+alternateTags+'<meta property="og:type" content="'+(item?'article':'website')+'"><meta property="og:title" content="'+esc(title)+'"><meta property="og:description" content="'+esc(description)+'"><meta property="og:url" content="'+canonical+'"><link rel="alternate" type="application/rss+xml" title="Journal RSS" href="'+urlFor(lang)+'rss.xml">'+schema+'<style>'+style+'</style>'+ga4InlineSnippet({pageType:slug?'journal_article':'journal_index',locale:lang,slug})+'</head><body><header><a href="/'+lang+'/">JP CHAUFFEUR KOREA</a><a href="'+pathFor(lang)+'">Journal</a>'+languageLink+'</header><main>'+body+'<p><a href="/'+lang+'/#reservation">'+(lang==='ko'?'예약 요청하기':'Request a reservation')+'</a></p>'+serviceLinks+'</main><footer>JP Chauffeur Korea</footer></body></html>'
 }
