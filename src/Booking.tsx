@@ -799,6 +799,7 @@ export default function Booking({
     setSending(true)
     setError('')
     const controller = new AbortController()
+    const requestKey = idempotency.current
     const timeout = window.setTimeout(() => controller.abort(), 15000)
     try {
       const response = await fetch('/api/reservations', {
@@ -806,7 +807,7 @@ export default function Booking({
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
-          'Idempotency-Key': idempotency.current,
+          'Idempotency-Key': requestKey,
         },
         body: JSON.stringify({
           date: journeys[0].date,
@@ -860,6 +861,8 @@ export default function Booking({
         optionCount: options.length,
         contactMethod,
         locale,
+        journeys: journeys.map(({ service, vehicle }) => ({ service, vehicle })),
+        requestKey,
       })
     } catch (error) {
       if (error instanceof TypeError) {

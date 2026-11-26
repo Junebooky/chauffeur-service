@@ -161,3 +161,38 @@ test('SPA page views ignore query strings and fragments, and reject non-public r
     assert.doesNotMatch(JSON.stringify(calls), /private|secret|admin/)
   })
 })
+
+test('mixed multi-day leads are counted once with no private request key or journey details', () => {
+  withMockBrowser({hostname:'www.jpchauffeurkorea.com',pathname:'/en/',search:''}, calls => {
+    const params={total:900000, serviceId:'airport',vehicleId:'g90',tripMode:'multi_day',dayCount:2,optionCount:0,contactMethod:'email',locale:'en',requestKey:'private-request-key',journeys:[{service:'airport',vehicle:'g90',pickup:'private-address'},{service:'day',vehicle:'staria'}]}
+    trackBookingLead(params)
+    trackBookingLead(params)
+    assert.equal(calls.length,1)
+    assert.equal(calls[0][2].service_id,'mixed')
+    assert.equal(calls[0][2].vehicle_id,'mixed')
+    assert.equal(calls[0][2].value,900000)
+    assert.doesNotMatch(JSON.stringify(calls),/private|requestKey|journeys/)
+    trackBookingLead({...params,requestKey:'different-key',journeys:[{service:'day',vehicle:'g90'},{service:'day',vehicle:'g90'}]})
+    assert.equal(calls.length,2)
+    assert.equal(calls[1][2].service_id,'day')
+    assert.equal(calls[1][2].vehicle_id,'g90')
+  })
+})
+test('lead telemetry fails safely and retries if delivery to gtag failed', () => {
+  withMockBrowser({hostname:'www.jpchauffeurkorea.com',pathname:'/ko/',search:''}, calls => {
+    const params={total:NaN,serviceId:'private-email@example.com',vehicleId:'private-address',tripMode:'single_day',dayCount:1,optionCount:0,contactMethod:'private-phone',locale:'ko',requestKey:'private-key'}
+    const gtag=globalThis.window.gtag
+    globalThis.window.gtag=()=>{throw new Error('tag failure')}
+    assert.doesNotThrow(()=>trackBookingLead(params))
+    globalThis.window.gtag=gtag
+    trackBookingLead(params)
+    trackBookingLead(params)
+    assert.equal(calls.length,1)
+    assert.equal(calls[0][2].service_id,'unknown')
+    assert.equal(calls[0][2].vehicle_id,'unknown')
+    assert.equal(calls[0][2].contact_method,'unknown')
+    assert.equal(calls[0][2].value,0)
+    assert.equal(calls[0][2].quote_required,true)
+    assert.doesNotMatch(JSON.stringify(calls),/private/)
+  })
+})

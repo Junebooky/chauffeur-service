@@ -70,16 +70,37 @@ function sendGtag(command, target, params = {}) {
   payload.page_referrer = safeReferrer()
   if (target === 'page_view') payload.page_path = path
   if (isDebugAnalytics(win.location.search)) payload.debug_mode = true
-  win.gtag(command, target, payload)
-  return true
+  // Telemetry must never interrupt a successful customer operation.
+  try {
+    win.gtag(command, target, payload)
+    return true
+  } catch {
+    return false
+  }
 }
 
 let lastTrackedPath = ''
 const viewedSections = new Set()
+const trackedLeadKeys = new Set()
+const serviceIds = new Set(['airport', 'day', 'hourly'])
+const vehicleIds = new Set(['staria', 'carnival_limousine', 'g90', 'sprinter_319', 'sprinter_519'])
+const contactMethods = new Set(['email', 'phone', 'whatsapp', 'line', 'kakao', 'wechat'])
+const allowed = (value, choices) => choices.has(value) ? value : 'unknown'
+
+// A multi-day request may include different vehicles or service types.
+// Count the request once; never attribute its full value to the first day.
+function summarizeSelection(journeys, key, fallback, choices) {
+  const values = Array.isArray(journeys) && journeys.length
+    ? journeys.map(day => allowed(day?.[key], choices))
+    : [allowed(fallback, choices)]
+  if (values.includes('unknown')) return 'unknown'
+  return new Set(values).size > 1 ? 'mixed' : values[0]
+}
 
 export function resetAnalyticsSessionForTests() {
   lastTrackedPath = ''
   viewedSections.clear()
+  trackedLeadKeys.clear()
 }
 
 export function trackPageView(path, title, locale) {
@@ -93,7 +114,7 @@ export function trackPageView(path, title, locale) {
 }
 
 export function trackEvent(name, params = {}) {
-  sendGtag('event', name, params)
+  return sendGtag('event', name, params)
 }
 
 export function trackLanguageSwitch(fromLocale, toLocale) {
@@ -182,19 +203,26 @@ export function trackBookingLead({
   optionCount,
   contactMethod,
   locale,
+  journeys,
+  requestKey,
 }) {
-  trackEvent('generate_lead', {
+  // The request key is local-only; it is never included in the GA4 payload.
+  const key = typeof requestKey === 'string' && requestKey.length > 0 ? requestKey : null
+  if (key && trackedLeadKeys.has(key)) return
+  const hasQuote = typeof total === 'number' && Number.isFinite(total) && total >= 0
+  const sent = trackEvent('generate_lead', {
     currency: 'KRW',
-    value: typeof total === 'number' ? total : 0,
-    quote_required: total === null,
-    service_id: serviceId,
-    vehicle_id: vehicleId,
-    trip_mode: tripMode,
-    day_count: dayCount,
-    option_count: optionCount,
-    contact_method: contactMethod,
-    locale,
+    value: hasQuote ? total : 0,
+    quote_required: !hasQuote,
+    service_id: summarizeSelection(journeys, 'service', serviceId, serviceIds),
+    vehicle_id: summarizeSelection(journeys, 'vehicle', vehicleId, vehicleIds),
+    trip_mode: allowed(tripMode, new Set(['single_day', 'multi_day'])),
+    day_count: Number.isSafeInteger(dayCount) && dayCount > 0 ? dayCount : undefined,
+    option_count: Number.isSafeInteger(optionCount) && optionCount >= 0 ? optionCount : undefined,
+    contact_method: allowed(contactMethod, contactMethods),
+    locale: allowed(locale, new Set(['en', 'ko'])),
   })
+  if (sent && key) trackedLeadKeys.add(key)
 }
 
 export function trackBookingEmailFallback(dayCount, locale) {

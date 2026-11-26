@@ -40,6 +40,8 @@ export function trackBookingLead(params: {
   optionCount: number
   contactMethod: string
   locale: string
+  journeys?: ReadonlyArray<{ service: string; vehicle: string }>
+  requestKey?: string
 }): void
 export function trackBookingEmailFallback(dayCount: number, locale: string): void
 export function trackItineraryExport(format: 'pdf' | 'png', dayCount: number, locale: string): void
