@@ -119,7 +119,7 @@ export default function AddressSearch({
         method: 'POST',
         signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: value, sessionToken: session.current }),
+        body: JSON.stringify({ query: value, sessionToken: session.current, locale }),
       })
         .then(async (response) => {
           if (!(response.headers.get('content-type') || '').includes('application/json'))
@@ -152,7 +152,7 @@ export default function AddressSearch({
       clearTimeout(timer)
       controller.abort()
     }
-  }, [value, open, place])
+  }, [value, open, place, locale])
   useEffect(() => {
     if (!open) return
     const reposition = () => {
@@ -225,6 +225,7 @@ export default function AddressSearch({
         body: JSON.stringify({
           id: suggestion.id,
           sessionToken: session.current,
+          locale,
         }),
       })
       if (!(response.headers.get('content-type') || '').includes('application/json'))

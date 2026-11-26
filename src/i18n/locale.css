@@ -23,3 +23,8 @@ html[lang="ko"] .no-payment { letter-spacing: normal; word-break: keep-all; over
 
 /* Reserve the same header slot; the existing mobile navigation switch is used on narrow screens. */
 html[lang="ko"] .booking-stepper-label { white-space: nowrap; }
+
+/* The original CSS hides .language below 1150px but the mobile drawer starts at 1000px. */
+@media (min-width: 1001px) and (max-width: 1150px) {
+  button.language-switcher { display: flex; flex-shrink: 0; white-space: nowrap; }
+}

@@ -84,7 +84,7 @@ export async function searchPlaces(body) {
         'X-Goog-FieldMask':'suggestions.placePrediction.placeId,suggestions.placePrediction.structuredFormat,suggestions.placePrediction.text,suggestions.placePrediction.types',
       },
       body:JSON.stringify({
-        input,sessionToken:body.sessionToken,languageCode:'en',includedRegionCodes:['kr'],
+        input,sessionToken:body.sessionToken,languageCode:body.locale==='ko'?'ko':'en',includedRegionCodes:['kr'],
         ...(types?{includedPrimaryTypes:types}:{}),
         locationBias:{circle:{center:{latitude:37.5665,longitude:126.978},radius:50000}},
       })
@@ -157,7 +157,7 @@ export async function resolvePlace(body) {
   if(!googleKey() || !/^[A-Za-z0-9_-]+$/.test(body.id))
     return {status:400,data:{error:'Please select a suggested location.'}}
   try{
-    const params=new URLSearchParams({languageCode:'en',sessionToken:body.sessionToken})
+    const params=new URLSearchParams({languageCode:body.locale==='ko'?'ko':'en',sessionToken:body.sessionToken})
     const data=await google('places/'+encodeURIComponent(body.id)+'?'+params,{
       headers:{'X-Goog-FieldMask':'id,displayName,formattedAddress,location,addressComponents'}
     })

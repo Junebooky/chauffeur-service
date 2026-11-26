@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { pathLocale, resolveLocale } from './locale.mjs'
 import type { Locale } from './locale.mjs'
 import { ko } from './ko'
+import { localeSeo, origin } from './seo.mjs'
 
 const KEY = 'chauffeur.locale'
 function preference() {
@@ -29,6 +30,14 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, [])
   useEffect(() => {
     document.documentElement.lang = locale
+    const meta = localeSeo[locale]
+    document.title = meta.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', meta.description)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', meta.title)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', meta.description)
+    document.querySelector('meta[property="og:locale"]')?.setAttribute('content', meta.ogLocale)
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', origin + '/' + locale + '/')
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', origin + '/' + locale + '/')
     return () => { document.documentElement.lang = 'en' }
   }, [locale])
   useEffect(() => {

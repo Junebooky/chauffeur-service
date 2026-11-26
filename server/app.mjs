@@ -483,6 +483,7 @@ export function createApp({
           'phone',
         ].map((k) => [k, b[k].trim()]),
       )
+      details.preferredLocale = b.preferredLocale === 'ko' ? 'ko' : 'en'
       details.options = b.options
       details.journeys = days.map((day, index) => ({
         date: day.date,

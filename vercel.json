@@ -18,19 +18,19 @@
     },
     {
       "source": "/ko",
-      "destination": "/index.html"
+      "destination": "/ko/index.html"
     },
     {
       "source": "/ko/",
-      "destination": "/index.html"
+      "destination": "/ko/index.html"
     },
     {
       "source": "/en",
-      "destination": "/index.html"
+      "destination": "/en/index.html"
     },
     {
       "source": "/en/",
-      "destination": "/index.html"
+      "destination": "/en/index.html"
     }
   ],
   "git": {

@@ -787,6 +787,7 @@ export default function Booking({
           phone,
           contactMethod,
           messengerContact: submittedMessengerContact,
+          preferredLocale: locale,
           consent,
         }),
       })

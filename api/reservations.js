@@ -91,6 +91,7 @@ export default async function handler(req, res) {
     const details={
       name:body.name.trim(),email:body.email.trim(),phone:body.phone.trim(),
       contactMethod:body.contactMethod||'email',
+      preferredLocale:body.preferredLocale==='ko'?'ko':'en',
       messengerContact:onlyString(body.messengerContact,80),
       options:body.options,quoteRequired,taxIncluded:catalog.taxIncluded,
       journeys:days.map(d=>({

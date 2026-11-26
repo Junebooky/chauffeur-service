@@ -127,7 +127,7 @@ export function createPlaces({
         body: JSON.stringify({
           input,
           sessionToken,
-          languageCode: 'en',
+          languageCode: req.body?.locale === 'ko' ? 'ko' : 'en',
           includedRegionCodes: ['kr'],
           ...(includedPrimaryTypes ? { includedPrimaryTypes } : {}),
           locationBias: {
@@ -208,7 +208,7 @@ export function createPlaces({
         .json({ error: 'Please select a suggested location.' })
     try {
       const data = await google(
-        `places/${encodeURIComponent(id)}?${new URLSearchParams({ languageCode: 'en', sessionToken })}`,
+        `places/${encodeURIComponent(id)}?${new URLSearchParams({ languageCode: req.body?.locale === 'ko' ? 'ko' : 'en', sessionToken })}`,
         {
           headers: {
             'X-Goog-FieldMask':
