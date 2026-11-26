@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "concurrently -k -n api,web \"node --watch --env-file-if-exists=.env --env-file-if-exists=.env.local server/index.mjs\" \"vite --host 0.0.0.0\"",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/build-search-pages.mjs",
     "start": "NODE_ENV=production node --env-file-if-exists=.env --env-file-if-exists=.env.local server/index.mjs",
     "test": "node --test tests/*.test.mjs",
     "check": "tsc -b",
