@@ -1,0 +1,14 @@
+# 검색 유입 자동화 — 1단계
+
+- OpenSEO 2026-11-26 조사: US Google 영어 chauffeur service Seoul 50/월, KD 0, CPC USD 18.76; private driver Seoul 70/월; Incheon airport transfer 90/월. 한국 Google 공항 픽업 서비스 210/월, 인천공항 픽업 140/월. 검색량 추정치, KD 0은 상위 노출 보장 아님. 네이버 공식 검색량 미확보.
+- seo/service-pages.json 단일 데이터 파일로 영어/한국어 HTML 6개를 생성한다. 가격/언어 서비스 포함 여부는 카탈로그 내 상충 정보가 있어 임의로 표시하지 않는다. 차량은 bookable=false 제외. 실제 제공 범위와 문구는 공개 전 검토한다.
+- 빌드 때 scripts/build-search-pages.mjs 실행. 기존 React 화면과 언어 전환 코드는 수정하지 않는다. 배포된 HTML 주소는 /services/{slug}/, /ko/services/{slug}/. 한국어 메인 페이지의 확정 URL 및 예약 CTA 딥링크는 병합 전 다른 에이전트와 조율한다. 현재 CTA는 기존 /#reservation 앵커. 기존 사이트맵 URL은 같은 공식 호스트만 유지. 홈에서 서비스 페이지로의 링크는 언어 작업 병합 후 연결해야 한다.
+- 자동 배포 방지를 위해 vercel git.deploymentEnabled에서 feature/seo-foundation 브랜치만 false. main에 병합하지 않는다. Vercel 프로젝트 설정은 변경하지 않는다. 병합 전 기존 정책과 합의한다.
+- 다음: Search Console 도메인 등록/인증 및 OpenSEO 연결. 네이버 서치어드바이저 등록, RSS와 사이트맵 제출. Bing Webmaster Tools 연결. 무료 데이터 우선. AI 초안 생성과 승인된 글의 자동 공개를 분리하고, Supabase CMS는 별도 마이그레이션 및 관리자 UI로 개발한다. 예약/메일 데이터 접근 금지. 외부 채널은 공식 API와 승인만. 비용이 드는 API, 반복 순위 추적, 자동 게시, 실제 배포는 별도 확인.
+
+## 2단계 Journal 발행 기반
+- `docs/sql/journal-articles-v1.sql` 추가 마이그레이션(운영 적용 전 확인). 기존 예약/메일 테이블 변경 없음.
+- `/api/journal` POST는 기존 Supabase 관리자 토큰 + owner 권한 필요. list/save_draft/approve/archive. 초안 승인 시 confirm=true, expected_updated_at 및 publish_at 필수. 승인된 글만 지정 시간 이후 읽기 시 자동 공개. Cron/배포 반복 불필요. 관리자 콘텐츠 관리 UI에서 작성/JSON 가져오기/승인/발행 시간 설정/비공개 처리 가능. AI 초안은 별도 자동화에서 생성하고 JSON을 가져온다. AI API 직접 호출은 아직 미연결.
+- 공개 `/journal`, `/ko/journal` 및 슬러그, `/journal/sitemap.xml`은 승인된 기한 도래 글만 반환. 모든 본문은 이스케이프 처리, 원격 HTML 삽입 없음. 공개 경로, 헤더, 검색 색인 여부는 배포 후 실제 HTTP 검사 필요. 로컬 Vite 프록시에서도 `/journal` 및 `/ko/journal` 접근 가능. Journal 사이트맵은 빌드 시 robots.txt에 자동 추가. 홈 내비게이션은 한국어 작업 병합 후 진행. 아직 실 게시물 생성/승인하지 않음.
+
+- 관리자에서 `AI 초안 JSON 가져오기`는 초안 입력만 채우고 자동 저장/승인하지 않는다. 승인 후 버전 수정은 금지하며 필요하면 비공개 처리한다. 예약 시간 입력은 KST, DB는 UTC. 검토 확인과 낙관적 동시성 제어 적용.
