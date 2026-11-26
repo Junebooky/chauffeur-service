@@ -49,3 +49,6 @@
 - CI에서 프로덕션 빌드 직후 npm run seo:verify를 실행한다. 9개 정적 HTML(영문 별칭 포함), 메인 sitemap, robots를 검증하고 실패하면 이후 브라우저 테스트 단계로 넘어가지 않는다. 외부 네트워크 사용 없음.
 - 승인된 운영 배포 이후 npm run seo:verify:live로 고정된 공개 URL 16개만 GET 확인한다(정적 페이지 9, Journal 목록 2, sitemap 2, robots 1, RSS 2). HTTP 200, content-type, canonical/hreflang/OG/HTML 언어/본문/공통 JSON-LD/noindex, 사이트맵 및 RSS 기본 계약 확인. 리디렉션, 차단 및 네트워크 오류는 실패로 처리한다. 크롤러별 실제 접근, GA4 DebugView, 색인 상태 및 실제 UI는 별도 확인; 본 체크는 일반 HTTP 요청이며 검색엔진 색인 요청/예약/배포를 수행하지 않는다. 현재 규칙과 URL 범위가 변경되면 검증 계약을 함께 검토한다.
 - 릴리스 게이트: 최신 CI 성공, GA4 pageChangesEnabled=false 및 8개 이벤트 범위 맞춤 측정기준 등록 확인, main 동기화 및 운영자 배포 승인. 배포 후 live 검사 및 검색 성과 조회. 실패 시 원인과 롤백 여부를 운영자가 결정; 자동 병합/배포/롤백 없음.
+
+## 운영 공개 사이트 읽기 전용 QA (2026-11-26)
+- GitHub Actions Public SEO smoke는 관련 PR과 수동 실행에서만 공식 도메인의 16개 GET 검증 및 Playwright client dataLayer 검사를 실행한다. main 병합이나 Vercel 배포는 수행하지 않는다. Playwright는 GA 라이브러리를 빈 스크립트로 대체하고 외부 요청, API 요청 및 모든 비-GET 요청을 차단/모킹한다. 실제 GA4 이벤트·예약 생성 없이 root EN, 언어 전환, 페이지 조회 중복, ChatGPT source, URL 정제 및 공개 서비스/Journal 이벤트 큐를 검증한다. GA4 실수신·자동 이벤트·보고서 반영은 별도 DebugView/실사용 데이터로 확인해야 한다.
