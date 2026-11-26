@@ -32,7 +32,7 @@ def config(page):
     return rows[0]
 def safe(page):
     import json
-    assert MARKER not in json.dumps(queue(page)), 'raw test query leaked to analytics queue'
+    assert MARKER not in json.dumps(queue(page), default=str), 'raw test query leaked to analytics queue'
     assert not events(page,'generate_lead'), 'no reservation should have been generated'
 def nav(page,path):
     res=page.goto(BASE+path,wait_until='domcontentloaded')
