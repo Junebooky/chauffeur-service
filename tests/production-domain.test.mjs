@@ -5,6 +5,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 test('production domain metadata uses canonical www and keeps admin routes out of search',()=>{
  const site='https://www.jpchauffeurkorea.com/'
  assert.ok(read('index.html').includes('rel="canonical" href="'+site+'"'))
+ assert.ok(read('index.html').includes('<meta name="naver-site-verification" content="e8bc57b622cd9de0d846b0d510d69b295f6788d1" />'))
  assert.ok(read('public/sitemap.xml').includes('<loc>'+site+'</loc>'))
  assert.ok(!read('public/sitemap.xml').includes('/admin'))
  assert.ok(read('public/robots.txt').includes('Sitemap: '+site+'sitemap.xml'))
