@@ -1,6 +1,34 @@
 {
   "rewrites": [
     {
+      "source": "/journal/rss.xml",
+      "destination": "/api/journal?format=rss&lang=en"
+    },
+    {
+      "source": "/ko/journal/rss.xml",
+      "destination": "/api/journal?format=rss&lang=ko"
+    },
+    {
+      "source": "/journal/sitemap.xml",
+      "destination": "/api/journal?format=sitemap"
+    },
+    {
+      "source": "/journal/:slug",
+      "destination": "/api/journal?lang=en&slug=:slug"
+    },
+    {
+      "source": "/journal",
+      "destination": "/api/journal?lang=en"
+    },
+    {
+      "source": "/ko/journal/:slug",
+      "destination": "/api/journal?lang=ko&slug=:slug"
+    },
+    {
+      "source": "/ko/journal",
+      "destination": "/api/journal?lang=ko"
+    },
+    {
       "source": "/admin",
       "destination": "/index.html"
     },
@@ -34,7 +62,11 @@
     }
   ],
   "git": {
-    "deploymentEnabled": true
+    "deploymentEnabled": {
+      "feature/seo-foundation": false,
+      "feature/seo-integration": false,
+      "feature/seo-release-ready": false
+    }
   },
   "headers": [
     {

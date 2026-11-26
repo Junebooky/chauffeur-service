@@ -3,6 +3,7 @@ import type { FormEvent, ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown, ClipboardList, Copy, FileText, LayoutDashboard, LogOut, Mail, RefreshCw, Search, ShieldCheck, X } from 'lucide-react'
 import AdminSchedule from './AdminSchedule'
 import AdminMail from './AdminMail'
+import AdminContent from './AdminContent'
 import { AdminNotes, EditContact, EditJourney, dispatchSummary } from './AdminBookingTools'
 import AdminBrand from './components/ui/AdminBrand'
 import DisplayHeading from './components/ui/DisplayHeading'
@@ -135,7 +136,7 @@ export default function Admin(){
   const [scheduleRevision,setScheduleRevision]=useState(0)
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('all')
-  const [tab,setTab]=useState<'home'|'reservations'|'calendar'|'mail'>(()=>new URLSearchParams(window.location.search).has('gmail')?'mail':'home')
+  const [tab,setTab]=useState<'home'|'reservations'|'calendar'|'mail'|'content'>(()=>new URLSearchParams(window.location.search).has('gmail')?'mail':'home')
   const [paymentMethod,setPaymentMethod]=useState<'on_site'|'separate'>('on_site')
   const [preview,setPreview]=useState<Preview|null>(null)
   const [previewId,setPreviewId]=useState('')
@@ -158,9 +159,9 @@ export default function Admin(){
     if(type)setError('로그인 링크가 만료되었어요. 다시 요청해 주세요.')
   },[])
   const signOut=()=>{sessionStorage.removeItem(SESSION_KEY);setSession(null);setSnapshot(null);setPreview(null);selectedRef.current='';detailRequest.current++;setSelectedId('');setTab('home')}
-  const api=useCallback(async(method:'GET'|'POST',body?:Record<string,unknown>)=>{
+  const api=useCallback(async(method:'GET'|'POST',body?:Record<string,unknown>,endpoint:'/api/admin'|'/api/journal'='/api/admin')=>{
     if(!session)throw new Error('로그인이 필요해요.')
-    const call=async(token:string)=>fetch('/api/admin',{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},...(body?{body:JSON.stringify(body)}:{})})
+    const call=async(token:string)=>fetch(endpoint,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},...(body?{body:JSON.stringify(body)}:{})})
     let response=await call(session.access_token)
     if(response.status===401&&DB_URL&&PUBLIC_KEY){
       const refreshed=await fetch(DB_URL+'/auth/v1/token?grant_type=refresh_token',{
@@ -181,6 +182,7 @@ export default function Admin(){
     if(!response.ok)throw new Error(data.error||'처리하지 못했어요. 다시 시도해 주세요.')
     return data
   },[session])
+  const journalApi=useCallback((body:Record<string,unknown>)=>api('POST',body,'/api/journal'),[api])
   const refresh=useCallback(async()=>{
     if(!session)return
     setLoading(true)
@@ -300,14 +302,15 @@ export default function Admin(){
       <button className={tab==='reservations'?'selected':''} type="button" onClick={()=>setTab('reservations')}><ClipboardList size={17}/> 예약 관리</button>
       <button className={tab==='calendar'?'selected':''} type="button" onClick={()=>setTab('calendar')}><CalendarDays size={17}/> 일정</button>
       {snapshot?.role==='owner'&&<button className={tab==='mail'?'selected':''} type="button" onClick={()=>setTab('mail')}><Mail size={17}/> 메일함</button>}
+      {snapshot?.role==='owner'&&<button className={tab==='content'?'selected':''} type="button" onClick={()=>setTab('content')}><FileText size={17}/> 콘텐츠 관리</button>}
       <div className="admin-sidebar-bottom"><span><ShieldCheck size={14}/> 관리자 권한 · {snapshot?.role||'확인 중'}</span><a href="/admin">예약 현황만 보기 <ArrowRight size={13}/></a><button onClick={signOut}><LogOut size={15}/> 로그아웃</button></div>
     </aside>
     <main className="admin-main">
-      <header className="admin-topbar"><span>CHAUFFEUR / {tab==='home'?'홈':tab==='calendar'?'일정':tab==='mail'?'메일함':'예약 관리'}</span><button disabled={loading} onClick={()=>void refresh()}><RefreshCw size={14}/> 새로고침</button></header>
+      <header className="admin-topbar"><span>CHAUFFEUR / {tab==='home'?'홈':tab==='calendar'?'일정':tab==='mail'?'메일함':tab==='content'?'콘텐츠 관리':'예약 관리'}</span><button disabled={loading} onClick={()=>void refresh()}><RefreshCw size={14}/> 새로고침</button></header>
       <div className="admin-content">
         {error&&<div className="admin-error admin-banner" role="alert">{error}<button onClick={()=>setError('')}>닫기</button></div>}
         {message&&<div className="admin-success admin-banner" role="status">{message}<button onClick={()=>setMessage('')}>닫기</button></div>}
-        {tab==='mail'?<AdminMail api={api} role={snapshot?.role}/>:tab!=='reservations'?<AdminSchedule mode={tab} reservations={reservations} api={api} revision={scheduleRevision} deliveries={snapshot?.deliveries||[]} openBooking={id=>void selectBooking(id)} openFilter={openFilter} loading={loading}/>:<>
+        {tab==='content'?<AdminContent api={journalApi} role={snapshot?.role}/>:tab==='mail'?<AdminMail api={api} role={snapshot?.role}/>:tab!=='reservations'?<AdminSchedule mode={tab} reservations={reservations} api={api} revision={scheduleRevision} deliveries={snapshot?.deliveries||[]} openBooking={id=>void selectBooking(id)} openFilter={openFilter} loading={loading}/>:<>
           <div className="admin-heading"><div><SectionEyebrow>예약 운영</SectionEyebrow><DisplayHeading as="h1">예약 업무, 여기서 끝내요.</DisplayHeading><p>새 예약을 확인하고 고객에게 확정 안내를 보내 주세요.</p></div><span className="admin-count">실제 예약 {reservations.length}건</span></div>
           <div className="admin-stats">{stats.map(([label,count])=><div key={label}><span>{label}</span><strong>{count}</strong></div>)}</div>
           <div className="admin-board">
