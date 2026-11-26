@@ -43,5 +43,6 @@ test('article language link only points to the translated article when one is pu
  assert.ok(translated.includes('hreflang="ko" href="/ko/journal/airport-guide/"'))
  const untranslated=renderJournal('en',[row],row.slug,false)
  assert.ok(untranslated.includes('href="/ko/journal/"'))
- assert.doesNotMatch(untranslated,/hreflang="x-default"/)
+ assert.doesNotMatch(untranslated,/hreflang="(?:ko|x-default)"/)
+ assert.ok(untranslated.includes('lang="ko" href="/ko/journal/"'))
 })
