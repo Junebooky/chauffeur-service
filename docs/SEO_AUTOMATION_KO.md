@@ -5,3 +5,8 @@
 - 빌드 때 scripts/build-search-pages.mjs 실행. 기존 React 화면과 언어 전환 코드는 수정하지 않는다. 배포된 HTML 주소는 /services/{slug}/, /ko/services/{slug}/. 한국어 메인 페이지의 확정 URL 및 예약 CTA 딥링크는 병합 전 다른 에이전트와 조율한다. 현재 CTA는 기존 /#reservation 앵커. 기존 사이트맵 URL은 같은 공식 호스트만 유지. 홈에서 서비스 페이지로의 링크는 언어 작업 병합 후 연결해야 한다.
 - 자동 배포 방지를 위해 vercel git.deploymentEnabled에서 feature/seo-foundation 브랜치만 false. main에 병합하지 않는다. Vercel 프로젝트 설정은 변경하지 않는다. 병합 전 기존 정책과 합의한다.
 - 다음: Search Console 도메인 등록/인증 및 OpenSEO 연결. 네이버 서치어드바이저 등록, RSS와 사이트맵 제출. Bing Webmaster Tools 연결. 무료 데이터 우선. AI 초안 생성과 승인된 글의 자동 공개를 분리하고, Supabase CMS는 별도 마이그레이션 및 관리자 UI로 개발한다. 예약/메일 데이터 접근 금지. 외부 채널은 공식 API와 승인만. 비용이 드는 API, 반복 순위 추적, 자동 게시, 실제 배포는 별도 확인.
+
+## 2단계 Journal 발행 기반
+- `docs/sql/journal-articles-v1.sql` 추가 마이그레이션(운영 적용 전 확인). 기존 예약/메일 테이블 변경 없음.
+- `/api/journal` POST는 기존 Supabase 관리자 토큰 + owner 권한 필요. list/save_draft/approve/archive. 초안 승인 시 confirm=true, expected_updated_at 및 publish_at 필수. 승인된 글만 지정 시간 이후 읽기 시 자동 공개. Cron/배포 반복 불필요. 아직 관리자 편집 UI 및 AI 작성 파이프라인은 미연결.
+- 공개 `/journal`, `/ko/journal` 및 슬러그, `/journal/sitemap.xml`은 승인된 기한 도래 글만 반환. 모든 본문은 이스케이프 처리, 원격 HTML 삽입 없음. 공개 경로, 헤더, 검색 색인 여부는 배포 후 실제 HTTP 검사 필요. 현재 로컬 API 확인은 `/api/journal?lang=en` 사용. 홈 내비게이션과 사이트맵 자동 등록은 한국어 작업 병합 후 진행. 아직 실 게시물 생성/승인하지 않음.

@@ -15,6 +15,7 @@ import liveAvailability from '../api/availability.js'
 import liveAdmin from '../api/admin.js'
 import gmailCallback from '../api/gmail/callback.js'
 import liveOverview from '../api/admin-overview.js'
+import journal from '../api/journal.js'
 
 export function createApp({
   databasePath = resolve('.data/reservations.sqlite'),
@@ -72,6 +73,7 @@ export function createApp({
   // This public summary never contains personal customer details.
   app.all('/api/gmail/callback', (req,res)=>{void gmailCallback(req,res)})
   app.all('/api/admin-overview', (req, res) => { void liveOverview(req, res) })
+  app.all('/api/journal', (req,res)=>{void journal(req,res)})
 
   const places = createPlaces({ now, ...placesOptions })
   if (hasDatabase() && process.env.CHAUFFEUR_USE_SQLITE !== 'true') {
