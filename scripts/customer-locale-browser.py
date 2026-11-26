@@ -64,6 +64,29 @@ try:
     else: raise RuntimeError('Preview server not ready')
     with sync_playwright() as p:
         browser = p.chromium.launch(args=['--no-sandbox'])
+        # Korean browsers and previous Korean selections must not change root.
+        for width, height in [(1440,900),(390,844)]:
+            page = browser.new_page(viewport={'width':width,'height':height}, locale='ko-KR', timezone_id='Asia/Seoul', reduced_motion='reduce', is_mobile=width<500, has_touch=width<500)
+            page.route('**/api/**', api_route)
+            page.add_init_script("localStorage.setItem('chauffeur.locale', 'ko')")
+            requests = []
+            page.on('request', lambda req: requests.append(req.url))
+            page.goto(BASE+'/?utm_source=locale-test', wait_until='domcontentloaded')
+            expect(page.locator('html')).to_have_attribute('lang','en')
+            expect(page).to_have_title('JP Chauffeur Korea | Private Chauffeur Service in Seoul')
+            expect(page).to_have_url(BASE+'/en/?utm_source=locale-test')
+            expect(page.locator('.hero-book-link')).to_contain_text('Book Now')
+            assert not any('/api/locale' in url for url in requests), requests
+            page.goto(BASE+'/ko/', wait_until='domcontentloaded')
+            expect(page.locator('html')).to_have_attribute('lang','ko')
+            expect(page.locator('.hero-book-link')).to_contain_text('예약하기')
+            page.reload(wait_until='domcontentloaded')
+            expect(page.locator('html')).to_have_attribute('lang','ko')
+            page.goto(BASE+'/', wait_until='domcontentloaded')
+            expect(page.locator('html')).to_have_attribute('lang','en')
+            expect(page).to_have_url(BASE+'/en/')
+            page.close()
+            print(f'PASS {width}x{height}: English root in Korean browser; explicit Korean URL', flush=True)
         for width, height in [(1440,900),(1024,768),(390,844),(360,800)]:
             page = browser.new_page(viewport={'width':width,'height':height}, locale='en-US', reduced_motion='reduce', is_mobile=width<500, has_touch=width<500)
             errors = []

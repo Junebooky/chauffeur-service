@@ -6,3 +6,5 @@ Second increment: booking display copy, calendar labels/date display, shared inp
 Third increment: restore language switch at 1001–1150px, use selected language for live place searches, persist preferredLocale in existing request_payload (no new column), build per-language HTML metadata and reciprocal sitemap. Full content prerender and deployed indexing are not yet verified.
 
 Fourth increment: customer email and confirmation PDF use the stored preferredLocale, while operator notices and historical snapshots default to English. Client PDF/PNG uses current display language. Apply docs/sql/customer-locale-v1.sql separately after schema verification. No live mail or migration executed.
+
+Default entry policy: the root always opens English (/en/), even on a Korean browser, Korean IP or after a prior Korean selection. Korean remains explicitly accessible at /ko/ or via the existing language switch. No automatic geolocation lookup or stored preference is used to decide the root language; query and hash are preserved.
