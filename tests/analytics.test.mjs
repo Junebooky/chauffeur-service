@@ -9,6 +9,8 @@ import {
   trackBookingLead,
   trackPageView,
 } from '../src/analytics.mjs'
+import { ga4InlineSnippet } from '../server/analytics-snippet.mjs'
+import { renderJournal } from '../server/journal.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const read = (path) => readFileSync(join(root, path), 'utf8')
@@ -127,4 +129,23 @@ test('SPA provider and customer funnel components wire Direct GA4 helpers', () =
   assert.match(read('src/Booking.tsx'), /trackBookingLead\(/)
   assert.match(read('src/Booking.tsx'), /trackItineraryExport\('pdf'/)
   assert.match(read('src/Booking.tsx'), /trackItineraryExport\('png'/)
+  assert.match(read('src/App.tsx'), /trackCtaClick\('journal_nav'/)
+})
+
+test('SEO service and journal pages embed Direct GA4 without blocking or GTM', () => {
+  const snippet = ga4InlineSnippet({ pageType: 'service_page', locale: 'ko', slug: 'seoul-chauffeur-service' })
+  assert.match(snippet, /G-8VWZ2SPG0Q/)
+  assert.match(snippet, /cta_click/)
+  assert.match(snippet, /contact_click/)
+  assert.match(snippet, /seo_content_click/)
+  assert.doesNotMatch(snippet, /<script src=|GTM-PTN9FZCL|GTM-K64295SC/)
+
+  const journalHtml = renderJournal('ko', [], '', false)
+  assert.match(journalHtml, /G-8VWZ2SPG0Q/)
+  assert.match(journalHtml, /journal_index/)
+  assert.doesNotMatch(journalHtml, /\/analytics\.js|GTM-PTN9FZCL|GTM-K64295SC/)
+
+  const searchScript = read('scripts/build-search-pages.mjs')
+  assert.match(searchScript, /ga4InlineSnippet/)
+  assert.doesNotMatch(searchScript, /\/analytics\.js/)
 })

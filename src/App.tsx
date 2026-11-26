@@ -104,6 +104,12 @@ export default function App() {
     scrollRef.current?.focus({ preventScroll: true })
   }
   useEffect(() => {
+    if (window.location.hash === '#reservation') {
+      const frame = requestAnimationFrame(() => goTo(3))
+      return () => cancelAnimationFrame(frame)
+    }
+  }, [goTo])
+  useEffect(() => {
     fetch('/api/rates')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -158,6 +164,13 @@ export default function App() {
           >
             {t("Your journey")}
           </button>
+          <a
+            className="journal-nav-link"
+            href={locale === 'ko' ? '/ko/journal/' : '/journal/'}
+            onClick={() => trackCtaClick('journal_nav', 'header', { locale })}
+          >
+            Journal
+          </a>
           <button onClick={() => { trackCtaClick('concierge_open', 'header'); setModal('contact') }}>
             {t("Concierge")} <ArrowUpRight size={11} />
           </button>
@@ -226,6 +239,13 @@ export default function App() {
             >
               {t("Concierge")} <ArrowUpRight size={20} />
             </button>
+            <a
+              className="journal-nav-link"
+              href={locale === 'ko' ? '/ko/journal/' : '/journal/'}
+              onClick={() => trackCtaClick('journal_nav', 'mobile_nav', { locale })}
+            >
+              Journal <span>05</span>
+            </a>
             <button type="button" className="mobile-language-switch" onClick={() => { setLocale(locale === 'en' ? 'ko' : 'en'); setMobileMenu(false) }}>
               {locale === 'en' ? '한국어' : 'English'} <span>{locale === 'en' ? 'KO' : 'EN'}</span>
             </button>
