@@ -3,12 +3,12 @@ import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ga4InlineSnippet } from '../server/analytics-snippet.mjs'
+import { homeSchema, serviceSchema, jsonLdScript } from '../server/public-schema.mjs'
 const root=fileURLToPath(new URL('../',import.meta.url))
 const domain='https://www.jpchauffeurkorea.com'
 const pages=JSON.parse(readFileSync(join(root,'seo/service-pages.json'),'utf8'))
 const catalog=JSON.parse(readFileSync(join(root,'src/catalog.json'),'utf8'))
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
-const jsonLd=v=>JSON.stringify(v).replace(/</g,'\\u003c')
 const pathFor=(slug,lang)=>'/' + (lang==='ko'?'ko/':'')+'services/'+slug+'/'
 const urlFor=(slug,lang)=>domain+pathFor(slug,lang)
 const vehicles=catalog.vehicles.filter(v=>v.bookable!==false)
@@ -31,8 +31,8 @@ function validate(){
 const style=':root{color-scheme:dark;background:#101211;color:#e9eae7;font:16px/1.75 system-ui,sans-serif}*{box-sizing:border-box}body{margin:0}a{color:inherit;text-underline-offset:.25em}header,main,footer{max-width:1050px;margin:auto;padding:28px 24px}header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #383b38}header a{text-decoration:none}main{max-width:900px}h1,h2{font-family:Georgia,serif;font-weight:400;line-height:1.2}h1{font-size:clamp(32px,6vw,57px);margin:35px 0 22px}h2{font-size:27px;margin:35px 0 12px}p{color:#c3c7c2}nav{display:flex;gap:18px;flex-wrap:wrap}.vehicles{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px}.vehicle{border:1px solid #353a36;padding:16px;border-radius:8px}.vehicle img{width:100%;height:100px;object-fit:contain}.vehicle strong{display:block}.cta{display:inline-block;margin:16px 0;padding:12px 24px;background:#e3e6e2;color:#121412;border-radius:6px;text-decoration:none}.small{font-size:13px;color:#a9b0aa}footer{border-top:1px solid #383b38}';
 function render(p,lang){
  const c=p[lang],l=locale[lang],canonical=urlFor(p.slug,lang),alt=lang==='en'?'ko':'en';
- const schema={'@context':'https://schema.org','@type':'Service',name:c.title,description:c.description,url:canonical,provider:{'@type':'Organization',name:'JP Chauffeur Korea',url:domain+'/'},areaServed:{'@type':'Country',name:'South Korea'}};
- return '<!doctype html><html lang="'+lang+'"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(c.title)+' | JP Chauffeur Korea</title><meta name="description" content="'+esc(c.description)+'"><link rel="canonical" href="'+canonical+'"><link rel="alternate" hreflang="en" href="'+urlFor(p.slug,'en')+'"><link rel="alternate" hreflang="ko" href="'+urlFor(p.slug,'ko')+'"><link rel="alternate" hreflang="x-default" href="'+urlFor(p.slug,'en')+'"><meta property="og:type" content="website"><meta property="og:title" content="'+esc(c.title)+'"><meta property="og:description" content="'+esc(c.description)+'"><meta property="og:url" content="'+canonical+'"><link rel="icon" href="/media/brand/favicon-jp.png"><script type="application/ld+json">'+jsonLd(schema)+'</script><style>'+style+'</style>'+ga4InlineSnippet({pageType:'service_page',locale:lang,slug:p.slug})+'</head><body><header><a href="/'+lang+'/">JP CHAUFFEUR KOREA</a><nav><a href="/'+lang+'/">'+l.home+'</a><a href="'+pathFor(p.slug,alt)+'" lang="'+alt+'">'+l.language+'</a></nav></header><main><p class="small">'+l.services+'</p><h1>'+esc(c.title)+'</h1><p>'+esc(c.intro)+'</p><a class="cta" href="/'+lang+'/#reservation">'+l.reserve+'</a>'+c.sections.map(s=>'<section><h2>'+esc(s[0])+'</h2><p>'+esc(s[1])+'</p></section>').join('')+'<section><h2>'+l.fleet+'</h2><div class="vehicles">'+vehicles.map(v=>'<div class="vehicle"><img loading="lazy" src="'+esc(v.image)+'" alt="'+esc(v.name)+'"><strong>'+esc(v.name)+'</strong><span>'+esc(v.passengers)+' '+l.passengers+'</span></div>').join('')+'</div><p class="small">'+l.notice+'</p></section><section><h2>'+l.other+'</h2><ul>'+pages.filter(q=>q.slug!==p.slug).map(q=>'<li><a href="'+pathFor(q.slug,lang)+'">'+esc(q[lang].title)+'</a></li>').join('')+'</ul></section><a class="cta" href="/'+lang+'/#reservation">'+l.reserve+'</a></main><footer><a href="mailto:topcs2026@gmail.com">'+l.contact+'</a> · JP Chauffeur Korea</footer></body></html>'
+ const schema=serviceSchema({url:canonical,lang,title:c.title,description:c.description});
+ return '<!doctype html><html lang="'+lang+'"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(c.title)+' | JP Chauffeur Korea</title><meta name="description" content="'+esc(c.description)+'"><link rel="canonical" href="'+canonical+'"><link rel="alternate" hreflang="en" href="'+urlFor(p.slug,'en')+'"><link rel="alternate" hreflang="ko" href="'+urlFor(p.slug,'ko')+'"><link rel="alternate" hreflang="x-default" href="'+urlFor(p.slug,'en')+'"><meta property="og:type" content="website"><meta property="og:title" content="'+esc(c.title)+'"><meta property="og:description" content="'+esc(c.description)+'"><meta property="og:url" content="'+canonical+'"><link rel="icon" href="/media/brand/favicon-jp.png">'+jsonLdScript(schema)+'<style>'+style+'</style>'+ga4InlineSnippet({pageType:'service_page',locale:lang,slug:p.slug})+'</head><body><header><a href="/'+lang+'/">JP CHAUFFEUR KOREA</a><nav><a href="/'+lang+'/">'+l.home+'</a><a href="'+pathFor(p.slug,alt)+'" lang="'+alt+'">'+l.language+'</a></nav></header><main><p class="small">'+l.services+'</p><h1>'+esc(c.title)+'</h1><p>'+esc(c.intro)+'</p><a class="cta" href="/'+lang+'/#reservation">'+l.reserve+'</a>'+c.sections.map(s=>'<section><h2>'+esc(s[0])+'</h2><p>'+esc(s[1])+'</p></section>').join('')+'<section><h2>'+l.fleet+'</h2><div class="vehicles">'+vehicles.map(v=>'<div class="vehicle"><img loading="lazy" src="'+esc(v.image)+'" alt="'+esc(v.name)+'"><strong>'+esc(v.name)+'</strong><span>'+esc(v.passengers)+' '+l.passengers+'</span></div>').join('')+'</div><p class="small">'+l.notice+'</p></section><section><h2>'+l.other+'</h2><ul>'+pages.filter(q=>q.slug!==p.slug).map(q=>'<li><a href="'+pathFor(q.slug,lang)+'">'+esc(q[lang].title)+'</a></li>').join('')+'</ul></section><a class="cta" href="/'+lang+'/#reservation">'+l.reserve+'</a></main><footer><a href="mailto:topcs2026@gmail.com">'+l.contact+'</a> · <a href="/'+(lang==='ko'?'ko/':'')+'journal/">'+(lang==='ko'?'이용 가이드':'Travel guides')+'</a> · JP Chauffeur Korea</footer></body></html>'
 }
 export function buildSearchPages(outDir=join(root,'dist')){
  validate()
@@ -41,7 +41,7 @@ export function buildSearchPages(outDir=join(root,'dist')){
  // Preserve existing or multilingual build-generated URLs, without blindly
  // advertising routes that have not been implemented. Existing XML is trusted
  // repository output; only retain same-origin locations.
- try{const prior=readFileSync(join(outDir,'sitemap.xml'),'utf8');for(const match of prior.matchAll(/<loc>([^<]+)<\/loc>/g)){const u=new URL(match[1]);if(u.origin===domain&&!/^\/(?:admin|api)(?:\/|$)/.test(u.pathname))locations.push(u.href)}}catch{}
+ try{const prior=readFileSync(join(outDir,'sitemap.xml'),'utf8');for(const match of prior.matchAll(/<loc>([^<]+)<\/loc>/g)){const u=new URL(match[1]);if(u.origin===domain&&!/^\/(?:admin|api)(?:\/|$)/.test(u.pathname)&&!/^\/en\/?$/.test(u.pathname))locations.push(u.href)}}catch{}
  for(const p of pages)for(const lang of ['en','ko']){
   const path=pathFor(p.slug,lang),dir=join(outDir,path.slice(1));mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'index.html'),render(p,lang));locations.push(domain+path)
  }
@@ -56,12 +56,18 @@ export function buildSearchPages(outDir=join(root,'dist')){
   const links=pages.map(p=>'<li><a href="'+pathFor(p.slug,lang)+'">'+esc(p[lang].title)+'</a></li>').join('')
   const journal='/'+(lang==='ko'?'ko/':'')+'journal/'
   const fallback='<div id="root"><main data-search-fallback style="max-width:800px;margin:0 auto;padding:40px 24px;color:#e9eae7;background:#101211;line-height:1.7;min-height:100vh;overflow:auto"><h1>'+esc(title)+'</h1><p>'+esc(intro)+'</p><h2>'+locale[lang].services+'</h2><ul>'+links+'</ul><h2>'+locale[lang].fleet+'</h2><p>'+esc(vehicles.map(v=>v.name).join(' · '))+'</p><nav><a href="'+journal+'">Journal</a> · <a href="/'+(lang==='ko'?'en':'ko')+'/" lang="'+(lang==='ko'?'en':'ko')+'">'+locale[lang].language+'</a></nav></main></div>'
-  if(source.includes('<div id="root"></div>'))writeFileSync(file,source.replace('<div id="root"></div>',fallback))
+  let next=source.replace('<div id="root"></div>',fallback)
+  // The English alias and root share the same canonical graph; Korean has its own page node.
+  if(!next.includes('data-public-schema')&&next.includes('</head>')){
+   const schema=homeSchema({url:domain+(lang==='ko'?'/ko/':'/'),lang,title,description:intro})
+   next=next.replace('</head>',jsonLdScript(schema)+'</head>')
+  }
+  if(next!==source)writeFileSync(file,next)
  }
  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'+[...new Set(locations)].map(loc=>{
   const page=pages.find(p=>['en','ko'].some(l=>urlFor(p.slug,l)===loc))
   const path=new URL(loc).pathname
-  const pair=page?[urlFor(page.slug,'en'),urlFor(page.slug,'ko')]:['/','/en/','/ko/'].includes(path)?[domain+'/en/',domain+'/ko/']:null
+  const pair=page?[urlFor(page.slug,'en'),urlFor(page.slug,'ko')]:['/','/ko/'].includes(path)?[domain+'/',domain+'/ko/']:null
   const alternate=pair&&pair.every(u=>locations.includes(u))?'<xhtml:link rel="alternate" hreflang="en" href="'+esc(pair[0])+'"/><xhtml:link rel="alternate" hreflang="ko" href="'+esc(pair[1])+'"/><xhtml:link rel="alternate" hreflang="x-default" href="'+esc(page?pair[0]:domain+'/')+'"/>':''
   return '  <url><loc>'+esc(loc)+'</loc>'+alternate+'</url>'
  }).join('\n')+'\n</urlset>\n'

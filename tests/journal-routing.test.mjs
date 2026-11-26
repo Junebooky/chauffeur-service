@@ -21,3 +21,28 @@ test('journal public canonical, sitemap, and RSS agree on slash URLs',async()=>{
  assert.match(await journalSitemap(now,async()=>[row]),/\/journal\/airport-guide\//)
  assert.match(await journalRss('en',now,async()=>[row]),/\/journal\/airport-guide\//)
 })
+
+test('journal indexes provide distinct useful content and reciprocal language links without scripts',()=>{
+ for(const lang of ['en','ko']){
+  const other=lang==='en'?'ko':'en',prefix=lang==='ko'?'/ko':'',otherPrefix=other==='ko'?'/ko':''
+  const html=renderJournal(lang,[],'',false)
+  const title=html.match(/<title>([^<]+)<\/title>/)[1]
+  const description=html.match(/<meta name="description" content="([^"]+)"/)[1]
+  assert.ok(title.length<=60)
+  assert.ok(description.length>=60&&description.length<=160)
+  assert.equal((html.match(/<section><h2>/g)||[]).length,4)
+  assert.ok(html.includes('hreflang="'+other+'" href="'+otherPrefix+'/journal/"'))
+  assert.ok(html.includes('hreflang="x-default" href="https://www.jpchauffeurkorea.com/journal/"'))
+  assert.ok(html.includes('property="og:url" content="https://www.jpchauffeurkorea.com'+prefix+'/journal/"'))
+  assert.match(html,lang==='en'?/Airport arrivals/:/공항 픽업과 샌딩 준비/)
+ }
+})
+test('article language link only points to the translated article when one is public',()=>{
+ const row={slug:'airport-guide',title:'Guide',description:'A guide',intro:'Travel details',sections:[]}
+ const translated=renderJournal('en',[row],row.slug,true)
+ assert.ok(translated.includes('hreflang="ko" href="/ko/journal/airport-guide/"'))
+ const untranslated=renderJournal('en',[row],row.slug,false)
+ assert.ok(untranslated.includes('href="/ko/journal/"'))
+ assert.doesNotMatch(untranslated,/hreflang="(?:ko|x-default)"/)
+ assert.ok(untranslated.includes('lang="ko" href="/ko/journal/"'))
+})

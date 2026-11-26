@@ -23,12 +23,24 @@
         [
           "How reservations work",
           "Submitting a request does not confirm a booking. Our team reviews the itinerary and provides confirmation."
+        ],
+        [
+          "Planning a corporate itinerary",
+          "For several meetings in one day, list the venues in order, note the intended arrival times and allow time between appointments. If a meeting ends later than planned, the team needs to know which later stops are flexible."
+        ],
+        [
+          "Coordinating a group or delegation",
+          "Identify the number of travelers, luggage and any separate arrival schedules. When travelers arrive at different times, distinguish each pickup request from the main business itinerary."
+        ],
+        [
+          "Details to review before confirming",
+          "Check the requested vehicle, pickup location, itinerary and the charges provided by the team. Share any special access instructions, such as a hotel entrance or meeting venue, before the journey."
         ]
       ]
     },
     "ko": {
       "title": "서울 VIP 의전 서비스",
-      "description": "서울 기업 출장, VIP 방문, 맞춤 일정에 필요한 의전 차량을 선택하고 예약을 요청하세요.",
+      "description": "서울 기업 출장과 VIP 방문을 위한 의전 차량 서비스입니다. 호텔 픽업, 미팅 장소, 경유지와 날짜별 일정을 준비하고 운영팀에 예약을 요청하세요.",
       "intro": "서울에서 비즈니스 미팅, VIP 방문 및 개인 일정에 맞춘 의전 차량을 요청할 수 있습니다. 날짜와 차량, 이동 장소를 선택하면 운영팀이 일정을 검토합니다.",
       "sections": [
         [
@@ -42,6 +54,18 @@
         [
           "예약 절차",
           "예약 요청은 즉시 확정되는 것이 아닙니다. 운영팀 검토 후 확정 안내를 받습니다."
+        ],
+        [
+          "기업 출장 일정 준비",
+          "하루에 여러 미팅이 있다면 방문 순서와 각 장소의 도착 희망 시간을 정리하세요. 미팅이 길어질 수 있는 경우 변경 가능한 일정과 반드시 지켜야 하는 시간을 구분해 전달하면 검토에 도움이 됩니다."
+        ],
+        [
+          "VIP 및 단체 방문",
+          "탑승 인원과 수하물 개수, 일행별 도착 시간이 다른지 확인하세요. 공항 도착 시간이 다른 일행은 개별 픽업 요청과 이후 공동 일정을 구분해 정리할 수 있습니다."
+        ],
+        [
+          "예약 확정 전 확인 사항",
+          "운영팀이 안내한 차량, 픽업 장소, 이동 일정과 비용을 확인하세요. 호텔 출입구나 행사장 승하차 위치처럼 특별한 안내가 필요한 경우 미리 공유해 주세요."
         ]
       ]
     }
@@ -70,12 +94,24 @@
         [
           "Before you travel",
           "Wait for our team's reservation confirmation and review the agreed pickup details before departure."
+        ],
+        [
+          "Arrival time versus pickup time",
+          "The scheduled landing time is not necessarily your preferred pickup time. Allow for immigration, baggage collection and any additional arrangements, and share the flight and requested meeting details with our team."
+        ],
+        [
+          "Airport drop-off planning",
+          "For a departure, enter the hotel or other pickup location and the airport terminal. Decide when you want to reach the airport, then consider travel time and airline check-in requirements when choosing a pickup time."
+        ],
+        [
+          "Luggage and meeting details",
+          "Include large suitcases, extra bags or unusual items as well as passenger count. Review the meeting point and contact instructions in the confirmed reservation; do not assume a specific meeting service is included."
         ]
       ]
     },
     "ko": {
       "title": "인천공항 픽업 및 샌딩 서비스",
-      "description": "인천공항 픽업·샌딩에 필요한 의전 차량과 출발지, 목적지를 선택하고 예약을 요청하세요.",
+      "description": "인천공항 픽업 및 샌딩을 위한 의전 차량 서비스입니다. 터미널, 항공편, 탑승 인원, 수하물과 목적지를 준비하고 운영팀에 예약을 요청하세요.",
       "intro": "인천공항 도착 및 출발 일정에 맞춰 픽업·샌딩 서비스를 요청할 수 있습니다. 날짜와 출발지, 목적지, 항공편 정보를 입력하세요.",
       "sections": [
         [
@@ -89,6 +125,18 @@
         [
           "예약 확정 안내",
           "출발 전에 운영팀의 확정 안내를 받고 픽업 장소와 시간을 확인하세요."
+        ],
+        [
+          "항공편 도착 시간과 픽업 시간",
+          "항공편 도착 예정 시간은 실제 픽업 희망 시간과 다를 수 있습니다. 입국 심사, 수하물 수령 등에 필요한 시간을 고려하고 항공편 및 미팅 장소 관련 요청을 운영팀에 알려주세요."
+        ],
+        [
+          "출국 시 샌딩 일정 준비",
+          "호텔 등 출발 장소와 이용할 공항 터미널을 입력하세요. 항공사 체크인 요건과 공항 도착 희망 시간, 이동에 걸리는 시간을 고려해 픽업 시간을 정하세요."
+        ],
+        [
+          "수하물 및 미팅 장소 확인",
+          "탑승 인원뿐 아니라 대형 캐리어, 추가 가방 등 수하물 정보를 준비하세요. 예약 확정 안내에서 미팅 장소와 연락 방법을 확인하고 필요한 별도 서비스를 사전에 문의하세요."
         ]
       ]
     }
@@ -102,7 +150,7 @@
     "cpc": 3.12,
     "service": "day",
     "en": {
-      "title": "Private Driver in Seoul: Plan Your Itinerary",
+      "title": "Private Driver in Seoul for Your Trip",
       "description": "Request a chauffeur-driven vehicle for your Seoul schedule, including multi-day itineraries and multiple destinations.",
       "intro": "A private driver lets you plan a journey around your own schedule. Request a chauffeur-driven vehicle for your dates and destinations in Seoul.",
       "sections": [
@@ -117,12 +165,24 @@
         [
           "Review before confirmation",
           "The team reviews the request and applicable charges before confirming the reservation."
+        ],
+        [
+          "Organize each day separately",
+          "For a multi-day visit, make a separate plan for each date rather than combining everything into one route. Note the first pickup, important arrival deadlines, planned stops and the last destination for each day."
+        ],
+        [
+          "When a schedule service may fit",
+          "A schedule with several stops differs from a simple airport transfer. If your plans involve meetings, hotel changes or visits to different venues, describe the full route so the team can review the request."
+        ],
+        [
+          "Choose the vehicle by actual needs",
+          "Consider passenger count, luggage and cabin preferences for every day. A vehicle that works for a city itinerary may not be the best choice for an airport journey with several bags."
         ]
       ]
     },
     "ko": {
       "title": "서울 기사 포함 차량 및 맞춤 일정",
-      "description": "서울에서 기사 포함 의전 차량을 이용하는 방법과 다일정 예약 절차를 확인하세요.",
+      "description": "서울에서 기사 포함 차량을 이용해 하루 또는 여러 날짜의 맞춤 이동 일정을 요청하세요. 날짜별 차량, 경유지, 픽업 시간과 목적지를 준비할 수 있습니다.",
       "intro": "서울에서 개인 또는 기업 일정에 맞춘 기사 포함 의전 차량을 요청할 수 있습니다. 하루 또는 여러 날짜의 이동 계획을 작성하세요.",
       "sections": [
         [
@@ -136,6 +196,18 @@
         [
           "확정 전 검토",
           "운영팀이 요청 일정과 적용되는 비용을 검토한 뒤 확정 안내를 제공합니다."
+        ],
+        [
+          "날짜별 이동 계획 작성",
+          "여러 날 이용하는 경우 전체 경로를 하나로 합치지 말고 날짜별로 정리하세요. 첫 픽업 장소, 반드시 도착해야 하는 시간, 경유지와 마지막 목적지를 각각 입력하면 일정 검토에 도움이 됩니다."
+        ],
+        [
+          "일정형 의전 서비스 활용",
+          "여러 장소를 방문하는 일정은 공항과 목적지 사이를 이동하는 픽업·샌딩과 다릅니다. 기업 미팅, 호텔 변경, 행사장 방문 등이 있다면 전체 이동 계획을 전달하세요."
+        ],
+        [
+          "실제 이용 목적에 맞는 차량",
+          "날짜별 탑승 인원과 수하물, 원하는 차량 유형을 확인하세요. 도심 일정에 적합한 차량도 수하물이 많은 공항 이동에는 다른 선택이 필요할 수 있습니다."
         ]
       ]
     }

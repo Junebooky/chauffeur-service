@@ -28,7 +28,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onPop = () => update(current())
     window.addEventListener('popstate', onPop)
-    // Keep the existing canonical English route, preserving query and hash.
+    // Preserve the English customer route; SEO canonical remains the root URL.
     if (location.pathname === '/') changePath('en', true)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
@@ -40,9 +40,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', meta.title)
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', meta.description)
     document.querySelector('meta[property="og:locale"]')?.setAttribute('content', meta.ogLocale)
-    document.querySelector('meta[property="og:url"]')?.setAttribute('content', origin + '/' + locale + '/')
-    document.querySelector('link[rel="canonical"]')?.setAttribute('href', origin + '/' + locale + '/')
-    trackPageView('/' + locale + '/' + location.search, meta.title, locale)
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', origin + (locale === 'ko' ? '/ko/' : '/'))
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', origin + (locale === 'ko' ? '/ko/' : '/'))
+    trackPageView('/' + locale + '/', meta.title, locale)
     return () => { document.documentElement.lang = 'en' }
   }, [locale])
   const t = useCallback((english: string) => locale === 'ko' ? (Object.hasOwn(ko, english) ? ko[english] : english) : english, [locale])

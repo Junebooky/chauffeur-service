@@ -73,6 +73,7 @@ test('trackPageView deduplicates identical paths and passes canonical parameters
       {
         page_path: '/ko/',
         page_location: 'https://www.jpchauffeurkorea.com/ko/',
+        page_referrer: '',
         page_title: 'CHAUFFEUR — 한국어',
         locale: 'ko',
       },
@@ -116,7 +117,7 @@ test('SPA provider and customer funnel components wire Direct GA4 helpers', () =
   assert.match(html, /https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-8VWZ2SPG0Q/)
   assert.doesNotMatch(html, /GTM-PTN9FZCL/)
 
-  assert.match(read('src/i18n/provider.tsx'), /trackPageView\('\/' \+ locale \+ '\/' \+ location\.search/)
+  assert.match(read('src/i18n/provider.tsx'), /trackPageView\('\/' \+ locale \+ '\/', meta\.title, locale\)/)
   assert.match(read('src/i18n/provider.tsx'), /trackLanguageSwitch\(locale, next\)/)
   assert.match(read('src/App.tsx'), /trackSectionView\(id, locale\)/)
   assert.match(read('src/App.tsx'), /trackCtaClick\('concierge_email', 'concierge_modal'\)/)
@@ -148,4 +149,50 @@ test('SEO service and journal pages embed Direct GA4 without blocking or GTM', (
   const searchScript = read('scripts/build-search-pages.mjs')
   assert.match(searchScript, /ga4InlineSnippet/)
   assert.doesNotMatch(searchScript, /\/analytics\.js/)
+})
+
+test('SPA page views ignore query strings and fragments, and reject non-public routes', () => {
+  withMockBrowser({ hostname: 'www.jpchauffeurkorea.com', pathname: '/en/', search: '?email=private@example.com' }, calls => {
+    trackPageView('/en/?email=private@example.com#secret', 'English', 'en')
+    trackPageView('/en/?phone=private', 'English', 'en')
+    trackPageView('/admin/live', 'Admin', 'en')
+    assert.equal(calls.length, 1)
+    assert.equal(calls[0][2].page_location, 'https://www.jpchauffeurkorea.com/en/')
+    assert.doesNotMatch(JSON.stringify(calls), /private|secret|admin/)
+  })
+})
+
+test('mixed multi-day leads are counted once with no private request key or journey details', () => {
+  withMockBrowser({hostname:'www.jpchauffeurkorea.com',pathname:'/en/',search:''}, calls => {
+    const params={total:900000, serviceId:'airport',vehicleId:'g90',tripMode:'multi_day',dayCount:2,optionCount:0,contactMethod:'email',locale:'en',requestKey:'private-request-key',journeys:[{service:'airport',vehicle:'g90',pickup:'private-address'},{service:'day',vehicle:'staria'}]}
+    trackBookingLead(params)
+    trackBookingLead(params)
+    assert.equal(calls.length,1)
+    assert.equal(calls[0][2].service_id,'mixed')
+    assert.equal(calls[0][2].vehicle_id,'mixed')
+    assert.equal(calls[0][2].value,900000)
+    assert.doesNotMatch(JSON.stringify(calls),/private|requestKey|journeys/)
+    trackBookingLead({...params,requestKey:'different-key',journeys:[{service:'day',vehicle:'g90'},{service:'day',vehicle:'g90'}]})
+    assert.equal(calls.length,2)
+    assert.equal(calls[1][2].service_id,'day')
+    assert.equal(calls[1][2].vehicle_id,'g90')
+  })
+})
+test('lead telemetry fails safely and retries if delivery to gtag failed', () => {
+  withMockBrowser({hostname:'www.jpchauffeurkorea.com',pathname:'/ko/',search:''}, calls => {
+    const params={total:NaN,serviceId:'private-email@example.com',vehicleId:'private-address',tripMode:'single_day',dayCount:1,optionCount:0,contactMethod:'private-phone',locale:'ko',requestKey:'private-key'}
+    const gtag=globalThis.window.gtag
+    globalThis.window.gtag=()=>{throw new Error('tag failure')}
+    assert.doesNotThrow(()=>trackBookingLead(params))
+    globalThis.window.gtag=gtag
+    trackBookingLead(params)
+    trackBookingLead(params)
+    assert.equal(calls.length,1)
+    assert.equal(calls[0][2].service_id,'unknown')
+    assert.equal(calls[0][2].vehicle_id,'unknown')
+    assert.equal(calls[0][2].contact_method,'unknown')
+    assert.equal(calls[0][2].value,0)
+    assert.equal(calls[0][2].quote_required,true)
+    assert.doesNotMatch(JSON.stringify(calls),/private/)
+  })
 })
