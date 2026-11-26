@@ -1,3 +1,4 @@
+import { curatedLabels } from './i18n/curated-places.mjs'
 import { useLocale } from './i18n/provider'
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -811,8 +812,8 @@ export default function Booking({
         preferredLocale: locale,
         journeys: data.journeys.map((day: Result['journeys'][number], i: number) => ({
           ...day,
-          pickupName: journeys[i]?.pickupPlace?.name || day.pickup,
-          destinationName: journeys[i]?.destinationPlace?.name || day.destination,
+          pickupName: (journeys[i]?.pickupPlace && curatedLabels(journeys[i].pickupPlace!.id, locale)?.name) || journeys[i]?.pickupPlace?.name || day.pickup,
+          destinationName: (journeys[i]?.destinationPlace && curatedLabels(journeys[i].destinationPlace!.id, locale)?.name) || journeys[i]?.destinationPlace?.name || day.destination,
         })),
       })
     } catch (error) {
@@ -1389,7 +1390,7 @@ export default function Booking({
                                         </span> · {getTime(day)}
                                       </span>
                                       <span className="booking-day-card-route">
-                                        {route.pickup || t('Pickup Location')} → {route.destination || t('Destination')}
+                                        {(route.pickupPlace && curatedLabels(route.pickupPlace.id, locale)?.name) || route.pickup || t('Pickup Location')} → {(route.destinationPlace && curatedLabels(route.destinationPlace.id, locale)?.name) || route.destination || t('Destination')}
                                       </span>
                                     </span>
                                   </button>

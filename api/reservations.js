@@ -10,7 +10,7 @@ const lengthValid = (value, max) => typeof value === 'string' && value.trim().le
 const maxStops = 8
 // Never trust client-provided Google location details. Curated IDs are
 // canonicalized server-side; Google Places selections carry an HMAC proof.
-const safePlace = value => validatePlaceSelection(value)
+const safePlace = (value, locale) => validatePlaceSelection(value, locale)
 
 export default async function handler(req, res) {
   noCache(res)
@@ -64,8 +64,8 @@ export default async function handler(req, res) {
       const service=catalog.services.find(s=>s.id===services[i])
       const vehicle=catalog.vehicles.find(v=>v.id===d.vehicle)
       if (!service || !vehicle) throw new ApiError(400,'Please select a valid service and vehicle.')
-      const pickupPlace=safePlace(d.pickupPlace || body.pickupPlace)
-      const destinationPlace=safePlace(d.destinationPlace || body.destinationPlace)
+      const pickupPlace=safePlace(d.pickupPlace || body.pickupPlace, body.preferredLocale)
+      const destinationPlace=safePlace(d.destinationPlace || body.destinationPlace, body.preferredLocale)
       if (!pickupPlace || !destinationPlace) throw new ApiError(400,'Please select valid pickup and destination places.')
       const startsAt=Date.parse(dates[i]+'T'+times[i]+':00+09:00')
       const endsAt=startsAt+service.duration*3600000
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       previousEnd=endsAt
       const stops=d.stops === undefined ? [] : d.stops
       if (!Array.isArray(stops) || stops.length>maxStops ||
-          stops.some(stop=>!stop || !safePlace(stop.place) || !lengthValid(stop.location,250)))
+          stops.some(stop=>!stop || !safePlace(stop.place, body.preferredLocale) || !lengthValid(stop.location,250)))
         throw new ApiError(400,'Please select valid route stops.')
       const flight=onlyString(d.flight === undefined ? body.flight : d.flight, 31)
       if (flight.length>30) throw new ApiError(400,'Please enter a valid flight number.')
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
         pickup:pickupPlace.address,destination:destinationPlace.address,
         pickup_place:pickupPlace,destination_place:destinationPlace,
         pickup_at:new Date(startsAt).toISOString(),end_at:new Date(endsAt).toISOString(),
-        stops,flight,total:vehicle.quoteRequired?null:amount
+        stops:stops.map(stop=>{const place=safePlace(stop.place,body.preferredLocale);return {location:place.address,place}}),flight,total:vehicle.quoteRequired?null:amount
       }
     })
     const details={

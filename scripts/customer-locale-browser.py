@@ -4,6 +4,7 @@ No production API or reservation write is used.
 """
 from pathlib import Path
 import subprocess
+import json
 import time
 import urllib.request
 from playwright.sync_api import sync_playwright, expect
@@ -12,6 +13,20 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'test-results' / 'customer-locale'
 OUT.mkdir(parents=True, exist_ok=True)
 BASE = 'http://127.0.0.1:4188'
+POPULAR = json.loads((ROOT / 'server' / 'popular-places.json').read_text())
+def api_route(route):
+    url = route.request.url
+    if '/api/places/' in url:
+        body = route.request.post_data_json or {}
+        ko = body.get('locale') == 'ko'
+        def localized(place):
+            name = place['nameKo'] if ko else place['name']
+            address = place['addressKo'] if ko else place['address']
+            return {'id':place['id'],'name':name,'address':address,'displayAddress':address,'latitude':place['latitude'],'longitude':place['longitude'],'source':'popular'}
+        if url.endswith('/resolve'):
+            return route.fulfill(json=localized(next(p for p in POPULAR if p['id']==body['id'])))
+        return route.fulfill(json={'mode':'popular','results':[localized(p) for p in POPULAR[:6]],'notice':None})
+    return route.fulfill(json={'rate':0.000749,'country':None,'results':[]})
 def check_controls(page):
     # Only visible text in the booking panel; carousel and scroll containers may intentionally extend offscreen.
     problems = page.locator('.booking-stepper-label, .booking-time-heading, .address-field > label, .booking-outer-buttons button').evaluate_all("""nodes => nodes.filter(el => {
@@ -53,7 +68,7 @@ try:
             page = browser.new_page(viewport={'width':width,'height':height}, locale='en-US', reduced_motion='reduce', is_mobile=width<500, has_touch=width<500)
             errors = []
             page.on('pageerror', lambda e: errors.append(str(e)))
-            page.route('**/api/**', lambda route: route.fulfill(json={'rate':0.000749,'country':None,'results':[]}))
+            page.route('**/api/**', api_route)
             page.goto(BASE+'/en/', wait_until='domcontentloaded')
             expect(page).to_have_title('JP Chauffeur Korea | Private Chauffeur Service in Seoul')
             expect(page.locator('html')).to_have_attribute('lang','en')
@@ -81,6 +96,23 @@ try:
             expect(pickup).to_have_value('Incheon Airport')
             check_controls(page)
             assert not errors, errors
+            pickup.fill('')
+            pickup.click()
+            expect(page.get_by_role('option', name='Incheon Airport — Terminal 1', exact=False)).to_be_visible()
+            switch_locale(page)
+            pickup.click()
+            option = page.get_by_role('option', name='인천국제공항 제1여객터미널', exact=False)
+            expect(option).to_be_visible()
+            expect(option).to_contain_text('인천광역시 중구 공항로 272')
+            assert page.locator('.address-popup').evaluate("(el) => { const r=el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth+2 && el.scrollWidth <= el.clientWidth+2 }")
+            page.screenshot(path=str(OUT/f'{width}-ko-popular-places.png'))
+            option.click()
+            expect(pickup).to_have_value('인천국제공항 제1여객터미널')
+            expect(page.locator('.address-help.resolved').first).to_contain_text('인천광역시 중구 공항로 272')
+            switch_locale(page)
+            expect(pickup).to_have_value('Incheon Airport — Terminal 1')
+            switch_locale(page)
+            expect(pickup).to_have_value('인천국제공항 제1여객터미널')
             page.close()
             print(f'PASS {width}x{height}: EN/KO, booking state and visible controls', flush=True)
         browser.close()

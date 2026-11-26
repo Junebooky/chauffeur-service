@@ -220,5 +220,15 @@ export const ko: Readonly<Record<string, string>> = {
   "Please select valid pickup and destination places.": "정확한 승차 및 하차 장소를 선택해 주세요.",
   "Please select valid route stops.": "정확한 경유지를 선택해 주세요.",
   "Please enter a valid flight number.": "항공편명을 확인해 주세요.",
-  "Too many requests. Please try again in a few minutes.": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."
+  "Too many requests. Please try again in a few minutes.": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+  "Popular locations only. Full address search is not connected yet.": "주요 장소만 검색할 수 있습니다. 전체 주소 검색은 아직 연결되지 않았습니다.",
+  "Live address search is temporarily unavailable. Showing popular locations.": "실시간 장소 검색이 일시적으로 불가능해 주요 장소를 표시합니다.",
+  "Live address search is temporarily unavailable. Please retry or choose a popular location.": "실시간 장소 검색이 일시적으로 불가능합니다. 다시 시도하거나 주요 장소를 선택해 주세요.",
+  "Please select a suggested location.": "검색 결과에서 장소를 선택해 주세요.",
+  "Please select a valid location.": "올바른 장소를 선택해 주세요.",
+  "Please enter a valid place or address.": "장소명 또는 주소를 입력해 주세요.",
+  "Choose a place from the suggestions to confirm its address.": "검색 결과에서 정확한 장소를 선택해 주세요.",
+  "We could not confirm this address. Please select it again.": "주소를 확인하지 못했습니다. 장소를 다시 선택해 주세요.",
+  "Please choose a location in South Korea.": "대한민국 내 장소를 선택해 주세요.",
+  "Please select the location again.": "장소를 다시 선택해 주세요."
 }

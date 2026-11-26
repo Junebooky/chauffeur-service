@@ -1,3 +1,4 @@
+import { curatedLabels } from './i18n/curated-places.mjs'
 import { useLocale } from './i18n/provider'
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -69,13 +70,14 @@ export default function AddressSearch({
   // Render booking selections immediately, before any live Google results.
   // Suggestions are displayed locally but re-resolved through the existing
   // server verification endpoint before being accepted into another day.
+  const selectedLabels = place ? curatedLabels(place.id, locale) : null
   const queryKey = normalizeQuery(value.trim())
   const seenRecent = new Set<string>()
   const recentMatches = recentPlaces.filter((candidate) => {
     if (!candidate?.id || seenRecent.has(candidate.id) || candidate.id === place?.id)
       return false
     seenRecent.add(candidate.id)
-    return !queryKey || [candidate.name, candidate.address, candidate.displayAddress || '']
+    return !queryKey || [candidate.name, candidate.address, candidate.displayAddress || '', ...(['en', 'ko'].flatMap(lang => { const labels = curatedLabels(candidate.id, lang); return labels ? [labels.name, labels.address] : [] }))]
       .some((text) => normalizeQuery(text).includes(queryKey))
   }).slice(0, 6)
   const recentIds = new Set(recentMatches.map((candidate) => candidate.id))
@@ -86,18 +88,19 @@ export default function AddressSearch({
       address: candidate.address,
       displayAddress: candidate.displayAddress,
       isStation: candidate.isStation,
+      ...curatedLabels(candidate.id, locale),
       fromTrip: true,
     })),
-    ...(!loading ? results.filter((result) => !recentIds.has(result.id)) : []),
+    ...(!loading ? results.filter((result) => !recentIds.has(result.id)).map(result => ({ ...result, ...curatedLabels(result.id, locale) })) : []),
   ]
 
   useEffect(() => {
     input.current?.setCustomValidity(
       value && !place
-        ? 'Choose a place from the suggestions to confirm its address.'
+        ? t('Choose a place from the suggestions to confirm its address.')
         : '',
     )
-  }, [value, place])
+  }, [value, place, t])
   useEffect(() => {
     // Important: do not block search while a Korean IME composition is active.
     // Some browsers keep composition open until a click/blur; blocking it
@@ -270,7 +273,7 @@ export default function AddressSearch({
           maxLength={180}
           autoComplete="off"
           spellCheck={false}
-          value={value}
+          value={selectedLabels?.name || value}
           placeholder={t(placeholder)}
           onFocus={() => {
             if (!place) setOpen(true)
@@ -341,7 +344,7 @@ export default function AddressSearch({
         className={`address-help ${place ? 'resolved' : ''}`}
       >
         {place
-          ? (place.displayAddress || place.address)
+          ? (selectedLabels?.displayAddress || place.displayAddress || place.address)
           : t('English, Korean or your own language · South Korea')}
       </p>
       {open &&

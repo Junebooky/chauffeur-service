@@ -1,3 +1,4 @@
+import { curatedLabels, curatedPlaceForLocale, curatedSearchTerms } from '../src/i18n/curated-places.mjs'
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
 import { fetch as proxyFetch, EnvHttpProxyAgent } from 'undici'
@@ -11,24 +12,8 @@ import {
 } from './station-search.mjs'
 
 const normalise = normalizePlaceQuery
-const safePlace = ({ aliases, ...place }) => {
-  const isStation = isStationPrediction(place)
-  return {
-    ...place,
-    source: 'popular',
-    accuracy: 'building',
-    isStation,
-    displayAddress: stationDisplayAddress(place.address, isStation),
-  }
-}
-const toSuggestion = (place) => ({
-  id: place.id,
-  name: place.name,
-  address: place.address,
-  isStation: isStationPrediction(place),
-  displayAddress: stationDisplayAddress(
-    place.address, isStationPrediction(place)),
-})
+const safePlace = (place, locale) => curatedPlaceForLocale(place.id, locale)
+const toSuggestion = (place, locale) => ({ id: place.id, ...curatedLabels(place.id, locale) })
 const sessionValid = (value) =>
   typeof value === 'string' && /^[a-zA-Z0-9_-]{16,80}$/.test(value)
 
@@ -92,7 +77,7 @@ export function createPlaces({
     // Verified exact matches are instant, even offline or without paid Google calls.
     const exactCurated = q.length >= 2
       ? popular.filter((place) =>
-          [place.name, ...place.aliases].some((alias) =>
+          curatedSearchTerms(place, false).some((alias) =>
             normalise(alias) === q ||
             (context.station && !context.exit && normalise(alias) === normalizedStationInput)),
         )
@@ -103,7 +88,7 @@ export function createPlaces({
         : popular.filter(
             (place) =>
               !q ||
-              [place.name, place.address, ...place.aliases].some((alias) =>
+              curatedSearchTerms(place).some((alias) =>
                 normalise(alias).includes(q) ||
                 (context.station && !context.exit &&
                   normalise(alias).includes(normalizedStationInput)),
@@ -111,7 +96,7 @@ export function createPlaces({
           )
       return res.json({
         mode: 'popular',
-        results: results.slice(0, 6).map(toSuggestion),
+        results: results.slice(0, 6).map(place => toSuggestion(place, req.body?.locale)),
         notice: apiKey
           ? null
           : 'Popular locations only. Full address search is not connected yet.',
@@ -201,7 +186,7 @@ export function createPlaces({
         .status(400)
         .json({ error: 'Please select a suggested location.' })
     const local = popular.find((p) => p.id === id)
-    if (local) return res.json(safePlace(local))
+    if (local) return res.json(safePlace(local, req.body?.locale))
     if (!apiKey || !/^[a-zA-Z0-9_-]+$/.test(id))
       return res
         .status(400)
@@ -263,13 +248,13 @@ export function createPlaces({
         })
     }
   })
-  function selected(input) {
+  function selected(input, locale = 'en') {
     if (!input || typeof input.id !== 'string')
       throw new Error(
         'Please choose your pickup and destination from the address suggestions.',
       )
     const local = popular.find((p) => p.id === input.id)
-    if (local) return safePlace(local)
+    if (local) return safePlace(local, locale)
     const entry = selections.get(input.selectionToken)
     if (!entry || entry.expires < now() || entry.place.id !== input.id)
       throw new Error(

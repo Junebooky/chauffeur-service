@@ -718,3 +718,24 @@ test('migrates pre-existing single-day requests into daily slots while preservin
     rmSync(dir, { recursive: true, force: true })
   }
 })
+
+
+test('offline popular places localize search, selection and trusted reservation addresses', () =>
+  withServer(async ({base,post})=>{
+    const call=async (action,body)=>{
+      const response=await fetch(base+'/api/places/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionToken:'curated-locale-test-1234',...body})})
+      assert.equal(response.status,200)
+      return response.json()
+    }
+    const ko=await call('search',{query:'',locale:'ko'})
+    const en=await call('search',{query:'',locale:'en'})
+    assert.equal(ko.results[0].id,en.results[0].id)
+    assert.equal(ko.results[0].name,'인천국제공항 제1여객터미널')
+    assert.equal(en.results[0].name,'Incheon Airport — Terminal 1')
+    const selected=await call('resolve',{id:'curated:icn-t2',locale:'ko'})
+    assert.equal(selected.address,'인천광역시 중구 제2터미널대로 446')
+    const result=await post({...valid,preferredLocale:'ko',pickupPlace:{id:selected.id,latitude:0,address:'fake'}})
+    assert.equal(result.status,201)
+    assert.match(result.data.journeys[0].pickup,/제2터미널대로 446/)
+    assert.equal(result.data.journeys[0].pickupPlace?.latitude ?? selected.latitude,37.4686)
+  }))

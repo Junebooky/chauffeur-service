@@ -364,9 +364,11 @@ export function createApp({
         }
         const dayPickup = places.selected(
           Object.hasOwn(inputDay, 'pickupPlace') ? inputDay.pickupPlace : b.pickupPlace,
+          b.preferredLocale,
         )
         const dayDestination = places.selected(
           Object.hasOwn(inputDay, 'destinationPlace') ? inputDay.destinationPlace : b.destinationPlace,
+          b.preferredLocale,
         )
         const dayFlight = inputDay.flight === undefined ? b.flight : inputDay.flight
         if (dayFlight && (typeof dayFlight !== 'string' || dayFlight.length > 30))
@@ -379,7 +381,7 @@ export function createApp({
             typeof stop.location !== 'string' || !stop.location.trim() ||
             stop.location.length > 250)
             throw new Error('Please select a valid location for every stop.')
-          const selected = places.selected(stop.place)
+          const selected = places.selected(stop.place, b.preferredLocale)
           return { location: selected.address, place: selected }
         })
         return {

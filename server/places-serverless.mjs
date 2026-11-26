@@ -1,3 +1,4 @@
+import { curatedLabels, curatedPlaceForLocale, curatedSearchTerms } from '../src/i18n/curated-places.mjs'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import popular from './popular-places.json' with { type: 'json' }
 import { normalizePlaceQuery, stationSearchContext, isStationPrediction, rankStationSuggestions, stationDisplayAddress } from './station-search.mjs'
@@ -6,23 +7,12 @@ const sessionOk = token => typeof token === 'string' && /^[A-Za-z0-9_-]{16,80}$/
 const googleKey = () => process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_PLACES_API_KEY || ''
 const signatureKey = () => process.env.PLACES_SELECTION_SIGNING_KEY ||
   process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-const suggestions = place => ({
-  id: place.id, name: place.name, address: place.address,
-  isStation: isStationPrediction(place),
-  displayAddress: stationDisplayAddress(place.address, isStationPrediction(place)),
-})
-export const curatedPlace = id => {
-  const p = popular.find(place => place.id === id)
-  if (!p) return null
-  const { aliases, ...place } = p
-  const isStation = isStationPrediction(place)
-  return { ...place, source:'popular', accuracy:'building', isStation,
-    displayAddress:stationDisplayAddress(place.address, isStation) }
-}
-export function validatePlaceSelection(place) {
+const suggestions = (place, locale) => ({ id: place.id, ...curatedLabels(place.id, locale) })
+export const curatedPlace = (id, locale = 'en') => curatedPlaceForLocale(id, locale)
+export function validatePlaceSelection(place, locale = 'en') {
   if (!place || typeof place !== 'object' || Array.isArray(place)) return null
   if (typeof place.id !== 'string') return null
-  const local = curatedPlace(place.id)
+  const local = curatedPlace(place.id, locale)
   if (local) return local
   if (place.source !== 'google' || !place.selectionToken) return null
   return verifySelection(place)
@@ -39,7 +29,7 @@ export function placeRequestInput(body, requireId=false) {
 function matchesCurated(query, context) {
   const q=normalizePlaceQuery(query.trim())
   const input=normalizePlaceQuery(context.input)
-  return popular.filter(place => [place.name, place.address, ...place.aliases].some(alias => {
+  return popular.filter(place => curatedSearchTerms(place).some(alias => {
     const a=normalizePlaceQuery(alias)
     return !q || a.includes(q) || context.station && !context.exit && a.includes(input)
   }))
@@ -71,11 +61,11 @@ export async function searchPlaces(body) {
   const context=stationSearchContext(body.query)
   const q=normalizePlaceQuery(body.query.trim())
   const allMatches=matchesCurated(body.query,context)
-  const exact=q.length>=2 ? allMatches.filter(p=>[p.name,...p.aliases].some(a =>
+  const exact=q.length>=2 ? allMatches.filter(p=>curatedSearchTerms(p, false).some(a =>
     normalizePlaceQuery(a)===q || context.station && !context.exit && normalizePlaceQuery(a)===normalizePlaceQuery(context.input))) : []
   const key=googleKey()
   if(!key || q.length<2 || exact.length) return {status:200,data:{
-    mode:'popular',results:(exact.length?exact:allMatches).slice(0,6).map(suggestions),
+    mode:'popular',results:(exact.length?exact:allMatches).slice(0,6).map(place => suggestions(place, body.locale)),
     notice: key?null:'Popular locations only. Full address search is not connected yet.'
   }}
   const autocomplete=async (input,types) => {
@@ -107,7 +97,7 @@ export async function searchPlaces(body) {
   } catch {
     // Google is an enhancement; curated matches keep core booking usable.
     if(allMatches.length) return {status:200,data:{
-      mode:'popular',results:allMatches.slice(0,6).map(suggestions),
+      mode:'popular',results:allMatches.slice(0,6).map(place => suggestions(place, body.locale)),
       notice:'Live address search is temporarily unavailable. Showing popular locations.'
     }}
     return {status:503,data:{error:'Live address search is temporarily unavailable. Please retry or choose a popular location.'}}
@@ -152,7 +142,7 @@ function verifySelection(place) {
 export async function resolvePlace(body) {
   const error=placeRequestInput(body,true)
   if(error)return {status:400,data:{error}}
-  const local=curatedPlace(body.id)
+  const local=curatedPlace(body.id, body.locale)
   if(local)return {status:200,data:local}
   if(!googleKey() || !/^[A-Za-z0-9_-]+$/.test(body.id))
     return {status:400,data:{error:'Please select a suggested location.'}}
