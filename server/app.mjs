@@ -556,6 +556,9 @@ export function createApp({
         .json({ error: error.message || 'Please check your journey details.' })
     }
   })
+  app.get('/api/locale', (req, res) => {
+    res.set('Cache-Control', 'private, no-store').json({ country: req.get('x-vercel-ip-country') === 'KR' ? 'KR' : null })
+  })
   app.use('/api', (_req, res) =>
     res.status(404).json({ error: 'This service could not be found.' }),
   )

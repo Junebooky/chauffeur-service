@@ -1,0 +1,10 @@
+/* The existing language slot is reused; mobile uses the existing navigation drawer. */
+button.language-switcher { background: transparent; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 11px; }
+button.language-switcher:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
+html[lang="ko"] .hero-subtitle,
+html[lang="ko"] .fleet-vehicle-tagline,
+html[lang="ko"] .fleet-specs-summary,
+html[lang="ko"] .fleet-spec-k,
+html[lang="ko"] .fleet-spec-v,
+html[lang="ko"] .desktop-nav button,
+html[lang="ko"] .mobile-nav button { word-break: keep-all; letter-spacing: normal; }

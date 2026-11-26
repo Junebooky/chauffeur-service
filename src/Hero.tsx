@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useEffect, useState } from 'react'
 import { MoveRight } from 'lucide-react'
 
@@ -11,6 +12,7 @@ export default function Hero({
   reducedMotion: boolean
   goTo?: (index: number) => void
 }) {
+  const { t } = useLocale()
   const [activeSlide, setActiveSlide] = useState(0)
   const [isResetting, setIsResetting] = useState(false)
 
@@ -105,16 +107,16 @@ export default function Hero({
             Chauffeur Service
           </h1>
           <p className="hero-subtitle">
-            A discreet, safe, and refined travel experience
+            {t("A discreet, safe, and refined travel experience")}
             <br className="hero-subtitle-break" />
-            for business and personal occasions.
+            {t("for business and personal occasions.")}
           </p>
           <button
             type="button"
             className="hero-book-link"
             onClick={() => goTo?.(3)}
           >
-            <span>Book Now</span>
+            <span>{t("Book Now")}</span>
             <MoveRight size={18} strokeWidth={1.25} aria-hidden="true" />
           </button>
         </div>

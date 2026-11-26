@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import { LocaleProvider } from './i18n/provider'
+import './i18n/locale.css'
 const GlassLab = React.lazy(() => import('./GlassLab'))
 const Admin = React.lazy(() => import('./Admin'))
 const AdminOverview = React.lazy(() => import('./AdminOverview'))
@@ -17,6 +19,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.Suspense fallback={<div className="glass-lab">Loading optical comparison…</div>}>
         <GlassLab />
       </React.Suspense>
-    ) : <App />}
+    ) : <LocaleProvider><App /></LocaleProvider>}
   </React.StrictMode>,
 )

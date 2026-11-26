@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -87,6 +88,7 @@ function Modal({
 }
 
 export default function App() {
+  const { locale, setLocale, t } = useLocale()
   const { scrollRef, active, reducedMotion, goTo } = useJourneyScroll()
   const [mobileMenu, setMobileMenu] = useState(false)
   const [modal, setModal] = useState<'contact' | 'privacy' | null>(null)
@@ -126,7 +128,7 @@ export default function App() {
           nav(3)
         }}
       >
-        Skip to reservation
+        {t("Skip to reservation")}
       </a>
       <header className="site-header">
         <Brand onClick={() => nav(0)} />
@@ -135,28 +137,28 @@ export default function App() {
             className={active === 1 ? 'active' : ''}
             onClick={() => nav(1)}
           >
-            The collection
+            {t("The collection")}
           </button>
           <button
             className={active === 2 ? 'active' : ''}
             onClick={() => nav(2)}
           >
-            Our services
+            {t("Our services")}
           </button>
           <button
             className={active === 3 ? 'active' : ''}
             onClick={() => nav(3)}
           >
-            Your journey
+            {t("Your journey")}
           </button>
           <button onClick={() => setModal('contact')}>
-            Concierge <ArrowUpRight size={11} />
+            {t("Concierge")} <ArrowUpRight size={11} />
           </button>
         </nav>
         <div className="header-actions">
-          <span className="language">
-            <Globe2 size={13} /> EN
-          </span>
+          <button type="button" className="language language-switcher" aria-label={locale === 'en' ? 'Switch to Korean' : '영어로 전환'} onClick={() => setLocale(locale === 'en' ? 'ko' : 'en')}>
+            <Globe2 size={13} /> {locale.toUpperCase()}
+          </button>
           <button
             className="icon-button mobile-menu-toggle"
             aria-label={mobileMenu ? 'Close navigation' : 'Open navigation'}
@@ -185,28 +187,28 @@ export default function App() {
               aria-current={active === 0 ? 'location' : undefined}
               onClick={() => nav(0)}
             >
-              The welcome <span>01</span>
+              {t("The welcome")} <span>01</span>
             </button>
             <button
               className={active === 1 ? 'active' : ''}
               aria-current={active === 1 ? 'location' : undefined}
               onClick={() => nav(1)}
             >
-              The collection <span>02</span>
+              {t("The collection")} <span>02</span>
             </button>
             <button
               className={active === 2 ? 'active' : ''}
               aria-current={active === 2 ? 'location' : undefined}
               onClick={() => nav(2)}
             >
-              Our services <span>03</span>
+              {t("Our services")} <span>03</span>
             </button>
             <button
               className={active === 3 ? 'active' : ''}
               aria-current={active === 3 ? 'location' : undefined}
               onClick={() => nav(3)}
             >
-              Your journey <span>04</span>
+              {t("Your journey")} <span>04</span>
             </button>
             <button
               onClick={() => {
@@ -214,7 +216,10 @@ export default function App() {
                 setMobileMenu(false)
               }}
             >
-              Concierge <ArrowUpRight size={20} />
+              {t("Concierge")} <ArrowUpRight size={20} />
+            </button>
+            <button type="button" className="mobile-language-switch" onClick={() => { setLocale(locale === 'en' ? 'ko' : 'en'); setMobileMenu(false) }}>
+              {locale === 'en' ? '한국어' : 'English'} <span>{locale === 'en' ? 'KO' : 'EN'}</span>
             </button>
           </nav>
         </>
@@ -249,7 +254,7 @@ export default function App() {
               className={active === i ? 'active' : ''}
               key={label}
               onClick={() => nav(i)}
-              aria-label={label}
+              aria-label={t(label)}
               aria-current={active === i ? 'location' : undefined}
             >
               <span>{`0${i + 1}`}</span>
@@ -262,59 +267,50 @@ export default function App() {
         open={modal !== null}
         onClose={() => setModal(null)}
         title={
-          modal === 'contact' ? 'Contact our team.' : 'Reservation & privacy.'
+          modal === 'contact' ? t("Contact our team.") : t("Reservation & privacy.")
         }
       >
         {modal === 'contact' ? (
           <>
             <p className="dialog-contact-intro">
-              Planning something beyond our standard services?
-              Email us your dates and itinerary. We'll help with the details.
+              {t("Planning something beyond our standard services? Email us your dates and itinerary. We'll help with the details.")}
             </p>
             <div className="dialog-contact-card">
-              <small>DIRECT CONTACT</small>
+              <small>{t("DIRECT CONTACT")}</small>
               <strong>{OPERATOR_EMAIL}</strong>
-              <span>Custom journeys · Private transfers · Special requests</span>
+              <span>{t("Custom journeys · Private transfers · Special requests")}</span>
             </div>
             <p className="dialog-note">
-              All journey requests are subject to confirmation. No upfront payment is taken.
+              {t("All journey requests are subject to confirmation. No upfront payment is taken.")}
             </p>
             <a className="button gold-button" href={customQuoteEmail()}>
-              Write an email <ArrowRight size={16} aria-hidden="true" />
+              {t("Write an email")} <ArrowRight size={16} aria-hidden="true" />
             </a>
           </>
         ) : (
           <div className="dialog-policy-list">
             <section className="dialog-policy-section" aria-labelledby="privacy-status">
-              <h3 id="privacy-status">Reservation status</h3>
+              <h3 id="privacy-status">{t("Reservation status")}</h3>
               <p>
-                Your request is pending until we confirm the vehicle and chauffeur.
-                No payment is taken online. Prices are in KRW and exclude tax.
+                {t("Your request is pending until we confirm the vehicle and chauffeur. No payment is taken online. Prices are in KRW and exclude tax.")}
               </p>
             </section>
             <section className="dialog-policy-section" aria-labelledby="privacy-information">
-              <h3 id="privacy-information">Your information</h3>
+              <h3 id="privacy-information">{t("Your information")}</h3>
               <p>
-                When online booking is available, we store your contact details,
-                itinerary and vehicle choices to manage your request. An email
-                notification is sent to our operator when email delivery is configured.
-                An email enquiry opens your mail app and is only sent when you send it.
+                {t("When online booking is available, we store your contact details, itinerary and vehicle choices to manage your request. An email notification is sent to our operator when email delivery is configured. An email enquiry opens your mail app and is only sent when you send it.")}
               </p>
             </section>
             <section className="dialog-policy-section" aria-labelledby="privacy-availability">
-              <h3 id="privacy-availability">Availability & changes</h3>
+              <h3 id="privacy-availability">{t("Availability & changes")}</h3>
               <p>
-                Vehicle availability is indicative, not a live fleet guarantee.
-                Final arrangements are confirmed by our team. Online cancellation
-                and payment are not currently available.
+                {t("Vehicle availability is indicative, not a live fleet guarantee. Final arrangements are confirmed by our team. Online cancellation and payment are not currently available.")}
               </p>
             </section>
             <section className="dialog-policy-section" aria-labelledby="privacy-places">
-              <h3 id="privacy-places">Addresses & maps</h3>
+              <h3 id="privacy-places">{t("Addresses & maps")}</h3>
               <p>
-                Live place searches use Google Maps when enabled. Selected locations
-                are used to plan your journey. Please confirm the exact meeting
-                point with your chauffeur. See{' '}
+                {t("Live place searches use Google Maps when enabled. Selected locations are used to plan your journey. Please confirm the exact meeting point with your chauffeur. See")}{' '}
                 <a
                   href="https://maps.google.com/help/terms_maps/"
                   target="_blank"

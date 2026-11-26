@@ -15,6 +15,22 @@
     {
       "source": "/admin/live/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/ko",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/ko/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/en",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/en/",
+      "destination": "/index.html"
     }
   ],
   "git": {

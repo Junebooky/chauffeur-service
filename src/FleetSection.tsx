@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useState, useEffect, useRef } from 'react'
 import {
   ArrowUpRight,
@@ -289,6 +290,7 @@ function BrandLogo({ brand, className }: { brand: string; className?: string }) 
 }
 
 export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProps) {
+  const { locale, t } = useLocale()
   // selectedId is null for Overview, or one of the 4 vehicle ids
   const [selectedId, setSelectedId] = useState<VehicleInfo['id'] | null>(null)
   // isSlideDetailOpen is true when viewing the full PPT-slide detail view (Ref Image 2)
@@ -444,7 +446,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
             aria-label="Close vehicle views and return to vehicle"
           >
             <ArrowLeft size={14} />
-            <span>Vehicle</span>
+            <span>{t("Vehicle")}</span>
           </button>
 
           <div
@@ -550,7 +552,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   <div className="fleet-specs-content">
                     <div className="fleet-specs-badge">{activeVehicle.classBadge}</div>
                     <DisplayHeading as="h3" className="fleet-specs-vehicle-title">{activeVehicleFullName}</DisplayHeading>
-                    <p className="fleet-specs-summary">{activeVehicle.shortDescription}</p>
+                    <p className="fleet-specs-summary">{t(activeVehicle.shortDescription)}</p>
 
                     <dl className="fleet-specs-facts">
                       {[
@@ -558,9 +560,9 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         { label: 'SEATING', value: activeVehicle.specs.passengers },
                         { label: 'LUGGAGE', value: activeVehicle.specs.luggage },
                       ].map((fact) => (
-                        <div className="fleet-specs-row" key={fact.label}>
+                        <div className="fleet-specs-row" key={t(fact.label)}>
                           <dt className="fleet-spec-k">{fact.label}</dt>
-                          <dd className="fleet-spec-v">{fact.value}</dd>
+                          <dd className="fleet-spec-v">{t(fact.value)}</dd>
                         </div>
                       ))}
                     </dl>
@@ -570,7 +572,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         type="button"
                         onClick={() => handleReserve(activeVehicle.catalogId)}
                       >
-                        Reserve {activeVehicleFullName} <ArrowUpRight size={15} />
+                        {locale === 'ko' ? activeVehicleFullName + ' 예약' : `Reserve ${activeVehicleFullName}`} <ArrowUpRight size={15} />
                       </ReservationButton>
                     </div>
                   </div>
@@ -643,7 +645,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                   Our Fleet
                 </h2>
                 <p className="fleet-subtitle">
-                  A curated fleet for every occasion, with professional chauffeurs.
+                  {t("A curated fleet for every occasion, with professional chauffeurs.")}
                 </p>
               </div>
 
@@ -695,7 +697,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
                         </span>
                       )}
                     </DisplayHeading>
-                    <p className="fleet-vehicle-tagline">{car.tagline}</p>
+                    <p className="fleet-vehicle-tagline">{t(car.tagline)}</p>
 
                   </div>
 
@@ -748,7 +750,7 @@ export default function FleetSection({ goTo, onSelectVehicle }: FleetSectionProp
               aria-label="Back to fleet overview"
             >
               <ArrowLeft size={14} />
-              <span>All Fleet</span>
+              <span>{t("All Fleet")}</span>
             </button>
           ) : (
             <SectionEyebrow>EXCELLENCE, IN EVERY DETAIL</SectionEyebrow>

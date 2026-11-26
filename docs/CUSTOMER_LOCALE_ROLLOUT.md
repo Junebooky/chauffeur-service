@@ -1,0 +1,2 @@
+# Customer localization rollout
+First increment: locale routing, in-place switch, navigation, Hero, Fleet and Pricing copy, contact and privacy. The existing booking screen, catalog IDs, availability and payment behavior are untouched in this increment. Phase 2: localize booking and search, preserve reservation state and API identifiers, then email/PDF and per-language SEO. Validate desktop and mobile before production integration. The language switch reuses the existing desktop slot and adds a mobile menu item because the desktop slot is hidden on narrow screens.

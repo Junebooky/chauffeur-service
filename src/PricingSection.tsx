@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useEffect, useRef, useState } from 'react'
 import catalog from './catalog.json'
 import { money } from './utils'
@@ -81,6 +82,7 @@ export default function PricingSection({
   onSelectService,
   goTo,
 }: PricingSectionProps) {
+  const { t } = useLocale()
   const trackRef = useRef<HTMLDivElement>(null)
   const pendingTargetRef = useRef<number | null>(null)
   const pendingClearTimerRef = useRef(0)
@@ -228,7 +230,7 @@ export default function PricingSection({
             Tailored Chauffeur Services
           </h2>
           <p className="!mt-3 !font-sans !text-[clamp(12.5px,1.04vw,16px)] !font-extralight !tracking-[0.01em] !text-[#d1d5db]/85">
-            Choose a pick-up, plan your schedule, or tell us what you have in mind.
+            {t("Choose a pick-up, plan your schedule, or tell us what you have in mind.")}
           </p>
         </div>
 
@@ -325,7 +327,7 @@ export default function PricingSection({
                 <div className="pointer-events-auto relative z-10 mt-auto translate-y-full bg-[linear-gradient(180deg,rgba(5,6,8,0)_0%,rgba(5,6,8,0.87)_25%,rgba(5,6,8,0.97)_100%)] px-6 pt-10 pb-6 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 sm:px-8 sm:pb-7 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
                   <div className="border-t border-white/20 pt-4">
                     <span className="block !font-sans text-[10px] !font-normal tracking-[0.2em] text-white/75 uppercase">
-                      {plan.eyebrow}
+                      {t(plan.eyebrow)}
                     </span>
                     {plan.serviceId !== null ? (
                       <>
@@ -349,23 +351,23 @@ export default function PricingSection({
                                   </span>
                                 </div>
                                 <strong className="shrink-0 !font-sans text-[clamp(19px,1.65vw,25px)] !font-extralight tracking-[-0.035em] text-white tabular-nums">
-                                  {price === null ? 'Ask for rate' : money(price)}
+                                  {price === null ? t('Ask for rate') : money(price)}
                                 </strong>
                               </div>
                             )
                           })}
                         </div>
                         <p className="!mt-3 !mb-0 !font-sans text-[10.5px] !font-light text-white/70">
-                          KRW · TAX excluded
+                          {t("KRW · TAX excluded")}
                         </p>
                       </>
                     ) : (
                       <>
                         <strong className="mt-3 block !font-sans text-[clamp(24px,2vw,30px)] !font-extralight tracking-[-0.02em] text-white">
-                          Tailored Quote
+                          {t("Tailored Quote")}
                         </strong>
                         <p className="!mt-1.5 !mb-0 !font-sans text-[12px] !font-light text-white/75">
-                          {plan.subtitle}
+                          {t(plan.subtitle)}
                         </p>
                       </>
                     )}
@@ -375,7 +377,7 @@ export default function PricingSection({
                       aria-label={plan.serviceId === null ? 'Email us for a custom quote' : `Plan your ${plan.lines.join(' ').toLowerCase()} journey`}
                       className="relative z-40 mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 py-2 !font-sans text-[13px] !font-light text-white/90 transition-colors hover:text-white hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:min-h-0 lg:py-0 lg:text-[11px]"
                     >
-                      {plan.serviceId === null ? 'Email us for a custom quote' : 'Plan your journey'}
+                      {t(plan.serviceId === null ? 'Email us for a custom quote' : 'Plan your journey')}
                       <span aria-hidden="true">→</span>
                     </button>
                   </div>

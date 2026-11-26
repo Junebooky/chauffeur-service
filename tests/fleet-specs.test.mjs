@@ -30,7 +30,7 @@ test('each vehicle has a Specs-only summary at least 50% shorter than its full c
   for (const [, short, full] of copies) {
     assert.ok(short.length <= full.length * 0.5, `Description is too long: ${short}`)
   }
-  assert.match(fleet, /\{activeVehicle\.shortDescription\}/)
+  assert.match(fleet, /\{t\(activeVehicle\.shortDescription\)\}/)
 })
 
 test('Specs title is light sans-serif and avoids silver text', () => {
