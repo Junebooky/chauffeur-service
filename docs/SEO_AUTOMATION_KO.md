@@ -19,3 +19,10 @@
 - GTM 콘솔: Google tag G-8VWZ2SPG0Q, analytics_storage 동의 조건 적용. 자동 page_view 중복 방지, 사이트 검색/폼 상호작용/외부 링크 등 자동 수집 및 page_referrer 검토. chauffeur_page_view -> GA4 page_view, view_vehicle/select_service/begin_booking/booking_step/generate_lead -> 동일 GA 이벤트. 데이터 영역 변수는 page_location, language, vehicle, service, booking_step, journey_type. generate_lead를 주요 이벤트로 지정. Tag Assistant 및 DebugView에서 실제 검증 필요. 응답 유실 후 200 재시도 시 전환이 누락될 수 있음. 실제 고객 예약을 테스트용으로 만들지 않음.
 
 - 최신 main의 영어 기본 진입 정책을 병합함. 서비스별 sitemap hreflang 쌍 생성. Journal RSS: /journal/rss.xml, /ko/journal/rss.xml. 승인 및 시각 도래 글만 포함. Search Console, 네이버 사이트맵/RSS 수집은 배포 후 등록.
+
+## 4단계 최신 main 통합 및 IndexNow
+- 최신 main의 direct GA4 이벤트를 유지하고 GTM 중복 경로를 제거. 한 번의 Google tag만 동의 후 초기화. 커스텀 이벤트의 URL query/hash 및 자유 입력 제외. 201 신규 저장만 generate_lead. 기존 main의 explicit localhost ga_debug=1은 동의 후 지원(운영 통계 제외용 GA4 developer filter 검토). GTM 매핑은 불필요. 이전 문서의 GTM 방식은 이 절로 대체한다.
+- GA4 관리자에서 generate_lead 주요 이벤트를 설정하고 향상된 측정 중 사이트 검색, 폼, 외부 링크, 자동 페이지 변경 등 원본 URL/입력 수집 가능 항목을 검토·비활성화해야 한다. 실제 DebugView, 동의 철회, 전환 테스트는 배포 전후 검증 필요. 가짜 고객 예약 금지. 선택적 분석 동의 UI를 추가한 상태이며 실제 디자인 및 개인정보 처리방침 검토 필요.
+- IndexNow 공개 인증 파일 public/0b75056beb2346d6acf5bc8dfc6319ce.txt 추가. 아직 운영 호스트에 존재하지 않아 OpenSEO 제출 실패. 배포 후 키 파일 HTTP 200 및 내용 확인, 변경된 실제 공개 URL만 제출. Google은 Search Console sitemap 사용. 자동 제출은 공개 검증 후 활성화한다.
+- 빌드된 메인 HTML에 실제 서비스 요약과 서비스 링크, Journal 링크를 초기 표시하고 React가 마운트되면 기존 UI로 교체. 봇 전용 숨김 텍스트는 없음. 전체 SSR은 아니며 배포 후 실제 크롤링 확인 필요.
+- AI visibility는 미국 영어, 4개 주제×3개 엔진 주간 추적 예상 24 credits/회, 약 96 credits/4주. 비용 승인 전 활성화하지 않는다.

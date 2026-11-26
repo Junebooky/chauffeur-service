@@ -48,7 +48,7 @@ function sendGtag(command, target, params = {}) {
   if (typeof win.gtag !== 'function') return
   const payload = sanitizeParams(params)
   if (isDebugAnalytics(win.location.search)) payload.debug_mode = true
-  win.gtag(command, target, payload)
+  return win.gtag(command, target, payload) !== false
 }
 
 let lastTrackedPath = ''
@@ -60,10 +60,10 @@ export function resetAnalyticsSessionForTests() {
 }
 
 export function trackPageView(path, title, locale) {
+  path = String(path || '').split(/[?#]/)[0]
   if (!path || path === lastTrackedPath) return
-  lastTrackedPath = path
   const win = globalThis.window
-  sendGtag('event', 'page_view', {
+  const sent = sendGtag('event', 'page_view', {
     page_path: path,
     page_location:
       typeof win !== 'undefined' && win.location?.origin
@@ -72,10 +72,12 @@ export function trackPageView(path, title, locale) {
     page_title: title,
     locale,
   })
+  if (sent) lastTrackedPath = path
+  win?.chauffeurAnalyticsRefresh?.()
 }
 
 export function trackEvent(name, params = {}) {
-  sendGtag('event', name, params)
+  return sendGtag('event', name, params)
 }
 
 export function trackLanguageSwitch(fromLocale, toLocale) {
@@ -89,11 +91,10 @@ export function trackLanguageSwitch(fromLocale, toLocale) {
 export function trackSectionView(sectionId, locale) {
   const key = `${locale}:${sectionId}`
   if (viewedSections.has(key)) return
-  viewedSections.add(key)
-  trackEvent('section_view', {
+  if (trackEvent('section_view', {
     section_id: sectionId,
     locale,
-  })
+  })) viewedSections.add(key)
 }
 
 export function trackCtaClick(ctaName, location, extra = {}) {

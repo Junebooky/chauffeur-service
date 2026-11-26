@@ -851,7 +851,8 @@ export default function Booking({
           destinationName: (journeys[i]?.destinationPlace && curatedLabels(journeys[i].destinationPlace!.id, locale)?.name) || journeys[i]?.destinationPlace?.name || day.destination,
         })),
       })
-      trackBookingLead({
+      // Only a newly created request (201), not a replay (200), is a new lead.
+      if (response.status === 201 && data.status === 'pending' && typeof data.reference === 'string') trackBookingLead({
         total: typeof data.total === 'number' ? data.total : null,
         serviceId: journeys[0]?.service || service,
         vehicleId: journeys[0]?.vehicle || vehicle,

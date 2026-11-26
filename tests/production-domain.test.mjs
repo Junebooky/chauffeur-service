@@ -6,9 +6,9 @@ test('production domain metadata uses canonical www and keeps admin routes out o
  const site='https://www.jpchauffeurkorea.com/'
  assert.ok(read('index.html').includes('rel="canonical" href="'+site+'"'))
  assert.ok(read('index.html').includes('<meta name="naver-site-verification" content="e8bc57b622cd9de0d846b0d510d69b295f6788d1" />'))
- assert.ok(read('index.html').includes('https://www.googletagmanager.com/gtag/js?id=G-8VWZ2SPG0Q'))
- assert.ok(read('index.html').includes('send_page_view: false'))
- assert.ok(read('index.html').includes("path.indexOf('/admin/') === 0"))
+ assert.ok(read('index.html').includes('src="/analytics.js"'))
+ assert.ok(read('public/analytics.js').includes('G-8VWZ2SPG0Q'))
+ assert.ok(read('public/analytics.js').includes('send_page_view:false'))
  assert.ok(read('public/sitemap.xml').includes('<loc>'+site+'</loc>'))
  assert.ok(!read('public/sitemap.xml').includes('/admin'))
  assert.ok(read('public/robots.txt').includes('Sitemap: '+site+'sitemap.xml'))
@@ -16,5 +16,7 @@ test('production domain metadata uses canonical www and keeps admin routes out o
  for(const path of ['/admin','/admin/','/admin/:path*','/api/:path*']){
   assert.ok(config.headers.find(h=>h.source===path)?.headers.some(h=>h.key==='X-Robots-Tag'&&h.value==='noindex, nofollow'))
  }
- assert.equal(config.git.deploymentEnabled,true)
+ assert.notEqual(config.git.deploymentEnabled?.main,false)
+ assert.equal(config.git.deploymentEnabled['feature/seo-release-ready'],false)
+ assert.equal(read('public/0b75056beb2346d6acf5bc8dfc6319ce.txt'),'0b75056beb2346d6acf5bc8dfc6319ce')
 })

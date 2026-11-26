@@ -111,10 +111,11 @@ test('trackBookingLead sends generate_lead without any PII fields', () => {
 
 test('SPA provider and customer funnel components wire Direct GA4 helpers', () => {
   const html = read('index.html')
-  assert.match(html, /https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-8VWZ2SPG0Q/)
+  assert.match(html, /src="\/analytics\.js"/)
+  assert.match(read('public/analytics.js'), /G-8VWZ2SPG0Q/)
   assert.doesNotMatch(html, /GTM-PTN9FZCL/)
 
-  assert.match(read('src/i18n/provider.tsx'), /trackPageView\('\/' \+ locale \+ '\/' \+ location\.search/)
+  assert.match(read('src/i18n/provider.tsx'), /trackPageView\('\/' \+ locale \+ '\/',/)
   assert.match(read('src/i18n/provider.tsx'), /trackLanguageSwitch\(locale, next\)/)
   assert.match(read('src/App.tsx'), /trackSectionView\(id, locale\)/)
   assert.match(read('src/App.tsx'), /trackCtaClick\('concierge_email', 'concierge_modal'\)/)
@@ -124,7 +125,7 @@ test('SPA provider and customer funnel components wire Direct GA4 helpers', () =
   assert.match(read('src/PricingSection.tsx'), /trackPricingSelect\(planId, serviceId\)/)
   assert.match(read('src/Booking.tsx'), /trackBookingOpen\(service, vehicle, locale\)/)
   assert.match(read('src/Booking.tsx'), /trackBookingStep\(/)
-  assert.match(read('src/Booking.tsx'), /trackBookingLead\(/)
+  assert.match(read('src/Booking.tsx'), /response\.status === 201 && data\.status === 'pending'.*trackBookingLead\(/)
   assert.match(read('src/Booking.tsx'), /trackItineraryExport\('pdf'/)
   assert.match(read('src/Booking.tsx'), /trackItineraryExport\('png'/)
 })
