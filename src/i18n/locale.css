@@ -28,3 +28,7 @@ html[lang="ko"] .booking-stepper-label { white-space: nowrap; }
 @media (min-width: 1001px) and (max-width: 1150px) {
   button.language-switcher { display: flex; flex-shrink: 0; white-space: nowrap; }
 }
+
+.desktop-nav .journal-nav-link,.mobile-nav .journal-nav-link{color:inherit;text-decoration:none;font:inherit;opacity:.85}
+.desktop-nav .journal-nav-link:hover,.mobile-nav .journal-nav-link:hover{opacity:1}
+.mobile-nav .journal-nav-link{display:flex;justify-content:space-between;align-items:center;padding:12px 0}

@@ -1,3 +1,4 @@
+import { trackAnalytics } from './analytics'
 import { useLocale } from './i18n/provider'
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -95,11 +96,19 @@ export default function App() {
   const [service, setService] = useState('airport')
   const [vehicle, setVehicle] = useState('staria')
   const [usdRate, setUsdRate] = useState<number>(DEFAULT_USD_RATE)
+  const selectService = (value: string) => { setService(value); trackAnalytics('select_service', {service:value}) }
+  const selectVehicle = (value: string) => { setVehicle(value); trackAnalytics('view_vehicle', {vehicle:value}) }
   const nav = (index: number) => {
     goTo(index)
     setMobileMenu(false)
     scrollRef.current?.focus({ preventScroll: true })
   }
+  useEffect(() => {
+    if (window.location.hash === '#reservation') {
+      const frame = requestAnimationFrame(() => goTo(3))
+      return () => cancelAnimationFrame(frame)
+    }
+  }, [goTo])
   useEffect(() => {
     fetch('/api/rates')
       .then((res) => (res.ok ? res.json() : null))
@@ -151,6 +160,7 @@ export default function App() {
           >
             {t("Your journey")}
           </button>
+          <a className="journal-nav-link" href={locale==='ko'?'/ko/journal/':'/journal/'}>Journal</a>
           <button onClick={() => setModal('contact')}>
             {t("Concierge")} <ArrowUpRight size={11} />
           </button>
@@ -218,6 +228,7 @@ export default function App() {
             >
               {t("Concierge")} <ArrowUpRight size={20} />
             </button>
+            <a className="journal-nav-link" href={locale==='ko'?'/ko/journal/':'/journal/'}>Journal <span>05</span></a>
             <button type="button" className="mobile-language-switch" onClick={() => { setLocale(locale === 'en' ? 'ko' : 'en'); setMobileMenu(false) }}>
               {locale === 'en' ? '한국어' : 'English'} <span>{locale === 'en' ? 'KO' : 'EN'}</span>
             </button>
@@ -231,17 +242,17 @@ export default function App() {
         aria-label="Chauffeur experience"
       >
         <Hero reducedMotion={reducedMotion} goTo={nav} />
-        <FleetSection goTo={nav} onSelectVehicle={setVehicle} />
+        <FleetSection goTo={nav} onSelectVehicle={selectVehicle} />
         <PricingSection
-          onSelectService={setService}
+          onSelectService={selectService}
           goTo={nav}
           usdRate={usdRate}
         />
         <Booking
           service={service}
-          setService={setService}
+          setService={selectService}
           vehicle={vehicle}
-          setVehicle={setVehicle}
+          setVehicle={selectVehicle}
           usdRate={usdRate}
           showPrivacy={() => setModal('privacy')}
           onRequestCustom={() => { window.location.href = customQuoteEmail() }}

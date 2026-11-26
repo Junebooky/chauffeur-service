@@ -12,3 +12,8 @@
 - 공개 `/journal`, `/ko/journal` 및 슬러그, `/journal/sitemap.xml`은 승인된 기한 도래 글만 반환. 모든 본문은 이스케이프 처리, 원격 HTML 삽입 없음. 공개 경로, 헤더, 검색 색인 여부는 배포 후 실제 HTTP 검사 필요. 로컬 Vite 프록시에서도 `/journal` 및 `/ko/journal` 접근 가능. Journal 사이트맵은 빌드 시 robots.txt에 자동 추가. 홈 내비게이션은 한국어 작업 병합 후 진행. 아직 실 게시물 생성/승인하지 않음.
 
 - 관리자에서 `AI 초안 JSON 가져오기`는 초안 입력만 채우고 자동 저장/승인하지 않는다. 승인 후 버전 수정은 금지하며 필요하면 비공개 처리한다. 예약 시간 입력은 KST, DB는 UTC. 검토 확인과 낙관적 동시성 제어 적용.
+
+## 3단계 다국어 통합 및 GA4
+- feature/seo-integration에 최신 main의 다국어 기능과 SEO/Journal 통합. main 병합/배포 미실행. 예약 링크는 /en/#reservation, /ko/#reservation. Journal 내 서비스 링크 및 홈 Journal 링크 추가.
+- 공식 HTTPS 공개 페이지에서만 분석 동의 후 GTM 로드. 로컬/preview/admin 제외. 이벤트에 고객 개인정보, 예약 ID, 주소, 날짜, 가격, 원본 쿼리를 포함하지 않음. 동의 철회 시 GA disable, consent update 및 추가 이벤트 중지. 실제 GTM 설정 및 쿠키 제거 정책은 공개 전 검토.
+- GTM 콘솔: Google tag G-8VWZ2SPG0Q, analytics_storage 동의 조건 적용. 자동 page_view 중복 방지, 사이트 검색/폼 상호작용/외부 링크 등 자동 수집 및 page_referrer 검토. chauffeur_page_view -> GA4 page_view, view_vehicle/select_service/begin_booking/booking_step/generate_lead -> 동일 GA 이벤트. 데이터 영역 변수는 page_location, language, vehicle, service, booking_step, journey_type. generate_lead를 주요 이벤트로 지정. Tag Assistant 및 DebugView에서 실제 검증 필요. 응답 유실 후 200 재시도 시 전환이 누락될 수 있음. 실제 고객 예약을 테스트용으로 만들지 않음.

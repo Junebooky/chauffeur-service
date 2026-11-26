@@ -19,7 +19,7 @@ test('bilingual search pages are readable without JS and use self-canonical lang
   assert.match(en,/hreflang="ko" href="https:\/\/www.jpchauffeurkorea.com\/ko\/services\/seoul-chauffeur-service\/"/)
   assert.match(ko,/rel="canonical" href="https:\/\/www.jpchauffeurkorea.com\/ko\/services\/seoul-chauffeur-service\/"/)
   assert.match(en,/"@type":"Service"/)
-  assert.match(en,/href="\/#reservation"/)
+  assert.match(en,/href="\/en\/#reservation"/)
   assert.doesNotMatch(en,/Sprinter 519|<script src=|type="module"/)
   const sitemap=readFileSync(join(dir,'sitemap.xml'),'utf8')
   assert.match(sitemap,/<loc>https:\/\/www.jpchauffeurkorea.com\/ko\/<\/loc>/)

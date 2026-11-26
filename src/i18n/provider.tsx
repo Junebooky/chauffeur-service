@@ -4,6 +4,7 @@ import { pathLocale, resolveLocale } from './locale.mjs'
 import type { Locale } from './locale.mjs'
 import { ko } from './ko'
 import { localeSeo, origin } from './seo.mjs'
+import { refreshAnalyticsLocale } from '../analytics'
 
 const KEY = 'chauffeur.locale'
 function preference() {
@@ -38,6 +39,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.querySelector('meta[property="og:locale"]')?.setAttribute('content', meta.ogLocale)
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', origin + '/' + locale + '/')
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', origin + '/' + locale + '/')
+    refreshAnalyticsLocale()
     return () => { document.documentElement.lang = 'en' }
   }, [locale])
   useEffect(() => {

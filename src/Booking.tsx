@@ -1,3 +1,4 @@
+import { trackAnalytics } from './analytics'
 import { curatedLabels } from './i18n/curated-places.mjs'
 import { useLocale } from './i18n/provider'
 import { useEffect, useRef, useState } from 'react'
@@ -342,6 +343,8 @@ export default function Booking({
   const [availabilityVersion, setAvailabilityVersion] = useState(0)
   const form = useRef<HTMLFormElement>(null)
   const idempotency = useRef(crypto.randomUUID())
+  const trackedBookingSteps = useRef(new Set<number>())
+  const trackedLead = useRef(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const successHeading = useRef<HTMLHeadingElement>(null)
   const glassTrigger = useRef<HTMLButtonElement>(null)
@@ -387,6 +390,7 @@ export default function Booking({
   const getService = (d: string) =>
     multiDay ? (servicesByDate[d] || service) : service
   const setServiceForDate = (d: string, serviceId: string) => {
+    trackAnalytics('select_service', { service: serviceId })
     setServicesByDate((previous) => ({ ...previous, [d]: serviceId }))
   }
   const getTime = (d: string) => timesByDate[d] || defaultTime
@@ -405,6 +409,7 @@ export default function Booking({
   const getVehicle = (d: string) =>
     !multiDay || vehicleMode === 'same' ? vehicle : (vehiclesByDate[d] || vehicle)
   const setVehicleForDate = (d: string, vId: string) => {
+    trackAnalytics('view_vehicle', { vehicle: vId })
     setVehiclesByDate((prev) => ({ ...prev, [d]: vId }))
   }
 
@@ -676,6 +681,14 @@ export default function Booking({
     return () => cancelAnimationFrame(frame)
   }, [glassOpen, result])
 
+  useEffect(() => {
+    if (!glassOpen || result || trackedBookingSteps.current.has(step)) return
+    trackedBookingSteps.current.add(step)
+    const journey_type = multiDay ? 'multiple' : 'single'
+    if (step === 0) trackAnalytics('begin_booking', { journey_type })
+    trackAnalytics('booking_step', { step: step + 1, journey_type })
+  }, [glassOpen, result, step, multiDay])
+
   const moveStep = (target: number) => {
     if (target > step && step === 0) {
       if (multiDay && dates.length < 2) {
@@ -805,6 +818,11 @@ export default function Booking({
         throw new Error(
           data.error || 'We could not save your request. Please try again.',
         )
+      }
+      // HTTP 201 is a newly persisted request; 200 is an idempotent replay.
+      if (response.status === 201 && typeof data.reference === 'string' && data.status === 'pending' && Array.isArray(data.journeys) && !trackedLead.current) {
+        trackedLead.current = true
+        trackAnalytics('generate_lead', { journey_type: multiDay ? 'multiple' : 'single' })
       }
       setExportError('')
       setResult({
@@ -1093,6 +1111,8 @@ export default function Booking({
                       setUsePhoneForMessenger(false)
                       setConsent(false)
                       idempotency.current = crypto.randomUUID()
+                      trackedBookingSteps.current.clear()
+                      trackedLead.current = false
                       setAvailabilityVersion((v) => v + 1)
                     }}
                   >
