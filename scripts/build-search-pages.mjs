@@ -46,6 +46,10 @@ export function buildSearchPages(outDir=join(root,'dist')){
  }
  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+[...new Set(locations)].map(loc=>'  <url><loc>'+esc(loc)+'</loc></url>').join('\n')+'\n</urlset>\n'
  writeFileSync(join(outDir,'sitemap.xml'),xml)
+ let robots='User-agent: *\nDisallow: /api/\n\nSitemap: '+domain+'/sitemap.xml\n'
+ try{robots=readFileSync(join(outDir,'robots.txt'),'utf8')}catch{}
+ const journalSitemap='Sitemap: '+domain+'/journal/sitemap.xml'
+ if(!robots.includes(journalSitemap))writeFileSync(join(outDir,'robots.txt'),robots.trimEnd()+'\n'+journalSitemap+'\n')
  return [...new Set(locations)]
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))console.log('Search pages:',buildSearchPages().length,'sitemap URLs')

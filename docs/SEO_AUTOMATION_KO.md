@@ -8,5 +8,7 @@
 
 ## 2단계 Journal 발행 기반
 - `docs/sql/journal-articles-v1.sql` 추가 마이그레이션(운영 적용 전 확인). 기존 예약/메일 테이블 변경 없음.
-- `/api/journal` POST는 기존 Supabase 관리자 토큰 + owner 권한 필요. list/save_draft/approve/archive. 초안 승인 시 confirm=true, expected_updated_at 및 publish_at 필수. 승인된 글만 지정 시간 이후 읽기 시 자동 공개. Cron/배포 반복 불필요. 아직 관리자 편집 UI 및 AI 작성 파이프라인은 미연결.
-- 공개 `/journal`, `/ko/journal` 및 슬러그, `/journal/sitemap.xml`은 승인된 기한 도래 글만 반환. 모든 본문은 이스케이프 처리, 원격 HTML 삽입 없음. 공개 경로, 헤더, 검색 색인 여부는 배포 후 실제 HTTP 검사 필요. 현재 로컬 API 확인은 `/api/journal?lang=en` 사용. 홈 내비게이션과 사이트맵 자동 등록은 한국어 작업 병합 후 진행. 아직 실 게시물 생성/승인하지 않음.
+- `/api/journal` POST는 기존 Supabase 관리자 토큰 + owner 권한 필요. list/save_draft/approve/archive. 초안 승인 시 confirm=true, expected_updated_at 및 publish_at 필수. 승인된 글만 지정 시간 이후 읽기 시 자동 공개. Cron/배포 반복 불필요. 관리자 콘텐츠 관리 UI에서 작성/JSON 가져오기/승인/발행 시간 설정/비공개 처리 가능. AI 초안은 별도 자동화에서 생성하고 JSON을 가져온다. AI API 직접 호출은 아직 미연결.
+- 공개 `/journal`, `/ko/journal` 및 슬러그, `/journal/sitemap.xml`은 승인된 기한 도래 글만 반환. 모든 본문은 이스케이프 처리, 원격 HTML 삽입 없음. 공개 경로, 헤더, 검색 색인 여부는 배포 후 실제 HTTP 검사 필요. 로컬 Vite 프록시에서도 `/journal` 및 `/ko/journal` 접근 가능. Journal 사이트맵은 빌드 시 robots.txt에 자동 추가. 홈 내비게이션은 한국어 작업 병합 후 진행. 아직 실 게시물 생성/승인하지 않음.
+
+- 관리자에서 `AI 초안 JSON 가져오기`는 초안 입력만 채우고 자동 저장/승인하지 않는다. 승인 후 버전 수정은 금지하며 필요하면 비공개 처리한다. 예약 시간 입력은 KST, DB는 UTC. 검토 확인과 낙관적 동시성 제어 적용.
