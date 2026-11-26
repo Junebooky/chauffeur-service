@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, ChevronDown } from 'lucide-react'
@@ -78,6 +79,7 @@ export default function GlassTimeInput({
   disabled = false,
   placeholder = 'HH:MM',
 }: GlassTimeInputProps) {
+  const { t } = useLocale()
   const autoId = useId()
   const inputId = id || `${autoId}-input`
   const listboxId = `${autoId}-listbox`
@@ -219,7 +221,7 @@ export default function GlassTimeInput({
       }
     } else {
       setInvalid(true)
-      e.currentTarget.setCustomValidity(TIME_VALIDATION_MESSAGE)
+      e.currentTarget.setCustomValidity(t(TIME_VALIDATION_MESSAGE))
     }
   }
 
@@ -250,7 +252,7 @@ export default function GlassTimeInput({
           commitTime(normalized)
         } else {
           setInvalid(true)
-          inputRef.current?.setCustomValidity(TIME_VALIDATION_MESSAGE)
+          inputRef.current?.setCustomValidity(t(TIME_VALIDATION_MESSAGE))
           inputRef.current?.reportValidity()
         }
       }
@@ -287,7 +289,7 @@ export default function GlassTimeInput({
           pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
           placeholder={placeholder}
           value={draft}
-          aria-label={ariaLabel}
+          aria-label={ariaLabel ? t(ariaLabel) : undefined}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={listboxId}

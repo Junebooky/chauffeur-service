@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, Users } from 'lucide-react'
 import catalog from './catalog.json'
@@ -20,6 +21,7 @@ export default function VehicleCarousel({
   availability: Record<string, boolean>
   ariaLabel?: string
 }) {
+  const { locale, t } = useLocale()
   const active = Math.max(0, visibleVehicles.findIndex((v) => v.id === value))
   const current = visibleVehicles[active] || visibleVehicles[0]
   const touch = useRef({ x: 0, y: 0 })
@@ -157,7 +159,7 @@ export default function VehicleCarousel({
             <button
               type="button"
               key={v.id}
-              aria-label={`${v.name} — ${v.model}`}
+              aria-label={`${v.name} — ${t(v.model)}`}
               aria-pressed={isSelected}
               className={`fleet-car ${isSelected ? 'fleet-center' : ''}`}
               style={style}
@@ -211,23 +213,23 @@ export default function VehicleCarousel({
       <div className="fleet-selected" aria-live="polite" aria-atomic="true">
         <div>
           <h4>{current.name}</h4>
-          <p>{current.model}</p>
+          <p>{t(current.model)}</p>
         </div>
         <span className="fleet-surcharge">
-          {current.surcharge ? `+${money(current.surcharge)}` : 'Included'}
+          {current.surcharge ? `+${money(current.surcharge)}` : t('Included')}
         </span>
       </div>
 
       <div className="fleet-selected-meta">
         <span>
-          <Users size={12} /> {current.passengers} guests
+          <Users size={12} /> {locale === 'ko' ? `${current.passengers}명` : `${current.passengers} guests`}
         </span>
         <span
           className={availability[value] === false ? 'fleet-unavailable' : ''}
         >
           {availability[value] === false
-            ? 'Unavailable at this time'
-            : 'Private chauffeur'}
+            ? t('Unavailable at this time')
+            : t('Private chauffeur')}
         </span>
       </div>
 
@@ -246,9 +248,9 @@ export default function VehicleCarousel({
               <img src={v.image} alt={v.name} />
               <div className="spec-info">
                 <strong>{v.name}</strong>
-                <small>{v.model}</small>
+                <small>{t(v.model)}</small>
                 <span>
-                  {v.surcharge ? `+${money(v.surcharge)}` : 'Included'}
+                  {v.surcharge ? `+${money(v.surcharge)}` : t('Included')}
                 </span>
               </div>
             </button>
@@ -257,8 +259,7 @@ export default function VehicleCarousel({
       )}
 
       <p className="fleet-hint">
-        Click or swipe vehicles to select. Convex perspective adapts to your
-        collection. Rates exclude TAX.
+        {t("Click or swipe vehicles to select. Convex perspective adapts to your collection. Rates exclude TAX.")}
       </p>
     </div>
   )

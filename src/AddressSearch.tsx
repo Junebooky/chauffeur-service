@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, LoaderCircle, MapPin, Navigation, Search, TrainFront } from 'lucide-react'
@@ -42,6 +43,7 @@ export default function AddressSearch({
   recentPlaces = [],
   onChange,
 }: Props) {
+  const { locale, t } = useLocale()
   const id = useId()
   const input = useRef<HTMLInputElement>(null)
   const popup = useRef<HTMLDivElement>(null)
@@ -248,7 +250,7 @@ export default function AddressSearch({
   return (
     <div className={`field address-field ${place ? 'has-place' : ''}`}>
       <label htmlFor={id}>
-        {labelIcon && <MapPin size={13} aria-hidden="true" />} {label}
+        {labelIcon && <MapPin size={13} aria-hidden="true" />} {t(label)}
       </label>
       <div className="address-control">
         <input
@@ -268,7 +270,7 @@ export default function AddressSearch({
           autoComplete="off"
           spellCheck={false}
           value={value}
-          placeholder={placeholder}
+          placeholder={t(placeholder)}
           onFocus={() => {
             if (!place) setOpen(true)
           }}
@@ -339,7 +341,7 @@ export default function AddressSearch({
       >
         {place
           ? (place.displayAddress || place.address)
-          : 'English, Korean or your own language · South Korea'}
+          : t('English, Korean or your own language · South Korea')}
       </p>
       {open &&
         !place &&
@@ -356,33 +358,33 @@ export default function AddressSearch({
                 : <Search size={12} />}
               {' '}
               {recentMatches.length
-                ? 'RECENT FROM THIS TRIP'
+                ? t('RECENT FROM THIS TRIP')
                 : mode === 'google'
-                  ? 'PLACES IN SOUTH KOREA'
-                  : 'POPULAR LOCATIONS'}
+                  ? t('PLACES IN SOUTH KOREA')
+                  : t('POPULAR LOCATIONS')}
             </div>
             <div role="status" className="address-status">
               {loading || resolving ? (
                 <>
                   <LoaderCircle size={12} className="spin" />{' '}
                   {resolving
-                    ? 'Confirming address…'
-                    : 'Finding your destination…'}
+                    ? t('Confirming address…')
+                    : t('Finding your destination…')}
                 </>
               ) : (
-                error || notice || 'Select a location to confirm its address.'
+                t(error || notice || 'Select a location to confirm its address.')
               )}
             </div>
             <div
               id={`${id}-list`}
               role="listbox"
-              aria-label={`${label} suggestions`}
+              aria-label={locale === 'ko' ? `${t(label)} 검색 결과` : `${label} suggestions`}
             >
               {visibleResults.map((result, index) => (
                 <Fragment key={`${result.fromTrip ? 'trip' : 'search'}-${result.id}`}>
                   {index === recentMatches.length && recentMatches.length > 0 && (
                     <div className="address-popup-heading address-more-places-heading" role="presentation">
-                      {mode === 'google' ? 'PLACES IN SOUTH KOREA' : 'SUGGESTED PLACES'}
+                      {mode === 'google' ? t('PLACES IN SOUTH KOREA') : t('SUGGESTED PLACES')}
                     </div>
                   )}
                   <div
@@ -409,8 +411,7 @@ export default function AddressSearch({
               ))}
               {!loading && !visibleResults.length && !error && (
                 <p className="address-empty">
-                  No matches. Try a hotel, airport terminal or a more specific
-                  address.
+                  {t("No matches. Try a hotel, airport terminal or a more specific address.")}
                 </p>
               )}
             </div>

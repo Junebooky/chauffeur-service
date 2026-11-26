@@ -9,7 +9,7 @@ const css = readFileSync(join(root, 'src/styles.css'), 'utf8')
 const button = readFileSync(join(root, 'src/components/ui/ReservationButton.tsx'), 'utf8')
 
 test('Your Details uses an internationally friendly full name field and quiet success marks', () => {
-  assert.match(booking, /<span>Full name<\/span>/)
+  assert.match(booking, /<span>\{t\("Full name"\)\}<\/span>/)
   assert.match(booking, /name="name"\s*autoComplete="name"/)
   assert.doesNotMatch(booking, /name="firstName"|name="lastName"/)
   assert.match(booking, /nameReady && <Check/)

@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, ChevronDown } from 'lucide-react'
@@ -36,6 +37,7 @@ export default function GlassSelect({
   disabled = false,
   placeholder = 'Select an option',
 }: GlassSelectProps) {
+  const { t } = useLocale()
   const autoId = useId()
   const triggerId = id || `${autoId}-trigger`
   const listboxId = `${autoId}-listbox`
@@ -217,14 +219,14 @@ export default function GlassSelect({
             ? `${listboxId}-option-${highlightedIndex}`
             : undefined
         }
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ? t(ariaLabel) : undefined}
         disabled={disabled}
         className="glass-select-trigger"
         onClick={() => !disabled && setOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
       >
         <span className={['glass-select-value', selectedOption?.labelClassName].filter(Boolean).join(' ')}>
-          {selectedOption ? selectedOption.label : placeholder}
+          {t(selectedOption ? selectedOption.label : placeholder)}
         </span>
         {selectedOption?.meta && !compact && (
           <span className="glass-select-value-meta">{selectedOption.meta}</span>
@@ -269,7 +271,7 @@ export default function GlassSelect({
                 >
                   <span className="glass-select-option-main">
                     <span className={['glass-select-option-label', option.labelClassName].filter(Boolean).join(' ')}>
-                      {option.label}
+                      {t(option.label)}
                     </span>
                     {option.meta && (
                       <span className="glass-select-option-meta">

@@ -51,7 +51,7 @@ test('Schedule copy is concise and its fields use icon-free labels', () => {
   assert.equal((booking.match(/labelIcon=\{false\}/g) || []).length, 5)
   assert.doesNotMatch(booking, /rightIcon="nav"|rightIcon="pin"/)
   assert.doesNotMatch(booking, /<Clock3 size=\{15\} aria-hidden="true" \/> Pick-up Time/)
-  assert.equal((booking.match(/className="booking-time-heading">Pickup Time/g) || []).length, 2)
+  assert.equal((booking.match(/className="booking-time-heading">\{t\("Pickup Time"\)\}/g) || []).length, 2)
   assert.equal((booking.match(/KST \(UTC\+9\)/g) || []).length, 3) // Two fields and the confirmation heading
   assert.match(booking, /'Continue to Vehicle'/)
   assert.match(booking, /Continue to Daily Schedule/)

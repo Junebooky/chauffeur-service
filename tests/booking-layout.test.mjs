@@ -25,7 +25,7 @@ test('Daily Schedule shows progress, one selected date, and a focused daily edit
   assert.ok(blockStart >= 0 && progress > blockStart && dayList > progress && editor > dayList)
   assert.match(booking, /Your daily itinerary/)
   assert.match(booking, /of \{dates\.length\} ready/)
-  assert.match(booking, /\{ready \? 'Ready' : 'To complete'\}/)
+  assert.match(booking, /\{t\(ready \? 'Ready' : 'To complete'\)\}/)
   assert.doesNotMatch(booking, /Same schedule for all days/)
   assert.match(css, /\.booking-daily-progress \{/)
   assert.match(booking, /booking-first-day-note/)
@@ -66,7 +66,7 @@ test('multi-day guidance belongs to date selection and daily cards separate serv
 test('daily routes reuse the same pickup, destination and pickup time labels as Schedule', () => {
   assert.equal((booking.match(/label="Pickup Location"/g) || []).length, 2)
   assert.equal((booking.match(/label="Destination"/g) || []).length, 2)
-  assert.equal((booking.match(/className="booking-time-heading">Pickup Time/g) || []).length, 2)
+  assert.equal((booking.match(/className="booking-time-heading">\{t\("Pickup Time"\)\}/g) || []).length, 2)
   assert.doesNotMatch(booking, /label="Final Drop-off"|label="Pick-up Location"/)
 })
 

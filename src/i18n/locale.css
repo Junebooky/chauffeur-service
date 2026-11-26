@@ -8,3 +8,15 @@ html[lang="ko"] .fleet-spec-k,
 html[lang="ko"] .fleet-spec-v,
 html[lang="ko"] .desktop-nav button,
 html[lang="ko"] .mobile-nav button { word-break: keep-all; letter-spacing: normal; }
+
+/* Korean text only: preserve shared geometry and allow natural wrapping in descriptive text. */
+html[lang="ko"] .booking-stepper-label,
+html[lang="ko"] .booking-time-heading,
+html[lang="ko"] .address-field > label,
+html[lang="ko"] .day-mode-segmented button,
+html[lang="ko"] .booking-glass-prompt,
+html[lang="ko"] .booking-glass-subtitle,
+html[lang="ko"] .booking-confirmation-heading,
+html[lang="ko"] .field-note,
+html[lang="ko"] .booking-email-fallback-note,
+html[lang="ko"] .no-payment { letter-spacing: normal; word-break: keep-all; overflow-wrap: break-word; }

@@ -1,3 +1,4 @@
+import { useLocale } from './i18n/provider'
 import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
@@ -40,7 +41,7 @@ import {
   DEFAULT_USD_RATE,
   moneyUsd,
   addDays,
-  displayDate,
+  displayDate as englishDisplayDate,
   journeyDates,
   money,
   seoulDate,
@@ -125,6 +126,8 @@ function Calendar({
   multiDay: boolean
   mode: 'range' | 'discrete'
 }) {
+  const { locale, t } = useLocale()
+  const displayDate = (date: string) => locale === 'ko' ? date.replace(/-/g, '.') : englishDisplayDate(date)
   const today = seoulDate()
   const maxDate = addDays(today, 365)
   const initialDate = selectedDates[0] || tomorrow()
@@ -188,7 +191,7 @@ function Calendar({
     <div className="calendar" role="region" aria-label="Journey calendar">
       <div className="calendar-heading">
         <span>
-          {new Date(`${viewMonth}-01T12:00:00`).toLocaleDateString('en-US', {
+          {new Date(`${viewMonth}-01T12:00:00`).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US', {
             month: 'long',
             year: 'numeric',
           })}
@@ -225,7 +228,7 @@ function Calendar({
             className="calendar-day-name"
             aria-hidden="true"
           >
-            {day}
+            {t(day)}
           </span>
         ))}
         {Array.from({ length: first }, (_, i) => (
@@ -288,6 +291,8 @@ export default function Booking({
   onRequestCustom,
   usdRate: initialUsdRate = DEFAULT_USD_RATE,
 }: Props) {
+  const { locale, t } = useLocale()
+  const displayDate = (date: string) => locale === 'ko' ? date.replace(/-/g, '.') : englishDisplayDate(date)
   const [usdRate, setUsdRate] = useState<number>(initialUsdRate)
   const [step, setStep] = useState(0)
   const [glassOpen, setGlassOpen] = useState(false)
@@ -368,7 +373,7 @@ export default function Booking({
     }
   }
   const compactDate = (value: string) =>
-    new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+    new Date(`${value}T12:00:00`).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-GB', { day: 'numeric', month: 'short' })
 
   const currentActiveDate = dates.includes(activeDate)
     ? activeDate
@@ -734,7 +739,7 @@ export default function Booking({
       itinerary,
       '',
       `Add-ons: ${additions}`,
-      `Estimated total (tax excluded): ${quoteRequired ? 'Quote on request' : money(total)}`,
+      `Estimated total (tax excluded): ${quoteRequired ? t('Quote on request') : money(total)}`,
       '',
       'Please confirm availability and follow up with me.',
     ].join('\n')
@@ -892,7 +897,7 @@ export default function Booking({
                     <span className="booking-stepper-num">
                       {isComplete ? <Check size={14} /> : i + 1}
                     </span>
-                    <span className="booking-stepper-label">{label}</span>
+                    <span className="booking-stepper-label">{t(label === 'Vehicle' ? 'Vehicle Selection' : label)}</span>
                   </button>
                   {i < arr.length - 1 && (
                     <span
@@ -955,8 +960,8 @@ export default function Booking({
               aria-expanded={false}
               onClick={() => setGlassOpen(true)}
             >
-              <span className="booking-glass-prompt">Ready to reserve your chauffeur?</span>
-              <span className="booking-glass-subtitle">Begin your journey</span>
+              <span className="booking-glass-prompt">{t("Ready to reserve your chauffeur?")}</span>
+              <span className="booking-glass-subtitle">{t("Begin your journey")}</span>
               <ArrowRight size={18} strokeWidth={1.4} aria-hidden="true" />
             </button>
           )}
@@ -979,41 +984,41 @@ export default function Booking({
                 <div className="booking-confirmation-header">
                   <div className="booking-confirmation-status">
                     <CheckCircle2 size={22} strokeWidth={1.5} aria-hidden="true" />
-                    <span>REQUEST SAVED</span>
+                    <span>{t("REQUEST SAVED")}</span>
                   </div>
-                  <span className="booking-confirmation-pending">Awaiting Confirmation</span>
+                  <span className="booking-confirmation-pending">{t("Awaiting Confirmation")}</span>
                 </div>
                 <div className="booking-confirmation-heading">
                   <div>
-                    <p className="booking-confirmation-kicker">YOUR RESERVATION REQUEST</p>
-                    <h3 ref={successHeading} tabIndex={-1}>Your journey, arranged.</h3>
-                    <p>Your itinerary is saved and ready for our team to review.</p>
+                    <p className="booking-confirmation-kicker">{t("YOUR RESERVATION REQUEST")}</p>
+                    <h3 ref={successHeading} tabIndex={-1}>{t("Your journey, arranged.")}</h3>
+                    <p>{t("Your itinerary is saved and ready for our team to review.")}</p>
                   </div>
                   <div className="booking-confirmation-reference">
-                    <small>REFERENCE</small>
+                    <small>{t("REFERENCE")}</small>
                     <strong>{result.reference}</strong>
                   </div>
                 </div>
                 <div className="booking-confirmation-stats">
                   <div>
-                    <small>DATES</small>
+                    <small>{t("DATES")}</small>
                     <strong>{displayDate(result.journeys[0].date)}
                       {result.journeys.length > 1 && ' – ' + displayDate(result.journeys[result.journeys.length - 1].date)}
                     </strong>
                   </div>
                   <div>
-                    <small>JOURNEYS</small>
-                    <strong>{result.journeys.length} {result.journeys.length === 1 ? 'day' : 'days'}</strong>
+                    <small>{t("JOURNEYS")}</small>
+                    <strong>{locale === 'ko' ? `${result.journeys.length}일` : `${result.journeys.length} ${result.journeys.length === 1 ? 'day' : 'days'}`}</strong>
                   </div>
                   <div>
-                    <small>ESTIMATED TOTAL</small>
-                    <strong>{result.total === null ? 'Quote on request' : money(result.total)}</strong>
-                    <span>KRW · Tax excluded</span>
+                    <small>{t("ESTIMATED TOTAL")}</small>
+                    <strong>{result.total === null ? t('Quote on request') : money(result.total)}</strong>
+                    <span>{t("KRW · Tax excluded")}</span>
                   </div>
                 </div>
                 <div className="booking-confirmation-itinerary">
                   <div className="booking-confirmation-itinerary-heading">
-                    <h4>Daily itinerary</h4>
+                    <h4>{t("Daily itinerary")}</h4>
                   </div>
                   <div className="booking-confirmation-days">
                     {result.journeys.map((day, index) => (
@@ -1043,20 +1048,20 @@ export default function Booking({
                   </div>
                 </div>
                 <div className="booking-confirmation-footer">
-                  <p><strong>Request saved · Not yet confirmed.</strong> No payment has been taken.</p>
+                  <p><strong>{t("Request saved · Not yet confirmed.")}</strong> {t('No payment has been taken.')}</p>
                   <div className="success-actions">
-                    <button type="button" className="booking-confirmation-export" aria-label="Download PDF" onClick={() => { void exportPdf() }}>
+                    <button type="button" className="booking-confirmation-export" aria-label={t("Download PDF")} onClick={() => { void exportPdf() }}>
                       <FileDown size={16} aria-hidden="true" /> PDF
                     </button>
-                    <button type="button" className="booking-confirmation-export" aria-label="Download PNG" onClick={() => { void exportPng() }}>
+                    <button type="button" className="booking-confirmation-export" aria-label={t("Download PNG")} onClick={() => { void exportPng() }}>
                       <Image size={16} aria-hidden="true" /> PNG
                     </button>
                     <a className="booking-confirmation-email"
                       href={customQuoteEmail()}>
-                      <Mail size={16} aria-hidden="true" /> Email Us
+                      <Mail size={16} aria-hidden="true" /> {t("Email Us")}
                     </a>
                   </div>
-                  {exportError && <p className="booking-confirmation-error" role="alert">{exportError}</p>}
+                  {exportError && <p className="booking-confirmation-error" role="alert">{t(exportError)}</p>}
                 </div>
                 <div className="booking-confirmation-secondary">
                   <button
@@ -1086,7 +1091,7 @@ export default function Booking({
                       setAvailabilityVersion((v) => v + 1)
                     }}
                   >
-                    Plan another journey <ArrowUpRight size={16} />
+                    {t("Plan another journey")} <ArrowUpRight size={16} />
                   </button>
                 </div>
               </div>
@@ -1100,13 +1105,13 @@ export default function Booking({
                 <div className="booking-main">
                   <div className="booking-fields" key={step}>
                     <h3 className="sr-only" tabIndex={-1} ref={heading}>
-                      {step === 0 && dailyScheduleOpen
+                      {t(step === 0 && dailyScheduleOpen
                         ? 'Review and customize your daily schedule'
                         : [
                             'Select your schedule and route',
                             'Choose your vehicle and options',
                             'Enter your contact details',
-                          ][step]}
+                          ][step])}
                     </h3>
                     {step === 0 && !dailyScheduleOpen && (
                       <div className="schedule-fields">
@@ -1153,7 +1158,7 @@ export default function Booking({
                                 setDailyScheduleOpen(false)
                               }}
                             >
-                              Single Day
+                              {t("Single Day")}
                             </button>
                             <button
                               type="button"
@@ -1175,7 +1180,7 @@ export default function Booking({
                                 // Each new date has its own itinerary, not a shared route.
                               }}
                             >
-                              Multiple Days
+                              {t("Multiple Days")}
                             </button>
                           </div>
                           {multiDay && (
@@ -1193,7 +1198,7 @@ export default function Booking({
                                   onClick={() => handleModeChange('range')}
                                 >
                                   <span>
-                                    Consecutive Range
+                                    {t("Consecutive Range")}
                                   </span>
                                 </button>
                                 <button
@@ -1204,36 +1209,35 @@ export default function Booking({
                                   onClick={() => handleModeChange('discrete')}
                                 >
                                   <span>
-                                    Specific Dates
+                                    {t("Specific Dates")}
                                   </span>
                                 </button>
                               </div>
                               <div className="selected-dates-summary">
                                 <span>
                                   <strong>
-                                    {dates.length}{' '}
-                                    {dates.length === 1 ? 'day' : 'days'}
+                                    {locale === 'ko' ? `${dates.length}일` : `${dates.length} ${dates.length === 1 ? 'day' : 'days'}`}
                                   </strong>
                                   {multiDayMode === 'range' && dates.length > 1
                                     ? ` · ${displayDate(dates[0])} — ${displayDate(dates[dates.length - 1])}`
-                                    : ` · ${dates.map((d) => new Date(`${d}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })).join(', ')}`}
+                                    : ` · ${dates.map((d) => new Date(`${d}T12:00:00`).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-GB', { day: 'numeric', month: 'short' })).join(', ')}`}
                                 </span>
                                 {dates.length > 1 && (
                                   <button
                                     type="button"
                                     onClick={() => setDates([dates[0]])}
                                   >
-                                    Reset
+                                    {t("Reset")}
                                   </button>
                                 )}
                               </div>
                               <div className="booking-first-day-note field-note">
-                                <span>Day 01 · Set pickup, time, and stops for each day next.</span>
-                                <span>Copy any day's itinerary to other days anytime.</span>
+                                <span>{t("Day 01 · Set pickup, time, and stops for each day next.")}</span>
+                                <span>{t("Copy any day's itinerary to other days anytime.")}</span>
                               </div>
                               {dates.length < 2 && (
                                 <p className="field-note booking-daily-next-note">
-                                  Select at least two dates in the calendar to continue.
+                                  {t("Select at least two dates in the calendar to continue.")}
                                 </p>
                               )}
                             </div>
@@ -1243,7 +1247,7 @@ export default function Booking({
                         <div className="route-fields schedule-route-col">
                           <div className="field">
                             <span>
-                              Service
+                              {t("Service")}
                             </span>
                             <GlassSelect
                               ariaLabel="Service"
@@ -1296,7 +1300,7 @@ export default function Booking({
                           />
                           <div className="field time-field">
                             <span className="booking-time-label">
-                              <span className="booking-time-heading">Pickup Time</span>
+                              <span className="booking-time-heading">{t("Pickup Time")}</span>
                               <small className="booking-timezone">KST (UTC+9)</small>
                             </span>
                             <GlassTimeInput
@@ -1313,7 +1317,7 @@ export default function Booking({
                           {getService(dates[0] || tomorrow()) === 'airport' && (
                             <label className="field">
                               <span>
-                                Flight number <small>optional</small>
+                                {t("Flight number")} <small>{t("optional")}</small>
                               </span>
                               <input
                                 name="flight"
@@ -1323,13 +1327,13 @@ export default function Booking({
                                   if (multiDay) setRouteForDate(dates[0], { flight: e.target.value })
                                   else setFlight(e.target.value)
                                 }}
-                                placeholder="e.g. KE 902"
+                                placeholder={t("e.g. KE 902")}
                               />
                             </label>
                           )}
                           <div className="booking-custom-footer">
                             <button type="button" className="booking-custom-contact" onClick={onRequestCustom}>
-                              Need a custom itinerary? Email us
+                              {t("Need a custom itinerary? Email us")}
                             </button>
                           </div>
                         </div>
@@ -1339,11 +1343,11 @@ export default function Booking({
                       <section className="booking-daily-screen" aria-label="Daily Schedule">
                         <div className="booking-daily-progress">
                           <div>
-                            <span className="field-section-title">Your daily itinerary</span>
-                            <p className="field-note">Set the pick-up, schedule and time for each date.</p>
+                            <span className="field-section-title">{t("Your daily itinerary")}</span>
+                            <p className="field-note">{t("Set the pick-up, schedule and time for each date.")}</p>
                           </div>
                           <span className="booking-daily-progress-count">
-                            {dates.filter((day) => isRouteComplete(getRoute(day))).length} of {dates.length} ready
+                            {locale === 'ko' ? `${dates.filter((day) => isRouteComplete(getRoute(day))).length}/${dates.length} 입력 완료` : <>{dates.filter((day) => isRouteComplete(getRoute(day))).length} of {dates.length} ready</>}
                           </span>
                         </div>
                           <div className="booking-daily-layout">
@@ -1371,7 +1375,7 @@ export default function Booking({
                                       </span>
                                       <span className={`active-hint ${ready ? 'is-ready' : ''}`}>
                                         {ready && <Check size={13} strokeWidth={1.7} aria-hidden="true" />}
-                                        {ready ? 'Ready' : 'To complete'}
+                                        {t(ready ? 'Ready' : 'To complete')}
                                       </span>
                                     </span>
                                     <span className="field-note booking-day-card-summary">
@@ -1381,7 +1385,7 @@ export default function Booking({
                                         </span> · {getTime(day)}
                                       </span>
                                       <span className="booking-day-card-route">
-                                        {route.pickup || 'Pickup Location'} → {route.destination || 'Destination'}
+                                        {route.pickup || t('Pickup Location')} → {route.destination || t('Destination')}
                                       </span>
                                     </span>
                                   </button>
@@ -1395,7 +1399,7 @@ export default function Booking({
                                 </span>
                               </div>
                               <div className="field">
-                                <span>Service</span>
+                                <span>{t("Service")}</span>
                                 <GlassSelect
                                   ariaLabel={`Service for ${displayDate(scheduleActiveDate)}`}
                                   name={`service-${scheduleActiveDate}`}
@@ -1430,7 +1434,7 @@ export default function Booking({
                                         labelIcon={false}
                                         recentPlaces={recentTripPlaces}
                                         name={`stop-${scheduleActiveDate}-${index}`}
-                                        label={`Stop ${index + 1}`}
+                                        label={locale === 'ko' ? `경유지 ${index + 1}` : `Stop ${index + 1}`}
                                         placeholder="Add a stop to this day"
                                         value={stop.location}
                                         place={stop.place}
@@ -1448,7 +1452,7 @@ export default function Booking({
                                           stops: getRoute(scheduleActiveDate).stops.filter((_, i) => i !== index),
                                         })}
                                       >
-                                        Remove
+                                        {t("Remove")}
                                       </button>
                                     </div>
                                   </div>
@@ -1463,7 +1467,7 @@ export default function Booking({
                                         stops: [...getRoute(scheduleActiveDate).stops, { location: '', place: null }],
                                       })}
                                     >
-                                      <Plus size={13} aria-hidden="true" /> Add Stop
+                                      <Plus size={13} aria-hidden="true" /> {t("Add Stop")}
                                     </button>
                                   )}
                                   <span className="booking-route-arrow" aria-hidden="true">
@@ -1488,7 +1492,7 @@ export default function Booking({
                               </div>
                               <div className="field time-field">
                                 <span className="booking-time-label">
-                                  <span className="booking-time-heading">Pickup Time</span>
+                                  <span className="booking-time-heading">{t("Pickup Time")}</span>
                                   <small className="booking-timezone">KST (UTC+9)</small>
                                 </span>
                                 <GlassTimeInput
@@ -1500,22 +1504,22 @@ export default function Booking({
                               </div>
                               {getService(scheduleActiveDate) === 'airport' && (
                                 <label className="field">
-                                  <span>Flight number <small>optional</small></span>
+                                  <span>{t("Flight number")} <small>{t("optional")}</small></span>
                                   <input
                                     name={`flight-${scheduleActiveDate}`}
                                     maxLength={30}
                                     value={getRoute(scheduleActiveDate).flight}
                                     onChange={(event) => setRouteForDate(scheduleActiveDate, { flight: event.target.value })}
-                                    placeholder="e.g. KE 902"
+                                    placeholder={t("e.g. KE 902")}
                                   />
                                 </label>
                               )}
                               <div className="booking-daily-copy">
                                 {confirmCopySchedule ? (
                                   <div className="selected-dates-summary">
-                                    <span>Copy this day's service, route, stops and time to all other dates? Existing plans will be replaced.</span>
-                                    <button type="button" onClick={applyScheduleToAll}>Confirm</button>
-                                    <button type="button" onClick={() => setConfirmCopySchedule(false)}>Cancel</button>
+                                    <span>{t("Copy this day's service, route, stops and time to all other dates? Existing plans will be replaced.")}</span>
+                                    <button type="button" onClick={applyScheduleToAll}>{t("Confirm")}</button>
+                                    <button type="button" onClick={() => setConfirmCopySchedule(false)}>{t("Cancel")}</button>
                                   </div>
                                 ) : (
                                   <button
@@ -1530,7 +1534,7 @@ export default function Booking({
                                       setConfirmCopySchedule(true)
                                     }}
                                   >
-                                    Copy this day to all
+                                    {t("Copy this day to all")}
                                   </button>
                                 )}
                               </div>
@@ -1544,15 +1548,15 @@ export default function Booking({
                           <div className="daily-schedule-configuration">
                             <div className="daily-schedule-header">
                               <div>
-                                <strong>Vehicle Selection</strong>
-                                <small>Use one vehicle for all days, or choose per day.</small>
+                                <strong>{t("Vehicle Selection")}</strong>
+                                <small>{t("Use one vehicle for all days, or choose per day.")}</small>
                               </div>
                             </div>
                             <div className="day-mode-segmented" role="radiogroup" aria-label="Vehicle assignment">
                               <button type="button" role="radio" aria-checked={vehicleMode === 'same'}
                                 className={`day-mode-pill ${vehicleMode === 'same' ? 'active' : ''}`}
                                 onClick={() => setVehicleMode('same')}>
-                                Same for All Days
+                                {t("Same for All Days")}
                               </button>
                               <button type="button" role="radio" aria-checked={vehicleMode === 'daily'}
                                 className={`day-mode-pill ${vehicleMode === 'daily' ? 'active' : ''}`}
@@ -1570,12 +1574,12 @@ export default function Booking({
                                   })
                                   setVehicleMode('daily')
                                 }}>
-                                Choose Per Day
+                                {t("Choose Per Day")}
                               </button>
                             </div>
                             {vehicleMode === 'same' ? (
                               <p className="field-note">
-                                Applies to all {dates.length} days.
+                                {locale === 'ko' ? `총 ${dates.length}일 일정에 적용됩니다.` : `Applies to all ${dates.length} days.`}
                               </p>
                             ) : (
                               <div className="daily-schedule-cards" role="group" aria-label="Choose a day to assign a vehicle">
@@ -1600,7 +1604,7 @@ export default function Booking({
                                         <span className={`service-tone service-tone-${getService(d)}`}>
                                           {selectedService?.name ?? 'Service'}
                                         </span> · {getTime(d)} · {car.name}
-                                        <small>{getRoute(d).pickup || 'Pick-up'} → {getRoute(d).destination || 'Destination'}</small>
+                                        <small>{getRoute(d).pickup || t('Pick-up')} → {getRoute(d).destination || t('Destination')}</small>
                                       </span></span>
                                     </button>
                                   )
@@ -1610,9 +1614,9 @@ export default function Booking({
                           </div>
                         )}
                         <p className="field-section-title extras-title">
-                          {dates.length > 1
+                          {t(dates.length > 1
                             ? 'Add-ons · Per Day'
-                            : 'Add-ons'}
+                            : 'Add-ons')}
                         </p>
                         <div className="extras">
                           {catalog.options.map((option) => (
@@ -1631,8 +1635,8 @@ export default function Booking({
                               }
                             >
                               <span>
-                                {option.name}
-                                <small>{option.description}</small>
+                                {t(option.name)}
+                                <small>{t(option.description)}</small>
                               </span>
                               <span className="extra-price">
                                 +{money(option.price)}
@@ -1650,7 +1654,7 @@ export default function Booking({
                     {step === 2 && (
                       <div className="contact-fields">
                         <label className="field">
-                          <span>Full name</span>
+                          <span>{t("Full name")}</span>
                           <div className="contact-input-wrap">
                             <input
                               name="name"
@@ -1659,14 +1663,14 @@ export default function Booking({
                               maxLength={100}
                               value={name}
                               onChange={(event) => setName(event.target.value)}
-                              placeholder="Your full name"
+                              placeholder={t("Your full name")}
                             />
                             {nameReady && <Check size={16} className="contact-input-valid" aria-hidden="true" />}
                           </div>
                         </label>
                         <div className="contact-field-row">
                           <label className="field">
-                            <span>Email address</span>
+                            <span>{t("Email address")}</span>
                             <div className="contact-input-wrap">
                               <input
                                 name="email"
@@ -1682,7 +1686,7 @@ export default function Booking({
                             </div>
                           </label>
                           <label className="field">
-                            <span>Phone number</span>
+                            <span>{t("Phone number")}</span>
                             <div className="contact-input-wrap">
                               <input
                                 name="phone"
@@ -1700,7 +1704,7 @@ export default function Booking({
                           </label>
                         </div>
                         <fieldset className="contact-methods">
-                          <legend>Preferred Contact Method</legend>
+                          <legend>{t("Preferred Contact Method")}</legend>
                           <div className="contact-method-grid">
                             {catalog.contactMethods.map((method) => {
                               const ContactIcon = CONTACT_METHOD_ICONS[method.id] ?? MessageCircle
@@ -1727,7 +1731,7 @@ export default function Booking({
                                     strokeWidth={1.5}
                                     aria-hidden="true"
                                   />
-                                  <span>{method.name}</span>
+                                  <span>{t(method.name)}</span>
                                 </label>
                               )
                             })}
@@ -1742,13 +1746,13 @@ export default function Booking({
                                     checked={usePhoneForMessenger}
                                     onChange={(event) => setUsePhoneForMessenger(event.target.checked)}
                                   />
-                                  <span>Use the phone number above for {contactApp}</span>
+                                  <span>{locale === 'ko' ? `위 연락처를 ${contactApp}에 사용` : `Use the phone number above for ${contactApp}`}</span>
                                 </label>
                               )}
                               {usesMessengerPhone ? (
                                 <p className="messenger-help" role="status">
-                                  {phone || 'Your phone number'} will be used for {contactApp}.
-                                  Make sure people can contact you on that app using this number.
+                                  {locale === 'ko' ? `${phone || t('Your phone number')}을(를) ${contactApp}에 사용합니다.` : `${phone || 'Your phone number'} will be used for ${contactApp}.`}
+                                  {t("Make sure people can contact you on that app using this number.")}
                                 </p>
                               ) : (
                                 <label className="field messenger-field">
@@ -1756,7 +1760,7 @@ export default function Booking({
                                     {contactMethod === 'whatsapp'
                                       ? 'WhatsApp number'
                                       : `${contactApp} ID or phone number`}
-                                    {contactMethod === 'whatsapp' && <small>optional</small>}
+                                    {contactMethod === 'whatsapp' && <small>{t("optional")}</small>}
                                   </span>
                                   <div className="contact-input-wrap">
                                     <input
@@ -1774,7 +1778,7 @@ export default function Booking({
                                       onChange={(event) => setMessengerContact(event.target.value)}
                                       placeholder={contactMethod === 'whatsapp'
                                         ? phone || '+82 10 1234 5678'
-                                        : 'Messenger ID or linked phone number'}
+                                        : t('Messenger ID or linked phone number')}
                                       aria-describedby="messenger-help"
                                     />
                                     {messengerContact.trim().length > 1 &&
@@ -1782,8 +1786,8 @@ export default function Booking({
                                   </div>
                                   <small id="messenger-help" className="messenger-help">
                                     {contactMethod === 'whatsapp'
-                                      ? 'Leave blank to use your phone number above.'
-                                      : 'Use an ID or a phone number that others can reach on this app.'}
+                                      ? t('Leave blank to use your phone number above.')
+                                      : t('Use an ID or a phone number that others can reach on this app.')}
                                   </small>
                                 </label>
                               )}
@@ -1799,7 +1803,7 @@ export default function Booking({
                             onChange={(e) => setConsent(e.target.checked)}
                           />
                           <span>
-                            I consent to storing my details to arrange this reservation.
+                            {t("I consent to storing my details to arrange this reservation.")}
                           </span>
                         </label>
                         <button
@@ -1807,21 +1811,18 @@ export default function Booking({
                           className="privacy-inline"
                           onClick={showPrivacy}
                         >
-                          Reservation & Privacy Notice{' '}
+                          {t("Reservation & Privacy Notice")}{' '}
                           <ArrowUpRight size={14} />
                         </button>
                         {(availabilityIssue?.kind === 'unreachable' ||
                           (allAvailable && !bookingSubmissionReady)) && (
                           <p className="booking-email-fallback-note" role="status">
-                            All vehicle types are open for enquiries. Online booking storage
-                            is not connected, so this opens an email draft instead;
-                            it will not be saved or sent until you send it from your email app.
+                            {t("All vehicle types are open for enquiries. Online booking storage is not connected, so this opens an email draft instead; it will not be saved or sent until you send it from your email app.")}
                           </p>
                         )}
                         {emailDraftOpened && (
                           <p className="booking-email-fallback-note" role="status">
-                            Your email app should open with a draft. Please send it from your
-                            email app. No booking has been confirmed or saved online.
+                            {t("Your email app should open with a draft. Please send it from your email app. No booking has been confirmed or saved online.")}
                           </p>
                         )}
                       </div>
@@ -1912,12 +1913,12 @@ export default function Booking({
                       <div>
                         <span>
                           {step !== 2 && <Car size={14} />} {mixedServices
-                            ? 'Services · per day'
+                            ? t('Services · per day')
                             : `${summaryService.name} (${summaryService.duration}h)${dates.length > 1 ? ` × ${dates.length} days` : ''}`}
                         </span>
                         <span>
                           {quoteRequired
-                            ? 'Quote on request'
+                            ? t('Quote on request')
                             : money(serviceBaseTotal)}
                         </span>
                       </div>
@@ -1925,8 +1926,8 @@ export default function Booking({
                         <div>
                           <span>
                             {upgradedVehicleSummary
-                              ? `Vehicle Upgrade (${upgradedVehicleSummary})`
-                              : 'Vehicle Upgrade'}
+                              ? `${t('Vehicle Upgrade')} (${upgradedVehicleSummary})`
+                              : t('Vehicle Upgrade')}
                           </span>
                           <span>{money(vehicleSurcharges)}</span>
                         </div>
@@ -1936,7 +1937,7 @@ export default function Booking({
                         .map((o) => (
                           <div key={o.id}>
                             <span>
-                              {o.name}
+                              {t(o.name)}
                               {dates.length > 1 ? ` × ${dates.length}` : ''}
                             </span>
                             <span>{money(o.price * dates.length)}</span>
@@ -1945,45 +1946,43 @@ export default function Booking({
                     </div>
                     <div className="summary-total">
                       <div>
-                        <span>Estimated total</span>
+                        <span>{t("Estimated total")}</span>
                         <small className="tax-notice">
-                          KRW · Tax excl. · ~{moneyUsd(total, usdRate)} USD
+                          {locale === 'ko' ? '부가세 별도 · ~' : 'KRW · Tax excl. · ~'}{moneyUsd(total, usdRate)} USD
                         </small>
                       </div>
                       <strong className={quoteRequired ? 'quote-on-request' : ''}>
-                        {quoteRequired ? 'Quote on request' : money(total)}
+                        {quoteRequired ? t('Quote on request') : money(total)}
                       </strong>
                     </div>
                     {quoteRequired && (
                       <p className="quote-note">
-                        This journey needs a tailored quote. TAX is not included.
+                        {t("This journey needs a tailored quote. TAX is not included.")}
                       </p>
                     )}
                     <p className="availability-note" aria-live="polite">
                       {checking ? (
                         <>
-                          <LoaderCircle size={14} className="spin" /> Checking your{' '}
-                          {dates.length > 1 ? 'dates…' : 'date…'}
+                          <LoaderCircle size={14} className="spin" /> {locale === 'ko' ? '예약 가능 여부 확인 중…' : <>Checking your{' '}{dates.length > 1 ? 'dates…' : 'date…'}</>}
                         </>
                       ) : allAvailable ? (
                         <>
                           <Check size={14} />{' '}
-                          {dates.length > 1
+                          {t(dates.length > 1
                             ? 'All dates open for requests'
-                            : 'Vehicle request accepted for review'}
+                            : 'Vehicle request accepted for review')}
                         </>
                       ) : availabilityIssue?.kind === 'unreachable' ? (
                         <>
-                          <Clock3 size={14} /> Availability not verified online.
-                          You can continue to Details and email your enquiry.
+                          <Clock3 size={14} /> {t("Availability not verified online. You can continue to Details and email your enquiry.")}
                         </>
                       ) : availabilityIssue?.kind === 'invalid' ? (
                         <>
-                          <X size={14} /> {availabilityIssue.message}
+                          <X size={14} /> {t(availabilityIssue.message)}
                         </>
                       ) : (
                         <>
-                          <Clock3 size={14} /> Checking availability is required before sending a request.
+                          <Clock3 size={14} /> {t("Checking availability is required before sending a request.")}
                         </>
                       )}
                     </p>
@@ -1993,18 +1992,18 @@ export default function Booking({
                         className="booking-availability-retry"
                         onClick={() => setAvailabilityVersion((v) => v + 1)}
                       >
-                        Recheck availability
+                        {t("Recheck availability")}
                       </button>
                     )}
                     {error && (
                       <div className="form-error" role="alert">
-                        {error}
+                        {t(error)}
                         <button
                           type="button"
                           onClick={() => setAvailabilityVersion((v) => v + 1)}
-                          aria-label="Recheck availability"
+                          aria-label={t("Recheck availability")}
                         >
-                          Retry
+                          {t("Retry")}
                         </button>
                       </div>
                     )}
@@ -2018,13 +2017,13 @@ export default function Booking({
           <div className="booking-outer-actions">
             {error && step === 0 && (
               <div className="form-error booking-outer-error" role="alert">
-                {error}
+                {t(error)}
                 <button
                   type="button"
                   onClick={() => setAvailabilityVersion((v) => v + 1)}
-                  aria-label="Recheck availability"
+                  aria-label={t("Recheck availability")}
                 >
-                  Retry
+                  {t("Retry")}
                 </button>
               </div>
             )}
@@ -2044,7 +2043,7 @@ export default function Booking({
                     }
                   }}
                 >
-                  {step > 0 && <ArrowLeft size={16} aria-hidden="true" />} Back
+                  {step > 0 && <ArrowLeft size={16} aria-hidden="true" />} {t('Back')}
                 </ReservationButton>
               )}
               <ReservationButton
@@ -2059,31 +2058,31 @@ export default function Booking({
               >
                 {sending ? (
                   <>
-                    Saving your request{' '}
+                    {t("Saving your request")}{' '}
                     <LoaderCircle size={16} className="spin" />
                   </>
                 ) : step === 0 ? (
                   <>
-                    {multiDay && !dailyScheduleOpen ? 'Continue to Daily Schedule' : 'Continue to Vehicle'} <span aria-hidden="true">→</span>
+                    {t(multiDay && !dailyScheduleOpen ? 'Continue to Daily Schedule' : 'Continue to Vehicle')} <span aria-hidden="true">→</span>
                   </>
                 ) : step === 1 ? (
                   <>
-                    Continue to Details <ArrowRight size={17} />
+                    {t('Continue to Details')} <ArrowRight size={17} />
                   </>
                 ) : !bookingSubmissionReady || availabilityIssue?.kind === 'unreachable' ? (
                   <>
-                    Email Booking Enquiry <ArrowUpRight size={17} />
+                    {t("Email Booking Enquiry")} <ArrowUpRight size={17} />
                   </>
                 ) : (
                   <>
-                    Request Booking <ArrowUpRight size={17} />
+                    {t("Request Booking")} <ArrowUpRight size={17} />
                   </>
                 )}
               </ReservationButton>
             </div>
             {step >= 1 && (
               <p className="no-payment">
-                No upfront payment · Subject to confirmation
+                {t('No upfront payment · Subject to confirmation')}
               </p>
             )}
           </div>
@@ -2095,7 +2094,7 @@ export default function Booking({
           travel.
         </span>
         <button onClick={showPrivacy}>
-          Privacy & reservations <Plus size={12} />
+          {t("Privacy & reservations")} <Plus size={12} />
         </button>
         <span>
           SEOUL, SOUTH KOREA <span className="live-dot" />
