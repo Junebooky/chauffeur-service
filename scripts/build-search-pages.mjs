@@ -45,6 +45,19 @@ export function buildSearchPages(outDir=join(root,'dist')){
  for(const p of pages)for(const lang of ['en','ko']){
   const path=pathFor(p.slug,lang),dir=join(outDir,path.slice(1));mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'index.html'),render(p,lang));locations.push(domain+path)
  }
+ // Initial customer HTML includes a visible, accessible overview when the SPA
+ // has not mounted. React replaces this fallback with the full customer UI.
+ for(const [folder,lang] of [['','en'],['en','en'],['ko','ko']]){
+  const file=join(outDir,folder,'index.html')
+  let source
+  try{source=readFileSync(file,'utf8')}catch{continue}
+  const title=lang==='ko'?'JP Chauffeur Korea | 프리미엄 의전 차량 서비스':'JP Chauffeur Korea | Private Chauffeur Service in Seoul'
+  const intro=lang==='ko'?'인천공항 픽업 및 샌딩, 기업 VIP 의전, 맞춤 이동 일정을 요청하세요. 운영팀이 예약 요청을 검토한 후 확정 안내를 제공합니다.':'Request private airport transfers, executive transportation and chauffeur-driven itineraries in South Korea. Our team reviews each reservation request before confirmation.'
+  const links=pages.map(p=>'<li><a href="'+pathFor(p.slug,lang)+'">'+esc(p[lang].title)+'</a></li>').join('')
+  const journal='/'+(lang==='ko'?'ko/':'')+'journal/'
+  const fallback='<div id="root"><main data-search-fallback style="max-width:800px;margin:0 auto;padding:40px 24px;color:#e9eae7;background:#101211;line-height:1.7;min-height:100vh;overflow:auto"><h1>'+esc(title)+'</h1><p>'+esc(intro)+'</p><h2>'+locale[lang].services+'</h2><ul>'+links+'</ul><h2>'+locale[lang].fleet+'</h2><p>'+esc(vehicles.map(v=>v.name).join(' · '))+'</p><nav><a href="'+journal+'">Journal</a> · <a href="/'+(lang==='ko'?'en':'ko')+'/" lang="'+(lang==='ko'?'en':'ko')+'">'+locale[lang].language+'</a></nav></main></div>'
+  if(source.includes('<div id="root"></div>'))writeFileSync(file,source.replace('<div id="root"></div>',fallback))
+ }
  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'+[...new Set(locations)].map(loc=>{
   const page=pages.find(p=>['en','ko'].some(l=>urlFor(p.slug,l)===loc))
   const path=new URL(loc).pathname

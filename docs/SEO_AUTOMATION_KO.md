@@ -19,3 +19,7 @@
 - GTM 콘솔: Google tag G-8VWZ2SPG0Q, analytics_storage 동의 조건 적용. 자동 page_view 중복 방지, 사이트 검색/폼 상호작용/외부 링크 등 자동 수집 및 page_referrer 검토. chauffeur_page_view -> GA4 page_view, view_vehicle/select_service/begin_booking/booking_step/generate_lead -> 동일 GA 이벤트. 데이터 영역 변수는 page_location, language, vehicle, service, booking_step, journey_type. generate_lead를 주요 이벤트로 지정. Tag Assistant 및 DebugView에서 실제 검증 필요. 응답 유실 후 200 재시도 시 전환이 누락될 수 있음. 실제 고객 예약을 테스트용으로 만들지 않음.
 
 - 최신 main의 영어 기본 진입 정책을 병합함. 서비스별 sitemap hreflang 쌍 생성. Journal RSS: /journal/rss.xml, /ko/journal/rss.xml. 승인 및 시각 도래 글만 포함. Search Console, 네이버 사이트맵/RSS 수집은 배포 후 등록.
+
+## 운영 진단 및 수정 (2026-11-26)
+- 운영 main b801fe6: IndexNow 인증 성공, 홈 3개와 정상 HTTP 200 서비스 페이지 6개 제출 성공. 색인 여부는 별도 확인 필요. OpenSEO audit b97b41af-b972-4936-89ac-a3809f9647b2에서 6개 Journal URL(목록 2, 승인 게시물 4)이 HTTP 404. 별도 audit d71a9ad6-8759-4228-9240-c29abf42d957에서 슬래시 없는 /journal은 200. Vercel rewrite에 canonical trailing slash 형태를 추가. 실제 운영에서 재검증하기 전 Journal URL은 IndexNow 제출하지 않음.
+- 메인 HTML에 실제 서비스 요약·링크를 초기 표시하고 React 마운트 후 정상 UI로 교체. 전체 SSR은 아님. 해당 수정은 feature/seo-production-fixes 브랜치에만 반영, main/운영 배포 변경 없음. GA4 generate_lead 주요 이벤트 등록 확인, enhanced measurement 및 consent 검토 필요.

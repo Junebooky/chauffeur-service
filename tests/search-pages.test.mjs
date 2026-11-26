@@ -1,6 +1,6 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
-import {mkdtempSync,readFileSync,writeFileSync,rmSync} from 'node:fs'
+import {mkdtempSync,readFileSync,writeFileSync,rmSync,mkdirSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {buildSearchPages} from '../scripts/build-search-pages.mjs'
@@ -26,5 +26,23 @@ test('bilingual search pages are readable without JS and use self-canonical lang
   assert.doesNotMatch(sitemap,/\/admin\/live/)
   assert.match(sitemap,/<xhtml:link rel="alternate" hreflang="ko" href="https:\/\/www.jpchauffeurkorea.com\/ko\/services\/seoul-chauffeur-service\/"/)
   assert.deepEqual(buildSearchPages(dir),urls)
+ }finally{rmSync(dir,{recursive:true,force:true})}
+})
+
+test('initial HTML exposes useful public navigation before React mounts',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'chauffeur-initial-'))
+ try{
+  for(const folder of ['','en','ko']){
+   const p=join(dir,folder);mkdirSync(p,{recursive:true});writeFileSync(join(p,'index.html'),'<html><body><div id="root"></div></body></html>')
+  }
+  buildSearchPages(dir)
+  const en=readFileSync(join(dir,'en/index.html'),'utf8'),ko=readFileSync(join(dir,'ko/index.html'),'utf8')
+  assert.match(en,/<h1>JP Chauffeur Korea \| Private Chauffeur Service in Seoul<\/h1>/)
+  assert.match(ko,/<h1>JP Chauffeur Korea \| 프리미엄 의전 차량 서비스<\/h1>/)
+  assert.match(en,/href="\/journal\/"/);assert.match(ko,/href="\/ko\/journal\/"/)
+  assert.match(en,/href="\/services\/incheon-airport-transfer\/"/)
+  assert.match(ko,/href="\/ko\/services\/incheon-airport-transfer\/"/)
+  buildSearchPages(dir)
+  assert.equal(readFileSync(join(dir,'en/index.html'),'utf8'),en)
  }finally{rmSync(dir,{recursive:true,force:true})}
 })
