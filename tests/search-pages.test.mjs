@@ -7,7 +7,7 @@ import {buildSearchPages} from '../scripts/build-search-pages.mjs'
 test('bilingual search pages are readable without JS and use self-canonical language alternates',()=>{
  const dir=mkdtempSync(join(tmpdir(),'chauffeur-seo-'))
  try{
-  writeFileSync(join(dir,'sitemap.xml'),'<urlset><url><loc>https://www.jpchauffeurkorea.com/</loc></url><url><loc>https://www.jpchauffeurkorea.com/ko/</loc></url><url><loc>https://www.jpchauffeurkorea.com/admin/live</loc></url></urlset>')
+  writeFileSync(join(dir,'sitemap.xml'),'<urlset><url><loc>https://www.jpchauffeurkorea.com/</loc></url><url><loc>https://www.jpchauffeurkorea.com/ko/</loc></url><url><loc>https://www.jpchauffeurkorea.com/en/</loc></url><url><loc>https://www.jpchauffeurkorea.com/admin/live</loc></url></urlset>')
   const urls=buildSearchPages(dir)
   assert.equal(urls.length,8)
   const en=readFileSync(join(dir,'services/seoul-chauffeur-service/index.html'),'utf8')
@@ -24,6 +24,8 @@ test('bilingual search pages are readable without JS and use self-canonical lang
   const sitemap=readFileSync(join(dir,'sitemap.xml'),'utf8')
   assert.match(sitemap,/<loc>https:\/\/www.jpchauffeurkorea.com\/ko\/<\/loc>/)
   assert.doesNotMatch(sitemap,/\/admin\/live/)
+  assert.doesNotMatch(sitemap,/<loc>https:\/\/www\.jpchauffeurkorea\.com\/en\/<\/loc>/)
+  assert.match(sitemap,/<xhtml:link rel="alternate" hreflang="en" href="https:\/\/www\.jpchauffeurkorea\.com\/"\/>/)
   assert.match(sitemap,/<xhtml:link rel="alternate" hreflang="ko" href="https:\/\/www.jpchauffeurkorea.com\/ko\/services\/seoul-chauffeur-service\/"/)
   assert.deepEqual(buildSearchPages(dir),urls)
  }finally{rmSync(dir,{recursive:true,force:true})}

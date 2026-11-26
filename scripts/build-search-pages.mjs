@@ -41,7 +41,7 @@ export function buildSearchPages(outDir=join(root,'dist')){
  // Preserve existing or multilingual build-generated URLs, without blindly
  // advertising routes that have not been implemented. Existing XML is trusted
  // repository output; only retain same-origin locations.
- try{const prior=readFileSync(join(outDir,'sitemap.xml'),'utf8');for(const match of prior.matchAll(/<loc>([^<]+)<\/loc>/g)){const u=new URL(match[1]);if(u.origin===domain&&!/^\/(?:admin|api)(?:\/|$)/.test(u.pathname))locations.push(u.href)}}catch{}
+ try{const prior=readFileSync(join(outDir,'sitemap.xml'),'utf8');for(const match of prior.matchAll(/<loc>([^<]+)<\/loc>/g)){const u=new URL(match[1]);if(u.origin===domain&&!/^\/(?:admin|api)(?:\/|$)/.test(u.pathname)&&!/^\/en\/?$/.test(u.pathname))locations.push(u.href)}}catch{}
  for(const p of pages)for(const lang of ['en','ko']){
   const path=pathFor(p.slug,lang),dir=join(outDir,path.slice(1));mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'index.html'),render(p,lang));locations.push(domain+path)
  }
@@ -61,7 +61,7 @@ export function buildSearchPages(outDir=join(root,'dist')){
  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'+[...new Set(locations)].map(loc=>{
   const page=pages.find(p=>['en','ko'].some(l=>urlFor(p.slug,l)===loc))
   const path=new URL(loc).pathname
-  const pair=page?[urlFor(page.slug,'en'),urlFor(page.slug,'ko')]:['/','/en/','/ko/'].includes(path)?[domain+'/en/',domain+'/ko/']:null
+  const pair=page?[urlFor(page.slug,'en'),urlFor(page.slug,'ko')]:['/','/ko/'].includes(path)?[domain+'/',domain+'/ko/']:null
   const alternate=pair&&pair.every(u=>locations.includes(u))?'<xhtml:link rel="alternate" hreflang="en" href="'+esc(pair[0])+'"/><xhtml:link rel="alternate" hreflang="ko" href="'+esc(pair[1])+'"/><xhtml:link rel="alternate" hreflang="x-default" href="'+esc(page?pair[0]:domain+'/')+'"/>':''
   return '  <url><loc>'+esc(loc)+'</loc>'+alternate+'</url>'
  }).join('\n')+'\n</urlset>\n'
