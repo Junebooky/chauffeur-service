@@ -1,9 +1,11 @@
+import { randomUUID } from 'node:crypto'
 import { db, ApiError, validUuid } from './chauffeur-supabase.mjs'
 import { ga4InlineSnippet } from './analytics-snippet.mjs'
 import { journalSchema, jsonLdScript } from './public-schema.mjs'
 import { journalServiceLinks } from './journal-service-links.mjs'
 const table='journal_articles'
 const select='id,slug,lang,title,description,intro,sections,publish_at,updated_at'
+const adminSelect=select+',status,approved_at,revision_draft,revision_token'
 const domain='https://www.jpchauffeurkorea.com'
 const enc=encodeURIComponent
 const slugOk=s=>typeof s==='string'&&s.length>=3&&s.length<=100&&s!=='sitemap'&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s)
@@ -11,6 +13,8 @@ const langOk=l=>l==='en'||l==='ko'
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
 const text=(s,min,max)=>{if(typeof s!=='string'||s.trim().length<min||s.trim().length>max)throw new ApiError(400,'Check article content.');return s.trim()}
 const date=s=>{if(typeof s!=='string'||!Number.isFinite(Date.parse(s)))throw new ApiError(400,'Invalid date.');return new Date(s).toISOString()}
+// Preserve the database's fractional seconds for optimistic locks.
+const lockDate=s=>{date(s);if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(s))throw new ApiError(400,'Invalid version.');return s}
 const pathFor=(lang,slug='')=>'/'+(lang==='ko'?'ko/':'')+'journal/'+(slug?slug+'/':'')
 const urlFor=(lang,slug='')=>domain+pathFor(lang,slug)
 const filter=(now)=>'status=eq.approved&publish_at=lte.'+enc(now)
@@ -43,15 +47,36 @@ export function validateDraft(b){
 }
 export async function journalAdmin(staff,b,now=new Date().toISOString(),database=db){
  if(staff?.role!=='owner'||!validUuid(staff.id))throw new ApiError(403,'Owner access required.')
- if(b.action==='list')return database(table+'?select='+select+',status,approved_at&order=updated_at.desc&limit=200')
+ if(b.action==='list')return database(table+'?select='+adminSelect+'&order=updated_at.desc&limit=200')
  if(b.action==='save_draft'&&!b.id){
   return database(table,{method:'POST',prefer:'return=representation',body:{...validateDraft(b),status:'draft',updated_at:now}})
  }
  if(!validUuid(b.id))throw new ApiError(400,'Invalid article.')
- const expected=date(b.expected_updated_at)
+ const expected=lockDate(b.expected_updated_at)
  const q=table+'?id=eq.'+b.id+'&updated_at=eq.'+enc(expected)
  let patch,path=q
- if(b.action==='save_draft'){
+ if(['save_revision','approve_revision','discard_revision'].includes(b.action)){
+  const token=b.expected_revision_token
+  if(token!==null&&!validUuid(token))throw new ApiError(400,'Invalid revision version.')
+  if(b.action!=='save_revision'&&!token)throw new ApiError(400,'No saved revision.')
+  if(b.action==='approve_revision'&&b.confirm!==true)throw new ApiError(400,'Explicit review confirmation required.')
+  path+='&status=eq.approved&publish_at=lte.'+enc(now)+'&revision_token='+(token===null?'is.null':'eq.'+token)
+  // Read only the matching version; the PATCH repeats all predicates atomically.
+  const current=(await database(path+'&select='+adminSelect+'&limit=1'))?.[0]
+  if(!current)throw new ApiError(409,'Article or revision changed. Refresh before trying again.')
+  if(b.action==='save_revision'){
+   const draft=validateDraft(b)
+   if(draft.slug!==current.slug||draft.lang!==current.lang)throw new ApiError(400,'Published URL and language cannot change.')
+   patch={revision_draft:draft,revision_token:randomUUID()}
+  }else if(b.action==='discard_revision'){
+   patch={revision_draft:null,revision_token:null}
+  }else{
+   const draft=validateDraft(current.revision_draft||{})
+   if(draft.slug!==current.slug||draft.lang!==current.lang)throw new ApiError(409,'Revision URL or language changed.')
+   const {title,description,intro,sections}=draft
+   patch={title,description,intro,sections,revision_draft:null,revision_token:null,updated_at:now,approved_at:now,approved_by:staff.id}
+  }
+ }else if(b.action==='save_draft'){
   path+='&status=eq.draft'
   patch={...validateDraft(b),updated_at:now}
  }else if(b.action==='approve'){
@@ -59,7 +84,7 @@ export async function journalAdmin(staff,b,now=new Date().toISOString(),database
   path+='&status=eq.draft'
   patch={status:'approved',publish_at:date(b.publish_at),approved_at:now,approved_by:staff.id,updated_at:now}
  }else if(b.action==='archive'){
-  path+='&status=in.(draft,approved)'
+  path+='&status=in.(draft,approved)&revision_token=is.null'
   patch={status:'archived',updated_at:now}
  }else throw new ApiError(400,'Unknown action.')
  const rows=await database(path,{method:'PATCH',prefer:'return=representation',body:patch})

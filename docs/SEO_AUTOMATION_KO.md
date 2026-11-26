@@ -56,3 +56,7 @@
 ## Journal 전환 링크 최적화 (2026-11-26)
 - Reviewed slug-to-service priority map on article pages: airport checklist -> airport transfer; executive/conference -> Seoul chauffeur; vehicle selection -> private driver. All three existing public service links retained and same-language; unknown topics use default order. No draft article URLs linked, no CMS content edits. Journal list still uses default order. Visible heading/aria label localized. New drafts need review before publication.
 - Existing content_slug custom dimension is now included on standalone seo_content_click and contact_click events as well as page_view/cta_click. Reservation clicks only recognize the known relative home anchors; no raw href, query, email, or customer data is added. These are interactions, not leads; OpenSEO aggregate reports cannot query per-content custom dimensions directly. Use GA4 Exploration after data collection.
+
+## Journal 개정 및 재승인 (2026-11-26)
+- 코드 및 SQL 준비: 기존 승인된 공개 글만 개정 초안을 만들 수 있다. 서버 전용 revision_draft/revision_token 컬럼은 공개 SELECT, sitemap, RSS에 포함되지 않으며 초안 저장/폐기는 updated_at을 바꾸지 않는다. 소유자 명시 승인 시 저장된 초안의 내용만 단일 조건부 PATCH로 반영하고 원래 slug/lang/publish_at은 유지한다. 동시 편집은 기존 공개 버전 및 임의 UUID 개정 토큰 비교로 차단한다. 개정 승인 후 updated_at이 변경되어 기존 제출 자동화가 감지할 수 있다. 저장된 개정 초안은 폐기 또는 승인 전까지 아카이브를 차단한다.
+- 운영 전 순서: SQL docs/sql/journal-revisions-v1.sql 검토, 별도 테스트 DB 적용 및 권한/동시성 검증, 승인 후 운영 DB 적용 및 코드 배포. 새 admin list API는 컬럼이 없으면 실패하므로 반드시 스키마 먼저 적용. 이전 코드에는 새 컬럼 영향 없음. 승인된 기존 글의 직접 수정이나 자동 개정 승인은 수행하지 않는다. 이전 버전 이력/롤백은 별도 후속 기능; 현 버전에서는 공개 전 폐기만 가능.
