@@ -22,6 +22,8 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: SEO release artifact checks
+        run: npm run seo:verify
       - name: Install browser test dependencies
         run: |
           python3 -m pip install playwright
